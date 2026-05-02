@@ -1,0 +1,50 @@
+---
+description: Payment integration safety rules. Loaded when working with Stripe, billing, checkout, or refund code.
+globs: "**/*{stripe,payment,billing,checkout,refund,subscription,invoice}*.{ts,tsx,js,jsx,py}"
+---
+
+# Payments Domain
+
+Money is L4-dangerous. Every payment change can lose customer trust or actual money.
+
+## Hard Rules
+
+1. **Never store raw card data.** Only Stripe tokens / payment method IDs.
+2. **Never log full card numbers, CVC, or PAN-like patterns.** Mask all but last 4.
+3. **All payment writes are idempotent.** Use Stripe's `idempotency_key` on every create.
+4. **Webhooks verify signatures.** Reject if `stripe.webhooks.constructEvent` fails — never trust raw body.
+5. **Amounts in cents (integers).** Never use floats for money.
+6. **Currency is explicit.** Always pass currency code, never assume USD/EUR.
+7. **Test mode keys ≠ live mode keys.** Hard fail if a `sk_test_` key is detected in production env.
+
+## Required Tests (Failure Paths)
+
+For every payment flow, test:
+
+- Stripe API timeout (network failure mid-charge)
+- Webhook arrives twice (idempotency proof)
+- Webhook signature invalid (must reject)
+- Amount = 0 or negative (must reject)
+- Currency mismatch between intent and confirm
+- Customer has no payment method
+- Card declined (`card_declined`)
+- 3DS required (`requires_action`)
+- Refund > original amount (must reject)
+
+## Forbidden Patterns
+
+- `parseFloat(amount)` for currency math → use integers, cents
+- `console.log(payment_intent)` → may leak PII
+- Hardcoded API keys → always env vars
+- Skipping webhook signature verification "for testing"
+- Catching Stripe errors and silently retrying without idempotency keys
+
+## Autonomy Level
+
+Per operating model: **L1 (Draft only)**. Agent drafts code; human reviews carefully before merge. Production deploys touching payments require explicit human approval.
+
+## Reference
+
+- Stripe API docs: https://stripe.com/docs/api
+- Use the `stripe-best-practices` skill if available
+- Spec must include "Payment Failure Modes" section

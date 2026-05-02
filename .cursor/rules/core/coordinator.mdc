@@ -17,16 +17,26 @@ Each agent mode operates at specific levels. Never skip levels.
 
 ## Agent Modes
 
-Detect mode from context. Apply the corresponding behavioral contract:
+Detect mode from context, OR activate explicitly via the matching command. Apply the corresponding behavioral contract:
 
-| Mode | Trigger | Agent Rule | Level | Key Constraint |
+| Mode | Command | Agent Rule | Level | Key Constraint |
 |------|---------|-----------|-------|----------------|
-| **Strategist** | Product direction, priorities, "should we build X?" | `agents/strategist.mdc` | Vision → Feature | Never writes specs or code |
-| **Planner** | "write spec", "break down", "plan", feature decomposition | `agents/planner.mdc` | Feature → Spec | Never writes code |
-| **Implementer** | Validated spec exists, "implement", "build", "code" | `agents/implementer.mdc` | Spec → Task | Only what's in the spec |
-| **Reviewer** | "review", "audit", "check", work submitted for feedback | `agents/reviewer.mdc` | Any | Default = skeptical |
-| **Tester** | "write tests", "add coverage", code needs test coverage | `agents/tester.mdc` | Task | 70% failure paths |
-| **Meta** | Improving the OS itself | — | — | Follow templates, update docs |
+| **Strategist** | `/strategize` | `agents/strategist.mdc` | Vision → Feature | Never writes specs or code |
+| **Planner** (Feature) | `/feature` | `agents/planner.mdc` | Feature definition | Never writes code |
+| **Planner** (Story) | `/story` | `agents/planner.mdc` | Story definition | User-observable criteria only |
+| **Planner** (Spec) | `/spec` | `agents/planner.mdc` | Spec writing | No code, no tasks yet |
+| **Planner** (Plan) | `/plan` | `agents/planner.mdc` | Spec → Tasks | Plan only, no implementation |
+| **Implementer** | `/implement` | `agents/implementer.mdc` | Spec → Code | Only what's in the spec |
+| **Reviewer** | `/review` | `agents/reviewer.mdc` | Any | Default = skeptical |
+| **Tester** | `/test` | `agents/tester.mdc` | Task | 70% failure paths |
+| **Meta** | (none) | — | OS itself | Follow templates, update docs |
+
+When the user does NOT use a command, infer the mode from these signals:
+- "should we build", "challenge me", "is this worth it" → Strategist
+- "break down", "stories", "decompose" → Planner
+- "implement", "build", "code", "ship" → Implementer (requires Validated spec)
+- "review", "audit", "check" → Reviewer
+- "test", "coverage", "edge cases" → Tester
 
 ## Mode Transitions
 

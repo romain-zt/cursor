@@ -1,47 +1,49 @@
 ---
-description: Run a health check on the Cursor OS itself
+description: Audit the Cursor OS for consistency, staleness, and broken wiring.
 ---
 
 # /health
 
-Audit the Cursor OS repo for consistency, staleness, and issues.
+Run a deterministic health check on the Cursor OS repo.
 
 ## Instructions
 
-Run these checks and report results:
+1. Execute the health-check script:
 
-### 1. Rule Consistency
-- Are all rules under 60 lines?
-- Do any rules have overlapping `globs`?
-- Are cross-references valid (referenced files exist)?
+```bash
+bash .cursor/hooks/health-check.sh           # human-readable output
+bash .cursor/hooks/health-check.sh --json    # machine-parseable JSON for CI
+```
 
-### 2. Spec Hygiene
-- Any specs stuck in `Draft` for > 2 weeks?
-- Any specs marked `Validated` with unresolved Open Questions?
-- Any specs without a corresponding task?
+2. Display the script's output verbatim. Do NOT paraphrase or summarize the technical results.
+3. After the output, give the user a 1-2 line plain-language summary of what to fix first.
+4. If the script exits non-zero (errors), recommend the highest-priority fix.
 
-### 3. Task Freshness
-- Any tasks older than 1 week without progress?
-- Any tasks marked done but still in `tasks/`? (should be archived)
+## Flags
 
-### 4. Scope Leaks
-- Scan recent code changes: any unclassified work?
-- Any client-specific hardcoding in "reusable" files?
+| Flag | Effect |
+|------|--------|
+| (none) | Human-readable output, exit 0/1 |
+| `--json` | Single-line JSON to stdout, exit 0/1/2 (2 = `jq` missing) |
 
-### 5. Skills Audit
-- Are installed skills (`.agents/skills/`) still referenced?
-- Any skills that haven't been used in 30+ days?
+## What the Script Checks
+
+| Check | Threshold |
+|-------|-----------|
+| Rule line counts | Max 60 per file |
+| Cross-reference validity | Files referenced in rules must exist |
+| `hooks.json` validity | Valid JSON, scripts exist and are executable |
+| Spec hygiene | No specs stuck in `Draft` >14 days |
+| Task freshness | No tasks untouched >7 days |
+| Agent ↔ command wiring | Every agent has at least one command |
 
 ## Output
 
-A summary table:
+The raw script output (PASS/WARN/FAIL per section + summary), followed by 1-2 lines of recommendation.
 
-| Area | Status | Issues |
-|------|--------|--------|
-| Rules | ✅/⚠️/❌ | ... |
-| Specs | ✅/⚠️/❌ | ... |
-| Tasks | ✅/⚠️/❌ | ... |
-| Scope | ✅/⚠️/❌ | ... |
-| Skills | ✅/⚠️/❌ | ... |
+## When the Script Is Wrong
 
-Plus recommended actions (if any).
+The script uses heuristics. If it flags something incorrectly:
+- Don't blindly trust the warning
+- Verify manually before "fixing"
+- If recurring false positives → improve the script, not the rules

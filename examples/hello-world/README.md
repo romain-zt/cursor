@@ -18,7 +18,7 @@ User types: /spec
 Command (commands/planning/spec.md)
   → reads Rule (workflow/spec-writing.mdc) for process requirements
   → reads Rule (core/scope-control.mdc) for classification
-  → uses Template (templates/specs/feature.md) for structure
+  → uses Template (templates/specs/spec.md) for structure
   → outputs: specs/my-feature.md
 ```
 

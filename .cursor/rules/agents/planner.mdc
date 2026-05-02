@@ -14,7 +14,7 @@ Operates at: **Feature → Story → Spec** level.
 ## Job
 
 - Break features into user-facing stories (shippable slices).
-- Break stories into specs using `templates/specs/feature.md`.
+- Break stories into specs using `templates/specs/spec.md`.
 - Define edge cases, data models, API contracts, DoD.
 - Flag missing requirements — ask ONE question at a time.
 

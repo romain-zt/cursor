@@ -8,7 +8,7 @@ loop_count=$(echo "$input" | jq -r '.loop_count // 0')
 timestamp=$(date '+%Y-%m-%d %H:%M:%S')
 echo "[$timestamp] agent stopped — status=$status loop=$loop_count" >> /tmp/cursor-agent-stops.log
 
-if [ "$status" = "error" ] && [ "$loop_count" -lt 2 ]; then
+if [ "$status" = "error" ] && [ "$loop_count" -lt 3 ]; then
   cat <<EOF
 {
   "followup_message": "The previous run errored. Review what failed, fix it, and continue."

@@ -17,11 +17,13 @@ This repo is our **Cursor Operating System** — a shared brain that makes every
   rules/agents/      → 5 agent modes (strategist, planner, implementer, reviewer, tester)
   rules/workflow/    → Process rules (spec-writing, review, testing)
   rules/domain/      → Domain-specific (add as needed: payments, CMS, etc.)
-  commands/          → Slash commands (/spec, /plan, /health)
-  hooks/             → Automated triggers (format-on-edit, guard-dangerous-commands, error-retry)
+  commands/          → Slash commands (planning/, building/, meta/)
+  hooks/             → Automated triggers (format-on-edit, guard-dangerous-commands, mode-trace, error-retry)
 
-specs/               → Feature specs (the "what" and "why")
-tasks/               → Active task files (ephemeral, deleted after merge)
+features/            → Feature artifacts (big capabilities)
+stories/             → Story artifacts (user-facing shippable slices)
+specs/               → Spec artifacts (technical contracts)
+tasks/               → Task files (ephemeral, deleted after merge)
 
 docs/
   onboarding/        → You are here
@@ -68,14 +70,30 @@ No skipping levels. A task without a spec = unauthorized work.
 
 ## First Steps
 
-1. Read `docs/playbooks/start-a-feature.md` — the standard workflow
-2. Look at `examples/hello-world/` — how layers connect
-3. Start with `/spec` to write your first feature spec
+1. Read `docs/playbooks/start-a-feature.md` — the standard workflow end-to-end
+2. Look at `examples/hello-world/` — how layers connect (Rule → Skill → Command)
+3. Look at `examples/real-world/` — a full Vision → Feature → Story → Spec → Task → Code → Tests trace
+4. Start with `/strategize` (idea) → `/feature` → `/story` → `/spec` → `/plan` → `/implement` → `/test` → `/review`
+
+## Commands Cheat Sheet
+
+| You want to... | Use |
+|----------------|-----|
+| Challenge an idea before building | `/strategize` |
+| Define a Feature from an approved idea | `/feature` |
+| Write a user-facing Story | `/story` |
+| Write a technical Spec from a Story | `/spec` |
+| Break a validated Spec into Tasks | `/plan` |
+| Implement a validated Spec | `/implement` |
+| Audit a Spec, code, or PR | `/review` |
+| Write adversarial tests | `/test` |
+| Audit the OS itself | `/health` |
 
 ## When Forking to a New Project
 
-1. Copy `.cursor/rules/` to your project
+1. Copy `.cursor/` to your project root (rules, commands, hooks, skills)
 2. Copy `templates/CONTEXT.md` to project root, fill it in
-3. Copy relevant templates
-4. Create `specs/` and `tasks/` directories
+3. Copy any templates you'll use (`vision.md`, `feature.md`, `story.md`, `specs/`, `tasks/`)
+4. Create `features/`, `stories/`, `specs/`, `tasks/` directories
 5. Optionally symlink `.agents/skills/` for community skills
+6. Run `/health` to validate the setup

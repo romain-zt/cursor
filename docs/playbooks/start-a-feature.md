@@ -18,7 +18,7 @@ The agent will ask about the problem, audience, and alternatives. Output: a Feat
 "Break [feature] into stories and write the first spec."
 ```
 
-The agent decomposes the Feature into shippable Stories, then writes a Spec for the first one using `templates/specs/feature.md`. Output lands in `specs/`.
+The agent decomposes the Feature into shippable Stories, then writes a Spec for the first one using `templates/specs/spec.md`. Output lands in `specs/`.
 
 **You review:** fill any Open Questions, confirm scope classification.
 

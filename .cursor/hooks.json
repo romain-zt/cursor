@@ -13,6 +13,11 @@
         "matcher": "git push --force|git push -f|rm -rf /|drop database|DROP DATABASE"
       }
     ],
+    "afterAgentResponse": [
+      {
+        "command": ".cursor/hooks/mode-trace.sh"
+      }
+    ],
     "stop": [
       {
         "command": ".cursor/hooks/on-stop.sh",
