@@ -143,7 +143,7 @@ if [ "$spec_count" -eq 0 ]; then
 else
   stale_drafts=0
   while IFS= read -r spec; do
-    age_days=$(( ( $(date +%s) - $(stat -f %m "$spec" 2>/dev/null || stat -c %Y "$spec") ) / 86400 ))
+    age_days=$(( ( $(date +%s) - $(stat -c %Y "$spec" 2>/dev/null || stat -f %m "$spec" 2>/dev/null || echo "$(date +%s)") ) / 86400 ))
     if grep -q "Status:.*Draft" "$spec" && [ "$age_days" -gt 14 ]; then
       warn "$spec stuck in Draft for ${age_days}d"
       stale_drafts=$((stale_drafts + 1))
@@ -159,7 +159,7 @@ task_count=$(find tasks -maxdepth 1 -name "*.md" -type f 2>/dev/null | wc -l | t
 if [ "$task_count" -gt 0 ]; then
   stale_tasks=0
   while IFS= read -r task; do
-    age_days=$(( ( $(date +%s) - $(stat -f %m "$task" 2>/dev/null || stat -c %Y "$task") ) / 86400 ))
+    age_days=$(( ( $(date +%s) - $(stat -c %Y "$task" 2>/dev/null || stat -f %m "$task" 2>/dev/null || echo "$(date +%s)") ) / 86400 ))
     if [ "$age_days" -gt 7 ]; then
       warn "$task untouched for ${age_days}d — abandoned?"
       stale_tasks=$((stale_tasks + 1))
