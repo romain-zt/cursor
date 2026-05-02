@@ -1,0 +1,57 @@
+---
+description: How to write specs. Loaded when creating or editing specs.
+globs: "specs/**"
+---
+
+# Spec Writing
+
+## When to Write a Spec
+
+- New feature (any size beyond a one-liner)
+- Architecture change
+- Integration with external service
+- Anything that touches payments, auth, or data models
+
+## Spec Structure
+
+Every spec MUST have:
+
+```markdown
+# [SPEC] Title
+
+## Meta
+- Status: Draft | In Review | Validated | Implemented | Deprecated
+- Classification: [1-6 from scope-control]
+- Target: [Product name | Global]
+- Author: [human or agent]
+- Date: YYYY-MM-DD
+
+## Problem
+What problem are we solving? For whom? Why now?
+
+## Solution
+What are we building? How does it work at a high level?
+
+## Scope
+What's IN scope. What's explicitly OUT of scope.
+
+## Technical Design
+Data models, API shape, component tree, dependencies.
+
+## Edge Cases
+What could go wrong? What are the boundaries?
+
+## DoD (Definition of Done)
+Specific, verifiable criteria for this spec.
+
+## Open Questions
+Unresolved decisions that need human input.
+```
+
+## Rules
+
+1. **No implementation before status = Validated.** Draft → Review → Validated → Implement.
+2. **Scope section is mandatory.** If you can't define what's out, the spec isn't ready.
+3. **Classification is mandatory.** Forces thinking about reusability upfront.
+4. **Open Questions must be answered** before moving to Validated.
+5. **One spec = one feature.** Don't combine unrelated work.

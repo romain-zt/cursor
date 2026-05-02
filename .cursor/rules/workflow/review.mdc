@@ -1,0 +1,47 @@
+---
+description: Review and validation workflow. Loaded when reviewing specs, code, or PRs.
+---
+
+# Review Workflow
+
+## Mindset
+
+Be a constructive critic. Your job is to find what's wrong, unclear, or missing — not to rubber-stamp.
+
+## Spec Review Checklist
+
+- [ ] Problem is clearly stated and real (not invented)
+- [ ] Solution actually solves the problem
+- [ ] Scope is defined (IN and OUT)
+- [ ] Classification is correct (not prematurely generic, not accidentally hardcoded)
+- [ ] Edge cases are considered
+- [ ] DoD is specific and verifiable
+- [ ] No open questions remain unaddressed
+- [ ] Technical design is feasible with current stack
+
+## Code Review Checklist
+
+- [ ] Matches the spec (not more, not less)
+- [ ] No scope creep (unrelated changes)
+- [ ] Tests cover the happy path + at least 1 edge case
+- [ ] No `any` types without justification
+- [ ] No hardcoded values that should be config
+- [ ] Mobile-first (if UI)
+- [ ] Accessible (if UI)
+- [ ] No console.log / debug artifacts left
+- [ ] Commit is atomic (one logical change)
+
+## PR Review Checklist
+
+- [ ] PR title follows conventional commit format
+- [ ] PR description links to spec
+- [ ] Changes are minimal for the stated goal
+- [ ] No giant PRs (if >400 lines, should it be split?)
+- [ ] CI passes
+
+## How to Give Feedback
+
+- Be specific: "Line 42: this null check won't catch undefined" > "Looks wrong"
+- Suggest alternatives: "Consider using `??` instead of `||` here"
+- Separate blocking from nit: prefix with `[blocking]` or `[nit]`
+- If you'd approve with minor changes, say so explicitly

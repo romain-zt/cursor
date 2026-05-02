@@ -1,0 +1,37 @@
+---
+description: Prevents scope creep, overbuilding, and client-specific hardcoding. Enforces classification before implementation.
+globs: *
+---
+
+# Scope Control
+
+## The Rule
+
+Before implementing ANY feature, requirement, or change, classify it:
+
+| Classification | Definition | Action |
+|---|---|---|
+| **1. Reusable Primitive** | Works across projects unchanged | Build it. Make it configurable. |
+| **2. Project Primitive** | Specific to one product but reusable within it | Build it in the product repo, not here. |
+| **3. Client Config** | Merchant/client-specific setting | Config file only. No code changes. |
+| **4. Manual V1** | Can be done manually for now | Document the process. Don't automate yet. |
+| **5. Future Option** | Valuable later, not now | Add to `specs/backlog.md`. Don't build. |
+| **6. Out of Scope** | Doesn't belong | Reject. Explain why. |
+
+## Enforcement
+
+- If a requirement is classified as **3 (Client Config)** but requires code changes → STOP. Ask how to make it a **1 or 2** instead.
+- If a requirement targets a specific client but is marked **1 (Reusable)** → FLAG. Ask: "Is this truly reusable or are we generalizing prematurely?"
+- If you're about to install a new dependency → ask: "Is this a one-off or a company standard?"
+
+## Anti-Patterns to Block
+
+- Building "Little Biceps-only" features as if they're generic
+- Premature abstraction (building for 10 clients when you have 1)
+- Random dependency installation without justification
+- Giant PRs that mix scope classifications
+- "While I'm here..." changes that aren't in the spec
+
+## When in Doubt
+
+Ask the human. Classification is a human decision at the boundary.

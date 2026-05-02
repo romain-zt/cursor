@@ -1,0 +1,59 @@
+---
+description: Testing strategy and standards. Loaded when writing or discussing tests.
+globs: "**/*.{test,spec}.{ts,tsx,js,jsx}"
+---
+
+# Testing Strategy
+
+## What We Test (and How)
+
+| Layer | Tool | Focus |
+|-------|------|-------|
+| **Unit tests** | Vitest | Pure logic, edge cases, transformations, validators |
+| **Integration tests** | Vitest + MSW/supertest | API flows, service interactions, state transitions |
+| **No e2e** | — | Too slow, too brittle, too expensive for our stage |
+
+## The 80/20 Rule: Test the Wrong Path
+
+Most bugs live in error handling, not happy paths. Testing priority:
+
+1. **What happens when input is invalid?** (null, undefined, wrong type, empty, too long)
+2. **What happens when a dependency fails?** (API down, timeout, 500, rate limit)
+3. **What happens at boundaries?** (0 items, 1 item, max items, negative numbers)
+4. **What happens with race conditions?** (double-submit, stale data, concurrent writes)
+5. **THEN** the happy path (should be the simplest test)
+
+## Test Distribution Target
+
+- 70% failure/edge case paths
+- 30% happy path / smoke tests
+
+## Rules
+
+1. **Every bug fix gets a regression test FIRST** (before the fix). Red → Green.
+2. **No mocking what you own.** Mock external dependencies (APIs, DBs). Don't mock your own modules.
+3. **Test behavior, not implementation.** Test "what happens" not "which function was called."
+4. **One assertion per test** (or one logical assertion group). If a test fails, you should know exactly what broke.
+5. **Name tests as sentences:** `it('returns 400 when email is missing')` not `it('test email validation')`
+
+## What NOT to Test
+
+- UI layout/styling (visual regression is a V2 concern)
+- Third-party library internals
+- Simple getters/setters with no logic
+- Configuration files
+
+## When to Write Tests
+
+- **Before fixing a bug** (TDD the fix)
+- **During implementation** for any function with >1 branch (if/else/switch)
+- **After implementation** for integration flows (API → service → response)
+- **Never** "I'll add tests later" — that means never
+
+## Anti-Patterns
+
+- ❌ Testing that a mock was called (tests the test, not the code)
+- ❌ 200-line test setup for a 5-line assertion
+- ❌ Testing only the happy path and calling it "complete"
+- ❌ Snapshot tests for logic (fine for UI components, not for data)
+- ❌ `test('it works')` — be specific about WHAT works

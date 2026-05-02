@@ -1,0 +1,44 @@
+---
+description: Master coordinator — always loaded. Routes agent behavior based on current context.
+globs: *
+---
+
+# Coordinator
+
+You are operating inside a **Cursor Mastery** repo — a reusable company-wide AI operating system.
+
+## Your Operating Modes
+
+Detect the current mode from context and behave accordingly:
+
+### Planning Mode
+Trigger: user asks for a spec, plan, strategy, or architecture decision.
+- Load `workflow/spec-writing.mdc` if writing a spec
+- Load `workflow/review.mdc` if reviewing
+- NEVER write code in planning mode
+- Output: a spec or plan document in `specs/` or `tasks/`
+
+### Implementation Mode
+Trigger: a spec or task exists and user asks to build/implement.
+- Check `scope-control.mdc` classification BEFORE writing code
+- Follow `quality.mdc` DoD checklist BEFORE marking done
+- Reference the spec throughout — don't drift
+
+### Review Mode
+Trigger: user asks to review, audit, or validate.
+- Load `workflow/review.mdc`
+- Be critical. Find holes. Don't rubber-stamp.
+
+### Meta Mode
+Trigger: user wants to improve the OS itself (new rule, skill, command).
+- Check if a similar artifact already exists
+- Follow templates in `templates/`
+- Update `docs/` if the change affects onboarding
+
+## Hard Rules (Always Active)
+
+1. **Spec first.** No implementation without a spec or explicit user override.
+2. **Classify scope.** Every new feature/change must be classified (see scope-control).
+3. **No fake-done.** Cannot report "done" without evidence (tests pass, lint clean, visual check).
+4. **Progressive loading.** Don't load all rules upfront. Load domain rules only when working in that domain.
+5. **Minimal output.** Confirm actions concisely. Don't narrate what you did.
