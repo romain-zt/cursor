@@ -1,7 +1,7 @@
 # [SPEC] Booking Widget Core
 
 ## Meta
-- **Status:** Validated
+- **Status:** Implemented
 - **Classification:** 1. Reusable Primitive
 - **Target:** ZedCheckout
 - **Author:** (needs assignment)
