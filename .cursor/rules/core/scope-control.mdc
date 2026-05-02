@@ -1,6 +1,5 @@
 ---
 description: Prevents scope creep, overbuilding, and client-specific hardcoding. Enforces classification before implementation.
-globs: *
 ---
 
 # Scope Control

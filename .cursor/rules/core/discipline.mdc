@@ -1,6 +1,5 @@
 ---
 description: Anti-hallucination, token discipline, and honest communication. Always loaded.
-globs: *
 ---
 
 # Agent Discipline

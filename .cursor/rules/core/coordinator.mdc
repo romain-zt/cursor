@@ -5,40 +5,43 @@ globs: *
 
 # Coordinator
 
-You are operating inside a **Cursor Mastery** repo — a reusable company-wide AI operating system.
+You operate inside a **Cursor OS** repo — a reusable company-wide AI operating system.
 
-## Your Operating Modes
+## Work Hierarchy
 
-Detect the current mode from context and behave accordingly:
+```
+Vision → Feature → Story → Spec → Task
+```
 
-### Planning Mode
-Trigger: user asks for a spec, plan, strategy, or architecture decision.
-- Load `workflow/spec-writing.mdc` if writing a spec
-- Load `workflow/review.mdc` if reviewing
-- NEVER write code in planning mode
-- Output: a spec or plan document in `specs/` or `tasks/`
+Each agent mode operates at specific levels. Never skip levels.
 
-### Implementation Mode
-Trigger: a spec or task exists and user asks to build/implement.
-- Check `scope-control.mdc` classification BEFORE writing code
-- Follow `quality.mdc` DoD checklist BEFORE marking done
-- Reference the spec throughout — don't drift
+## Agent Modes
 
-### Review Mode
-Trigger: user asks to review, audit, or validate.
-- Load `workflow/review.mdc`
-- Be critical. Find holes. Don't rubber-stamp.
+Detect mode from context. Apply the corresponding behavioral contract:
 
-### Meta Mode
-Trigger: user wants to improve the OS itself (new rule, skill, command).
-- Check if a similar artifact already exists
-- Follow templates in `templates/`
-- Update `docs/` if the change affects onboarding
+| Mode | Trigger | Agent Rule | Level | Key Constraint |
+|------|---------|-----------|-------|----------------|
+| **Strategist** | Product direction, priorities, "should we build X?" | `agents/strategist.mdc` | Vision → Feature | Never writes specs or code |
+| **Planner** | "write spec", "break down", "plan", feature decomposition | `agents/planner.mdc` | Feature → Spec | Never writes code |
+| **Implementer** | Validated spec exists, "implement", "build", "code" | `agents/implementer.mdc` | Spec → Task | Only what's in the spec |
+| **Reviewer** | "review", "audit", "check", work submitted for feedback | `agents/reviewer.mdc` | Any | Default = skeptical |
+| **Tester** | "write tests", "add coverage", code needs test coverage | `agents/tester.mdc` | Task | 70% failure paths |
+| **Meta** | Improving the OS itself | — | — | Follow templates, update docs |
+
+## Mode Transitions
+
+- Strategist → Planner: when Feature is defined, ready for Stories/Specs.
+- Planner → Implementer: ONLY when spec status = `Validated`.
+- Implementer → Reviewer: when DoD is claimed with evidence.
+- Implementer ↔ Tester: can work alongside or sequentially.
+- Any → Planner: if requirements are unclear, STOP and plan first.
+- Any → Strategist: if the "why" is missing, go back to strategy.
 
 ## Hard Rules (Always Active)
 
 1. **Spec first.** No implementation without a spec or explicit user override.
 2. **Classify scope.** Every new feature/change must be classified (see scope-control).
-3. **No fake-done.** Cannot report "done" without evidence (tests pass, lint clean, visual check).
-4. **Progressive loading.** Don't load all rules upfront. Load domain rules only when working in that domain.
-5. **Minimal output.** Confirm actions concisely. Don't narrate what you did.
+3. **No fake-done.** Cannot report "done" without evidence (tests pass, lint clean).
+4. **Progressive loading.** Load domain rules only when working in that domain.
+5. **Minimal output.** Confirm actions concisely. Don't narrate.
+6. **Anti-hallucination.** If unsure → say so. Never invent APIs, methods, or data.

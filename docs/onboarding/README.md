@@ -1,64 +1,81 @@
 # Onboarding — Start Here
 
-Welcome. This repo is our **Cursor Operating System** — a shared brain that makes every project faster and higher quality.
-
-## What is this?
-
-A collection of rules, skills, commands, and templates that tell AI agents (and humans) how to work. Think of it as your team's "operating manual" that Cursor reads automatically.
+This repo is our **Cursor Operating System** — a shared brain that makes every project faster and higher quality.
 
 ## 5-Minute Setup
 
 1. **Clone this repo** alongside your project repos
-2. **Open in Cursor** — everything activates automatically via `.cursor/`
-3. **Read the Operating Model** → `docs/operating-model/README.md`
-4. **Start working** — the rules guide the agent's behavior
+2. **Open in Cursor** — rules activate automatically via `.cursor/`
+3. **Copy `templates/CONTEXT.md`** to your project root and fill it in
+4. **Read this doc** + `docs/operating-model/README.md`
 
-## Structure at a Glance
+## Structure
 
 ```
 .cursor/
-  rules/core/        → Always-active principles (scope control, quality, coordination)
-  rules/workflow/    → Process rules (how to write specs, how to review)
-  rules/domain/     → Domain-specific (payments, CMS, frontend — added as needed)
-  skills/           → Reusable capabilities (organized by category)
-  commands/         → Slash commands (/spec, /plan, /health)
-  hooks/            → Automated triggers (post-save, post-commit)
+  rules/core/        → Always-active principles (coordinator, quality, discipline, scope-control)
+  rules/agents/      → 5 agent modes (strategist, planner, implementer, reviewer, tester)
+  rules/workflow/    → Process rules (spec-writing, review, testing)
+  rules/domain/      → Domain-specific (add as needed: payments, CMS, etc.)
+  commands/          → Slash commands (/spec, /plan, /health)
+  hooks/             → Automated triggers (format-on-edit, guard-dangerous-commands, error-retry)
+
+specs/               → Feature specs (the "what" and "why")
+tasks/               → Active task files (ephemeral, deleted after merge)
 
 docs/
-  onboarding/       → You are here
-  operating-model/  → Philosophy, autonomy levels, principles
-  playbooks/        → Step-by-step guides for common workflows
-  reference/        → Cursor tips, features, shortcuts
+  onboarding/        → You are here
+  operating-model/   → Philosophy, autonomy levels, workflow
+  playbooks/         → Step-by-step guides ("how to start a feature")
 
-templates/          → Starting points for specs, tasks, rules, skills
-examples/           → Working examples to learn from
+templates/           → Starting points for specs, tasks, rules, skills, CONTEXT.md
+examples/            → How rules, agents, commands, and hooks connect
 
-.agents/skills/     → Installed community skills (from skills.sh)
+.agents/skills/      → Community skills (from skills.sh — obra/superpowers, mattpocock, etc.)
 ```
 
-## How to Use in Your Project
+## How It Works
 
-This repo is a **reference + source**. For your actual project:
+### Agent Modes
 
-1. Copy the `.cursor/rules/core/` folder (always needed)
-2. Copy relevant `rules/workflow/` and `rules/domain/` rules
-3. Copy templates you'll use
-4. Symlink or copy `.agents/skills/` for community skills
+Cursor has one model. We shape its behavior through 5 modes:
 
-Over time, improvements flow back here and propagate to all projects.
+| Mode | When | Does | Never Does |
+|------|------|------|-----------|
+| **Strategist** | Product direction talk | Challenges "why", evaluates trade-offs | Write specs or code |
+| **Planner** | Breaking features down | Writes specs, defines stories | Write code |
+| **Implementer** | Validated spec exists | Codes, tests first, ships | Go beyond spec |
+| **Reviewer** | Work submitted | Finds problems, flags issues | Fix code itself |
+| **Tester** | Code needs coverage | Writes failure-path tests | Skip edge cases |
+
+### Work Hierarchy
+
+```
+Vision → Feature → Story → Spec → Task
+```
+
+No skipping levels. A task without a spec = unauthorized work.
 
 ## Key Concepts
 
 | Concept | What it means |
 |---------|---------------|
-| **Spec-first** | No code without a written spec. Prevents drift and overbuilding. |
-| **Scope classification** | Every feature is labeled 1-6 before implementation. Prevents mess. |
-| **Definition of Done** | Specific checklist that must be green before "done" is real. |
-| **Progressive loading** | Only load context when needed. Saves tokens, reduces noise. |
-| **Mobile-first** | All UI starts at 320px and scales up. Non-negotiable. |
+| **Spec-first** | No code without a written spec. Prevents drift. |
+| **Scope classification** | Every feature labeled 1-6 before implementation. Prevents mess. |
+| **70/30 testing** | 70% failure paths, 30% happy paths. Bugs hide in error handling. |
+| **Evidence-based done** | Paste test output + lint output. "Done" isn't a feeling. |
+| **Mobile-first** | All UI starts at 320px. Non-negotiable. |
 
-## Next Steps
+## First Steps
 
-- Read `docs/operating-model/README.md` for the full philosophy
-- Look at `examples/hello-world/` to see rule→skill→command in action
-- Check `docs/playbooks/` for "how do I..." guides
+1. Read `docs/playbooks/start-a-feature.md` — the standard workflow
+2. Look at `examples/hello-world/` — how layers connect
+3. Start with `/spec` to write your first feature spec
+
+## When Forking to a New Project
+
+1. Copy `.cursor/rules/` to your project
+2. Copy `templates/CONTEXT.md` to project root, fill it in
+3. Copy relevant templates
+4. Create `specs/` and `tasks/` directories
+5. Optionally symlink `.agents/skills/` for community skills

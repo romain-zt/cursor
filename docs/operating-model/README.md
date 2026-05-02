@@ -2,14 +2,62 @@
 
 ## Philosophy: Evidence-Based Autonomy
 
-Agents can do a lot. But "can" ≠ "should." Our model is simple:
-
 > The agent's autonomy expands with evidence of correctness.
 
 No spec? Agent can only plan.  
 Spec validated? Agent can implement.  
 Tests pass + lint clean? Agent can report done.  
 Never: force push, prod deploy, or billing changes without human approval.
+
+---
+
+## Agent System: 5 Modes
+
+Cursor has ONE agent (the model). We shape its behavior via `.mdc` rules.
+"Agents" = behavioral modes, activated contextually via the coordinator.
+
+### Work Hierarchy
+
+```
+Vision → Feature → Story → Spec → Task
+```
+
+Each mode operates at specific levels. Never skip levels.
+
+### Agent Modes
+
+| Mode | Level | Gate | Stop Condition | Model |
+|------|-------|------|----------------|-------|
+| **Strategist** | Vision → Feature | Product direction discussion | Feature defined or "don't build" decision | claude-4-opus / gemini-2.5-pro |
+| **Planner** | Feature → Spec | Feature defined | Spec status = Validated | claude-3.7-sonnet (thinking) |
+| **Implementer** | Spec → Task | Spec = Validated | DoD 100% green with evidence | claude-4-sonnet / claude-3.7-sonnet |
+| **Reviewer** | Any | Something to review | All [blocking] resolved | claude-4-opus |
+| **Tester** | Task | Code exists | Every spec edge case has a test | claude-3.7-sonnet |
+
+### Mode Transitions
+
+```
+Strategist → Planner → Implementer → Reviewer
+                              ↕
+                           Tester
+```
+
+- Strategist → Planner: Feature defined, ready for decomposition.
+- Planner → Implementer: Spec validated (no open questions, DoD defined).
+- Implementer → Reviewer: DoD claimed with evidence.
+- Implementer ↔ Tester: Work alongside or sequentially.
+- Any → Planner: Requirements unclear → stop and plan.
+- Any → Strategist: "Why" is missing → go back.
+
+### Key Boundaries
+
+| Mode | Forbidden Actions |
+|------|-------------------|
+| Strategist | Writing specs, code, or technical decisions |
+| Planner | Writing code, creating files outside specs/tasks |
+| Implementer | Beyond-spec work, skipping tests, fake-done |
+| Reviewer | Fixing code (only flag + suggest), rubber-stamping |
+| Tester | Happy-path-only tests, mocking internals |
 
 ---
 
@@ -55,10 +103,22 @@ Never: force push, prod deploy, or billing changes without human approval.
 
 ---
 
+## Testing Philosophy
+
+Embedded in Implementer + Tester modes:
+
+- NO e2e tests. Only unit (logic/edge cases) + integration (flow).
+- 70% failure paths / 30% happy path.
+- Every bug fix starts with a failing test.
+- Test behavior, not implementation.
+- Name tests as sentences: `it('returns 400 when email is missing')`.
+
+---
+
 ## Token Strategy
 
 ### Always loaded (via globs: *)
-- `coordinator.mdc` — routing logic (~50 lines)
+- `coordinator.mdc` — routes between 5 agent modes (~40 lines)
 - `scope-control.mdc` — classification system (~40 lines)
 
 ### Loaded by context (via globs on file types)
@@ -82,19 +142,21 @@ Never: force push, prod deploy, or billing changes without human approval.
 
 ```
 1. IDEA        → Human describes what they want
-2. SPEC        → Agent (or human) writes spec in specs/
-3. REVIEW      → Spec is reviewed (holes, scope, classification)
-4. VALIDATE    → Open questions resolved, status → Validated
-5. TASK        → Agent creates task breakdown in tasks/
-6. BUILD       → Agent implements (checking DoD continuously)
-7. VERIFY      → Tests pass, lint clean, mobile checked
-8. PR          → Agent opens PR with spec link
-9. MERGE       → Human approves and merges
-10. LEARN      → If something was hard, update a rule or skill
+2. STRATEGIZE  → Strategist challenges "why", defines Feature (or kills it)
+3. PLAN        → Planner breaks Feature into Stories → Specs
+4. REVIEW SPEC → Reviewer audits spec (holes, scope, classification)
+5. VALIDATE    → Open questions resolved, status → Validated
+6. BUILD       → Implementer implements (tests first, DoD continuously)
+7. TEST        → Tester writes adversarial tests (failure-path focus)
+8. VERIFY      → Tests pass, lint clean, DoD evidence collected
+9. REVIEW CODE → Reviewer audits code against spec
+10. PR         → Agent opens PR with spec link
+11. MERGE      → Human approves and merges
+12. LEARN      → If something was hard, update a rule or skill
 ```
 
-Steps 1, 3, 4, 9, 10 require human involvement.  
-Steps 2, 5, 6, 7, 8 can be autonomous (within bounds).
+Steps 1, 4, 5, 11, 12 require human involvement.  
+Steps 2, 3, 6, 7, 8, 9, 10 can be autonomous (within bounds).
 
 ---
 

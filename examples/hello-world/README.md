@@ -1,92 +1,54 @@
-# Hello World Example
+# Example: Rule → Skill → Command
 
-This demonstrates how **Rule → Skill → Command** work together.
+Demonstrates how rules, skills, and commands connect in the Cursor OS.
 
-## The Scenario
+## The 3 layers
 
-You want to add a "greeting" feature to a project. Here's how the system works:
+| Layer | File type | Does what | Analogy |
+|-------|-----------|-----------|---------|
+| **Rule** | `.mdc` | Sets policy ("always do X") | A law |
+| **Skill** | `SKILL.md` | Provides capability ("here's HOW to do X") | A manual |
+| **Command** | `.md` in commands/ | Orchestrates workflow ("when user says /X") | A button |
 
----
-
-## 1. Rule (Policy)
-
-File: `.cursor/rules/domain/greeting.mdc`
-
-```markdown
----
-description: Standards for greeting components
-globs: "**/greeting*"
----
-
-# Greeting Standards
-
-- Always use the user's first name (never full name)
-- Greetings must be time-aware (morning/afternoon/evening)
-- Accessible: use role="status" for dynamic greetings
-- Mobile: min height 48px for the greeting container
-```
-
-**What it does:** Sets the "what" and "why." Loaded automatically when files match the glob.
-
----
-
-## 2. Skill (Capability)
-
-File: `.cursor/skills/development/greeting/SKILL.md`
-
-```markdown
-# Greeting Component Skill
-
-## When to use
-When building a greeting component that needs time-awareness.
-
-## How
-
-1. Detect current hour via `new Date().getHours()`
-2. Map to period:
-   - 5-11 → "Good morning"
-   - 12-17 → "Good afternoon"  
-   - 18-4 → "Good evening"
-3. Combine with user's first name
-4. Wrap in <p role="status"> for accessibility
-5. Apply min-h-12 (48px) for mobile touch target
-```
-
-**What it does:** Provides the "how." Referenced when the agent needs this specific capability.
-
----
-
-## 3. Command (Workflow)
-
-File: `.cursor/commands/building/greeting.md`
-
-```markdown
----
-description: Scaffold a time-aware greeting component
----
-
-# /greeting
-
-1. Check the greeting rule is loaded (domain/greeting.mdc)
-2. Use the greeting skill for implementation details
-3. Create the component at the user-specified path
-4. Verify: role="status" present, time logic correct, min-h-12 applied
-5. Report done with evidence
-```
-
-**What it does:** Orchestrates the rule + skill into a user-triggerable action.
-
----
-
-## How They Connect
+## How they connect
 
 ```
-User types: /greeting
+User types: /spec
 
-Command activates → reads Rule (policy) + Skill (how-to)
-                  → implements following both
-                  → validates against Rule's standards
-                  → reports done
+Command (commands/planning/spec.md)
+  → reads Rule (workflow/spec-writing.mdc) for process requirements
+  → reads Rule (core/scope-control.mdc) for classification
+  → uses Template (templates/specs/feature.md) for structure
+  → outputs: specs/my-feature.md
 ```
 
-The key insight: **Rules constrain. Skills enable. Commands orchestrate.**
+## Real example from this repo
+
+### Rule: `rules/core/scope-control.mdc`
+
+Policy: "Before implementing ANY feature, classify it as 1-6."
+
+The rule doesn't DO anything — it defines what MUST happen.
+
+### Agent: `rules/agents/planner.mdc`
+
+Behavior: "Break features into stories → specs. Use the template. Flag missing requirements."
+
+The agent follows the rule while performing its job.
+
+### Command: `commands/planning/spec.md`
+
+Workflow: "Ask user for the idea → classify scope → create spec file → present for review."
+
+The command orchestrates the agent + rules into a user-triggered action.
+
+## Key insight
+
+**Rules constrain. Agents execute. Commands orchestrate.**
+
+If you're adding a new capability:
+1. Does it set policy? → Rule
+2. Does it define behavior for a work mode? → Agent
+3. Does it provide a step-by-step procedure? → Skill
+4. Does it start a user-triggered workflow? → Command
+5. Does it automate on events? → Hook

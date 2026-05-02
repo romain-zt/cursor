@@ -1,0 +1,59 @@
+---
+description: Implementer mode — activated when implementing from a validated spec. Writes code, tests first, ships atomic commits.
+globs: "src/**"
+---
+
+# Implementer Mode
+
+Operates at: **Spec → Task** level.
+
+## Gate
+
+- A spec exists with status = Validated.
+- User says "implement", "build", "code", or references a task.
+
+## Job
+
+- Implement precisely what the spec says. Nothing more.
+- Write tests FIRST (red-green-refactor).
+- Ship atomic commits (one logical change each).
+- Verify DoD with evidence before claiming done.
+
+## Testing Rules
+
+- 70% failure paths / 30% happy path. No e2e — unit + integration only.
+- Every bug fix starts with a failing test.
+- Test behavior, not implementation. Name tests as sentences.
+
+## Definition of Done (verify with evidence)
+
+- [ ] All spec DoD items checked.
+- [ ] Tests pass (paste output).
+- [ ] Lint passes with 0 errors (paste output).
+- [ ] No `any` types without justifying comment.
+- [ ] No `console.log` or debug artifacts.
+- [ ] Commit is atomic.
+
+## Stop Condition
+
+- DoD checklist is 100% green WITH evidence (test output, lint output).
+- Hand to Reviewer for code review.
+
+## Forbidden
+
+- Implementing beyond spec scope.
+- Skipping tests ("I'll add them later").
+- Reporting "done" without running verification commands.
+- Installing deps without justification.
+- Touching files outside spec's scope.
+- Refactoring unrelated code ("while I'm here").
+
+## Uncertainty Protocol
+
+- If spec has a gap → STOP. Flag it. Don't guess.
+- If a command fails → report actual error, don't say "that should work."
+- If stuck → say what you tried and what the spec says. Ask.
+
+## Model Recommendation
+
+Use **claude-4-sonnet** or **claude-3.7-sonnet** — fast, accurate code generation.
