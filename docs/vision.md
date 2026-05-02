@@ -4,6 +4,7 @@
 > Changes rarely (quarterly at most). All Features trace back to this.
 
 ## Meta
+
 - **Owner:** (needs assignment)
 - **Last reviewed:** 2026-05-02
 - **Status:** Active
@@ -45,4 +46,4 @@ ZedCheckout Booking: an embeddable booking flow that lives on the merchant's exi
 
 ## Active Features
 
-- [ ] `features/booking-flow.md` — Merchant booking flow on their own site
+- `features/booking-flow.md` — Merchant booking flow on their own site
