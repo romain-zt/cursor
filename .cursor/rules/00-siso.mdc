@@ -81,6 +81,8 @@ SISO blocking applies in these PRD contexts **only** when the user explicitly re
 - implementation specs, tickets, or architecture intended for execution
 - code changes or dependency installation
 
+**UX flow and product surface statements are always DISCOVERY.** Descriptions of buyer journey, checkout interaction patterns, payment surface choices (iframe, redirect, modal), or product-level decisions stated during discovery are raw product direction — not implementation specs. Do not block them.
+
 **Discovery note and question queue writes** (`docs/prd/notes/`, `docs/prd/questions/open-questions.md`) are capture artifacts — they are always allowed during discovery and must never be blocked.
 
 ## Anti-Patterns
