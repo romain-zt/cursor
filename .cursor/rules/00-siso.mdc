@@ -391,11 +391,23 @@ Action:
 The user wants to clarify product direction, PRD, strategy, UX, architecture options, or requirements without executing changes.
 
 Examples:
-- “Let’s make the PRD.”
-- “Help me define the product.”
-- “What should the MVP include?”
-- “Challenge this architecture.”
-- “Compare these options.”
+- “Let’s define the PRD workflow.”
+- “Generate the PRD skill.”
+- “Create the PRD guide agent.”
+- “Help structure the discovery process.”
+- “Design the product workflow.”
+
+These are considered governance/discovery tasks, not implementation.
+
+Generating:
+- rules,
+- skills,
+- agents,
+- hooks,
+- commands,
+- governance workflows,
+
+is considered DISCOVERY unless the user explicitly requests immediate repository writes or execution.
 
 Action:
 - Do not block.

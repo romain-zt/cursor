@@ -11,7 +11,7 @@ This is **AI-assisted product governance**, not "AI generates PRDs". Discussion 
 | Product Lead | [`prd-product-lead.md`](./prd-product-lead.md) | Drives product clarity and synthesis |
 | Challenger | [`prd-challenger.md`](./prd-challenger.md) | Attacks weak assumptions and scope |
 | Researcher | [`prd-researcher.md`](./prd-researcher.md) | Market, users, competition, context |
-| Prioritizer | [`prd-prioritizer.md`](./prd-prioritizer.md) | Impact, confidence, effort, sequencing |
+| Prioritizer | [`prd-prioritizer.md`](./prd-prioritizer.md) | ICE scoring (Impact, Confidence, Ease) and sequencing |
 | PRD Editor | [`prd-editor.md`](./prd-editor.md) | Writes clean structured PRD deltas |
 | Scope Guardian | [`prd-scope-guardian.md`](./prd-scope-guardian.md) | Prevents PRD inflation and drift |
 
@@ -52,7 +52,7 @@ Use the [`/prd`](../commands/prd.md) orchestrator command with a mode:
 - `/prd discover` — open product discovery (Product Lead leads)
 - `/prd challenge` — stress-test current direction (Challenger leads)
 - `/prd review` — full committee review of current PRD
-- `/prd prioritize` — re-rank scope using the Impact / Confidence / Effort model
+- `/prd prioritize` — re-rank scope using the ICE model (Impact / Confidence / Ease)
 - `/prd update` — extract a PRD delta proposal from recent discussion (Editor leads)
 - `/prd summarize` — produce a short, structured snapshot of current product understanding
 

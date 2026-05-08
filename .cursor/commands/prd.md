@@ -15,7 +15,7 @@ Run the PRD Committee in a specific mode. The committee lives in [`.cursor/agent
 | `discover` | Product Lead | Open product discovery / clarify direction |
 | `challenge` | Challenger | Stress-test current assumptions and scope |
 | `review` | Product Lead (full committee) | Full review of the active PRD |
-| `prioritize` | Prioritizer | Re-rank scope using Impact / Confidence / Effort |
+| `prioritize` | Prioritizer | Re-rank scope using ICE (Impact / Confidence / Ease) |
 | `update` | PRD Editor | Extract a PRD delta proposal from recent discussion |
 | `summarize` | Product Lead | Short structured snapshot of current understanding |
 
@@ -71,16 +71,17 @@ Flow:
 
 ## Mode: `prioritize`
 
-Lead: **Prioritizer**. Support: Researcher (Confidence), Challenger (Effort honesty), Scope Guardian (cuts).
+Lead: **Prioritizer**. Support: Researcher (Confidence), Challenger (Ease honesty), Scope Guardian (cuts).
 
 Flow:
 
 1. Enumerate current scope candidates from the active PRD + recent discussion.
-2. Score each: **Impact (1–5)**, **Confidence (1–5)**, **Effort (1–5)**.
-3. Compute `score = (Impact + Confidence) / Effort`.
-4. Output a ranked table with explicit `KEEP / DEFER / CUT / TEST-FIRST` decisions.
-5. Scope Guardian publishes the cut list.
-6. **No writes** unless user runs `/prd update` afterward.
+2. Score each on the **ICE** model: **Impact (1–10)**, **Confidence (1–10)**, **Ease (1–10)**.
+3. Capture the tuple as `Impact,Confidence,Ease` (e.g. `8,6,7`).
+4. Compute `score = Impact + Confidence + Ease` (max 30). Higher = higher priority. Tie-break: higher Ease, then higher Confidence.
+5. Output a ranked table with explicit `KEEP / DEFER / CUT / TEST-FIRST` decisions.
+6. Scope Guardian publishes the cut list.
+7. **No writes** unless user runs `/prd update` afterward.
 
 ## Mode: `update`
 

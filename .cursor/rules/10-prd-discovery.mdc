@@ -101,7 +101,7 @@ Discovery is operated by a small committee of specialized agent personas in [`.c
 - **Product Lead** — clarity and synthesis
 - **Challenger** — attacks weak assumptions and scope
 - **Researcher** — market, users, competition, evidence
-- **Prioritizer** — Impact / Confidence / Effort scoring
+- **Prioritizer** — ICE scoring (Impact / Confidence / Ease)
 - **PRD Editor** — writes structured deltas (only mode allowed to touch `docs/prd/`)
 - **Scope Guardian** — prevents inflation and drift
 
