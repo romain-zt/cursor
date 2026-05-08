@@ -18,7 +18,11 @@
 | `prioritize` | PRD Builder skill | Re-rank feature groups using ICE |
 | `update` | PRD Builder skill | Persist an approved delta |
 
-If no mode is given, ask the user which mode they want.
+If no mode is given:
+
+1. If `docs/prd/questions/open-questions.md` exists and has an open question, treat the user input as an answer to the current highest-priority open question and run `questions` mode.
+2. If the user input looks like a new product insight, correction, or founder note, run `note` mode.
+3. If neither applies, ask which mode the user wants.
 
 ## Pre-flight
 
