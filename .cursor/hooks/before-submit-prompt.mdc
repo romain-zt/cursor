@@ -6,7 +6,8 @@ Before applying any SISO check, classify the user request:
 
 - If the request is PRD discovery, product thinking, a raw founder insight, an answer to an open question, informal product clarification, `/prd discover`, `/prd note`, `/prd questions`, or `/prd converge` → **do not block**. `/prd converge` is a read-only synthesis mode — it produces a proposal in chat only and writes no files. Route to the PRD Question Loop for capture modes. Writes to `docs/prd/notes/` and `docs/prd/questions/open-questions.md` are always allowed.
 - **UX flow descriptions, buyer journey statements, checkout interaction patterns, and product surface decisions stated during PRD discovery are always DISCOVERY — not implementation specs.** Examples: "the payment should be in an iframe", "buyer stays on the merchant site", "modal instead of redirect", "use Stripe embedded". These describe product direction, not code. Do not block them.
-- If the request is `/prd update`, implementation specs, tickets, architecture for execution, code edits, dependency changes, terminal commands, or mutations to `PRD.md`, `state.md`, `history.md`, or `archive/` → apply full SISO.
+- `/prd update` is a structured PRD workflow command — always treat it as **DISCOVERY**. Do not apply SISO. It synthesizes prior discovery material into the PRD and does not require input validation.
+- If the request is implementation specs, tickets, architecture for execution, code edits, dependency changes, terminal commands, or mutations to `PRD.md`, `state.md`, `history.md`, or `archive/` outside of a `/prd update` workflow → apply full SISO.
 
 ---
 
