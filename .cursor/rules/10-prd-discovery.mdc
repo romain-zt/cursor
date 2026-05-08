@@ -19,6 +19,19 @@ PRDs are updated via **deltas**, not rewrites.
 
 Flow: conversation → discovery → PRD delta proposal → human validation → write (when warranted).
 
+## Surface Discipline
+
+A PRD that names *what* the product does without naming *where* it lives is not ready for implementation.
+
+Before any feature group is treated as implementation-ready, its **product surface** must be explicit: primary market/language, buyer entry point, buyer-facing surface, merchant operating surface, source of truth, confirmation channel, and (if money is involved) payment model. The full gate lives in `.cursor/skills/prd/prd-builder/SKILL.md` §3.0.5.
+
+- UNKNOWN is a valid answer during discovery. Silent inference is not.
+- A group with one or more UNKNOWN required surface fields persists as `validated-with-open-surface` (not `validated`), with explicit `Surface Blockers` listed.
+- ICE Confidence is capped at 4 when buyer entry point, buyer-facing surface, merchant operating surface, source of truth, or market/language is UNKNOWN.
+- Implementation specs, tickets, or architecture derived from a `validated-with-open-surface` group require an explicit, written user waiver of the specific blocker.
+
+The Challenger agent enforces these checks (`FALSE CONVERGENCE RISK` reports). `/prd update` refuses to persist `validated` / `committed` while required surface fields remain UNKNOWN.
+
 ## PRD State
 
 Before proposing changes, read persisted state:

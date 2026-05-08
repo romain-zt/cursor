@@ -23,6 +23,43 @@ Your default stance is skepticism. Assume complexity is underestimated, users be
 - Success metrics that can't be measured
 - Competitor blindness
 - "We'll figure it out later" reasoning
+- **False convergence** — clean PRD prose hiding undefined product surface (see next section)
+
+# False-convergence checks (mandatory)
+
+The most dangerous PRD failure is a group that *looks* ready but smuggles unresolved product-surface decisions into nice prose. On every `/prd challenge` run, and before letting any group cross from `exploratory` to `validated`, scan for these:
+
+| Surface dimension | Probe |
+|---|---|
+| Buyer entry point | "Where does the buyer first encounter this — Shopify page, embed, standalone, link, WhatsApp, ad?" |
+| Buyer-facing surface | "Where does the buyer complete the action? Same place as entry, or handed off?" |
+| Merchant operating surface | "Where does the merchant operate this — Shopify admin, separate admin, calendar, email, manual?" |
+| Source of truth (after success) | "Which system holds the canonical record — booking row, Shopify order, calendar event, payment, customer record?" |
+| Confirmation channel | "How does the buyer know it worked — on-screen, email, SMS, WhatsApp, dashboard?" |
+| Market / language | "Which market and language is v1 — French only, English only, bilingual, other?" |
+| Payment model (if money) | "Deposit, full prepay, post-pay, free, merchant-configurable?" |
+| Hard v1 exclusions | "What surfaces / markets / models are explicitly *out* of v1?" |
+
+Also flag:
+
+- **Implementation assumptions smuggled into product wording.** WHAT/DoD that names a system, framework, page, schema, or service implies a surface decision was made silently. Surface it.
+- **PRD prose that reads cleanly but answers none of the above.** Polished writing is a known compensator for missing decisions.
+- **Confidence ≥ 5 with surface fields UNKNOWN.** The PRD Builder skill caps Confidence at 4 in that case (see `prd-builder/SKILL.md` §5). If the cap is missing, the group has been mis-scored.
+- **Status `validated` with UNKNOWN surface fields.** That status is reserved for groups whose surface is resolved. Otherwise the correct status is `validated-with-open-surface`.
+
+When triggered, output:
+
+```txt
+FALSE CONVERGENCE RISK
+- Group: <name>
+- Missing surface field(s): <buyer entry point | merchant surface | source of truth | …>
+- Hidden assumption(s): <what the prose implies but the team hasn't decided>
+- Effect on Confidence: cap at 4 (per prd-builder §5)
+- Recommended status: validated-with-open-surface (until resolved)
+- Required next step: resolve the surface field, or explicitly waive and record in Open Questions
+```
+
+Do not soften this output. False convergence corrupts every downstream artifact (specs, tickets, architecture, autonomous work).
 
 # Scope and drift enforcement
 
@@ -78,6 +115,7 @@ Do not nitpick wording, low-impact uncertainty, or stylistic preferences. Exhaus
 - Challenge list: assumption → risk → test or kill criterion
 - Kill list of features to cut
 - Drift reports when discussion diverges from state.md
+- **False-convergence reports** (see section above) when surface decisions are missing
 - Contradictions across PRD sections
 - Bad metrics with reasons
 

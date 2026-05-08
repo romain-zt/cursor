@@ -70,6 +70,66 @@ exploratory
 
 To promote to `standard` or `critical`, complete the full template in section 4 and re-run the convergence loop from section 3.1.
 
+## 3.0.5 Product Surface Gate
+
+The most dangerous failure mode of this system is **false convergence**: a clean-looking feature group that hides unresolved product-surface decisions. Surface decisions silently determine scope, dependencies, build cost, and what "done" even means. AI-generated PRD prose is especially good at making absent decisions look present.
+
+The Surface Gate runs *before* the first feature group is drafted for a new PRD, and *again* whenever a feature group surfaces a surface ambiguity that the current PRD has not resolved.
+
+### When to run the gate
+
+Run before drafting the first WHY/WHO/WHAT/WHEN of a feature group when **any** of:
+
+- `docs/prd/state.md` has no `DIRECTION` set, or it is the scaffold value
+- `docs/prd/PRD.md` has no validated feature group yet
+- The candidate group introduces a new buyer surface, merchant surface, market, or source-of-truth not already established in the PRD
+- Challenger has flagged a `FALSE CONVERGENCE RISK` against the current direction
+
+If none apply, skip the gate — the surface is already established.
+
+### Required surface fields
+
+Ask only the smallest set of product-shaping questions. One short answer per field, or `UNKNOWN — decision needed before implementation`. Never silently infer.
+
+| Field | Question | Why it matters |
+|---|---|---|
+| Primary market / language | Which market and language is v1 for? | Determines copy, legal, payment rails, support load |
+| Buyer entry point | Where does the buyer first encounter the product? | Distribution surface (Shopify page, embed, standalone, link, WhatsApp, …) |
+| Buyer-facing surface | Where does the buyer complete the action? | Same surface as entry, or a handoff? |
+| Merchant operating surface | Where does the merchant operate it? | Shopify admin, separate admin, calendar, email-only, manual |
+| Source of truth (after success) | Which system holds the canonical record after a successful action? | Booking record, Shopify order, calendar event, payment, customer record |
+| Confirmation channel | How does the buyer know it worked? | On-screen, email, SMS, WhatsApp, dashboard |
+| Payment model (if money) | Deposit, full prepayment, post-pay, free, merchant-configurable? | Determines refund logic, dispute surface, risk |
+| Hard v1 exclusions | What surfaces / markets / models are explicitly out of v1? | Caps scope drift |
+
+### Output: Surface Block
+
+Produce one block per gate run. Persisted as part of the active PRD (under "Product Surface" or per feature group, depending on scope).
+
+```md
+## Product Surface
+
+- Primary market / language: <answer | UNKNOWN — decision needed before implementation>
+- Buyer entry point: <…>
+- Buyer-facing surface: <…>
+- Merchant operating surface: <…>
+- Source of truth: <…>
+- Confirmation channel: <…>
+- Payment model: <… | n/a>
+- Hard v1 exclusions: <list>
+
+## Surface Blockers
+- <field>: <what decision is missing> — blocks: <implementation specs | this feature group | none>
+```
+
+### Hard rules
+
+- **The gate does not block discussion.** UNKNOWN is a valid, expected answer. Surface ambiguity must be made visible, not resolved by inference.
+- **The gate does block implementation readiness.** See section 6 (convergence checks) and section 8 (persistence).
+- **Confidence cap.** If `Buyer entry point`, `Buyer-facing surface`, `Merchant operating surface`, `Source of truth`, or `Primary market / language` is UNKNOWN, ICE Confidence for any feature group depending on that field is **capped at 4** (see section 5).
+- **No giant questionnaire.** Ask only fields that materially affect the next decision. Skip `Payment model` if money is not in scope. Group fields the user can answer in one breath.
+- **No silent inference.** If the user says "I don't know", write `UNKNOWN — decision needed before implementation`. Do not pick the most plausible answer "for now".
+
 ## 3. Convergence Loop
 
 **Active group limit: 3 maximum** — 1 primary (actively converging), up to 2 exploratory (partially understood, explicitly tagged as `exploratory`). Committed groups are frozen and not "active."
@@ -83,6 +143,8 @@ Avoid unlimited parallel discovery — three open fronts is already aggressive.
 A feature group = a coherent slice of user value with a single intent. Not a theme, not a single button, not a release.
 
 Ask: "What's the smallest user-visible capability we want to define right now?" If the user names something too large, split before proceeding.
+
+Then run the **Product Surface Gate** (section 3.0.5) if its activation conditions are met. Do not skip — false convergence almost always starts here. The gate may produce UNKNOWNs; that is fine. What is NOT fine is drafting WHY/WHO/WHAT/WHEN against silently-assumed surface.
 
 ### 3.2 Draft WHY / WHO / WHAT / WHEN
 
@@ -152,6 +214,11 @@ Standard and critical feature groups use this exact template:
 ## WHEN
 <Trigger/context: when in the user's workflow does this matter?>
 
+## Product Surface
+<Inherit from PRD-level Surface block, OR list overrides for this group.
+Required fields (see section 3.0.5). Use `inherits PRD` if no override.
+Any UNKNOWN field caps Confidence at 4 and blocks implementation specs.>
+
 ## Definition of Done
 - <Observable, user-visible condition 1>
 - <Observable, user-visible condition 2>
@@ -177,7 +244,7 @@ What would invalidate this: <required>
 - <Unresolved question blocking confidence>
 
 ## Status
-exploratory | validated | committed
+exploratory | validated-with-open-surface | validated | committed
 
 ## Validation Metadata
 Last validated: YYYY-MM-DD
@@ -190,13 +257,25 @@ Stale after: YYYY-MM-DD
 | WHO | yes | "All users" | Demand a role or segment |
 | WHAT | yes | Implementation language | Strip frameworks and services |
 | WHEN | yes | Vague ("anytime") | Anchor to a user moment |
+| Product Surface | yes | Silently inferred / missing | Run Surface Gate (3.0.5); UNKNOWN is allowed, silent inference is not |
 | DoD | yes | Engineering-shaped | Reject; rewrite as user-observable |
 | ICE | yes | Fake confidence | See section 5 |
 | Dependencies | optional | Hides scope creep | Each dep must be defined or external |
 | Out of Scope | yes | Empty | Block until ≥2 exclusions |
 | Open Questions | optional | Dumping ground | Flag if it blocks Confidence ≥ 7 |
-| Status | yes | Never updated | Update at every /prd update pass |
+| Status | yes | Never updated; `validated` claimed while surface UNKNOWN | Use `validated-with-open-surface` when surface fields are UNKNOWN; update at every /prd update pass |
 | Validation Metadata | required for validated/committed | Missing on critical groups | Add at first /prd update after initial draft |
+
+### Status semantics
+
+| Status | Means | May proceed to |
+|---|---|---|
+| `exploratory` | Shape under discussion; not user-validated | further discovery; not persistence as ready |
+| `validated-with-open-surface` | User value, WHAT, DoD agreed; one or more required surface fields are UNKNOWN | persistence (with explicit blockers listed); NOT implementation specs |
+| `validated` | All convergence checks pass AND all required surface fields resolved | persistence; implementation specs |
+| `committed` | `validated` + the team has decided to build it | implementation |
+
+A group cannot skip from `exploratory` to `committed`. A group cannot be `validated` while any required surface field is UNKNOWN — downgrade to `validated-with-open-surface` instead.
 
 ## 5. ICE Scoring
 
@@ -243,6 +322,7 @@ Higher Ease first (cheaper to validate), then higher Confidence.
 - Ease ≥ 8 requires challenge from Challenger.
 - "Why Confidence is not higher" and "What would invalidate this" are required in every ICE block. An ICE block without them is not scored.
 - Default Confidence for new ideas with no user evidence: 3 (not 5, not 7).
+- **Surface cap.** If any of `Buyer entry point`, `Buyer-facing surface`, `Merchant operating surface`, `Source of truth`, or `Primary market / language` is UNKNOWN for this group (per section 3.0.5), Confidence is capped at **4** regardless of evidence quality. The cap is lifted only when the surface field is resolved or the user explicitly waives the uncertainty in writing (recorded in Open Questions).
 
 ### Staleness defaults
 
@@ -264,8 +344,18 @@ A feature group is converged when ALL of:
 4. ICE tuple exists with per-axis justification
 5. No Open Question blocks Confidence ≥ 7
 6. User has explicitly validated the four checkpoints in 3.7
+7. Product Surface block exists; every required field (3.0.5) is either resolved or explicitly marked UNKNOWN with the cap and blocker recorded
 
-If any fails, loop back. Narrow scope — don't widen to fill weak sections.
+### Implementation-readiness gate
+
+Convergence ≠ implementation-ready. A group is **implementation-ready** only when, in addition to the 7 checks above:
+
+- No required surface field (Buyer entry point, Buyer-facing surface, Merchant operating surface, Source of truth, Primary market / language) is UNKNOWN.
+- Status is `validated` (not `validated-with-open-surface`).
+
+If any required surface field is UNKNOWN, the group may converge to `validated-with-open-surface` and be persisted with explicit blockers — but no implementation spec, ticket, or architecture work may start from it. The user may waive a specific blocker explicitly; record the waiver in Open Questions and keep Confidence capped at 4.
+
+If any check fails, loop back. Narrow scope — don't widen to fill weak sections.
 
 ### Drift signals
 
@@ -313,6 +403,17 @@ Update mode is persistence, not discovery. Only explicitly validated blocks may 
 - The delta proposal must contain only content the user has seen and approved verbatim or near-verbatim.
 
 Violation of this invariant is the single most dangerous failure mode of the system.
+
+### Invariant: no false implementation-readiness
+
+A persistence delta must never make a feature group *look* more ready than it is.
+
+- If any required surface field (3.0.5) is UNKNOWN for the group, Status MUST be `validated-with-open-surface`, not `validated`. Refuse to write `validated` in this case, even if the user asks for it — surface the blocker first.
+- Confidence in the persisted ICE tuple MUST respect the surface cap (≤ 4 when applicable).
+- The persisted block MUST include the `Surface Blockers` list verbatim from discovery. Do not collapse, summarize, or "tidy" blockers away.
+- A delta that promotes Status to `validated` or `committed` MUST verify in writing that all required surface fields are resolved. If not, the delta is rejected at the persistence step — not silently relaxed.
+
+Violation of this invariant produces clean-looking PRD prose that hides missing product decisions. That is the failure mode the Surface Gate exists to prevent.
 
 ### Discovery language vs persistence language
 
@@ -393,6 +494,10 @@ The skill is the construction and persistence surface. The agents provide viewpo
 | "We'll figure it out later" | Wrong | Becomes Open Question + lowers Confidence |
 | Adding a group before current one converges | Wrong | Breaks convergence loop |
 | Sprint plans, Jira tickets | Wrong | Not PRD output |
+| Drafting WHY/WHO/WHAT/WHEN before running the Surface Gate | Wrong | False convergence; surface gets silently inferred |
+| Marking Status `validated` while a required surface field is UNKNOWN | Forbidden | Use `validated-with-open-surface`. Misrepresenting readiness corrupts every downstream decision. |
+| Lifting the Confidence cap because the group "feels right" | Wrong | The cap is mechanical — only resolution or explicit waiver lifts it |
+| Proposing implementation specs from a `validated-with-open-surface` group | Forbidden | Block until surface resolves or the user waives in writing |
 
 ## 11. Guardrails
 

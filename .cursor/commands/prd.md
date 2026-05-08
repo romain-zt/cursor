@@ -27,9 +27,15 @@ If no mode is given, ask the user which mode they want.
 
 The PRD Builder skill drives the convergence loop (one feature group at a time). Researcher tags evidence. Challenger attacks weak logic. No file writes — output is structured discussion.
 
+**Surface Gate first.** If `state.md` has no `DIRECTION`, or `PRD.md` has no validated feature group yet, the skill MUST run the Product Surface Gate (`prd-builder/SKILL.md` §3.0.5) before drafting WHY/WHO/WHAT/WHEN. The gate is short and conversational — primary market/language, buyer entry point, buyer-facing surface, merchant operating surface, source of truth, confirmation channel, payment model (if money), hard v1 exclusions. UNKNOWN is a valid answer. Silent inference is not.
+
+The gate also re-runs whenever a candidate feature group introduces a buyer surface, merchant surface, market, or source-of-truth not already established in the PRD.
+
 ## Mode: challenge
 
 Challenger leads. Reads active PRD and recent discussion. Produces: assumption → risk → test or kill criterion. Flags drift against state.md. Researcher labels evidence quality. No file writes.
+
+**False-convergence checks are mandatory** (see `prd-challenger.md`). For each non-`exploratory` group, Challenger verifies that buyer entry point, buyer-facing surface, merchant operating surface, source of truth, market/language, and confirmation channel are explicitly resolved or marked UNKNOWN with the Confidence cap applied. Any hidden surface assumption — including implementation language smuggled into product wording — is reported as `FALSE CONVERGENCE RISK`.
 
 ## Mode: prioritize
 
@@ -49,8 +55,12 @@ Output: ranked table with KEEP / DEFER / CUT / TEST-FIRST decisions + explicit c
 
 1. PRD Builder skill produces a delta proposal: target file, section, before/after, rationale, version-bump decision.
 2. Challenger verifies every addition has a paired cut, deferral, or kill criterion.
-3. Wait for human approval.
-4. On approval, apply the smallest edit. If version bump: add a row to `docs/prd/history.md`, copy current PRD.md to `docs/prd/archive/PRD-v<N>.md`, then update PRD.md + state.md.
+3. **Surface readiness check** — for any group whose Status is being written or promoted:
+   - If any required surface field (buyer entry point, buyer-facing surface, merchant operating surface, source of truth, market/language) is UNKNOWN, Status MUST be `validated-with-open-surface` (not `validated`, not `committed`) and the `Surface Blockers` list MUST be persisted verbatim.
+   - Confidence in the persisted ICE tuple MUST respect the surface cap (≤ 4 when applicable).
+   - A promotion to `validated` or `committed` requires written confirmation that all required surface fields are resolved.
+4. Wait for human approval.
+5. On approval, apply the smallest edit. If version bump: add a row to `docs/prd/history.md`, copy current PRD.md to `docs/prd/archive/PRD-v<N>.md`, then update PRD.md + state.md.
 
 ## Hard rules
 
@@ -59,3 +69,5 @@ Output: ranked table with KEEP / DEFER / CUT / TEST-FIRST decisions + explicit c
 - No file writes outside `update` mode.
 - No version bumps without the triggers in `10-prd-discovery.mdc`.
 - Drift between conversation and state.md is surfaced, not silently absorbed.
+- No persistence of `validated` / `committed` while required surface fields are UNKNOWN. Use `validated-with-open-surface` and persist the blockers.
+- No implementation specs, tickets, or architecture work derived from a `validated-with-open-surface` group unless the user has explicitly waived the specific blocker in writing.
