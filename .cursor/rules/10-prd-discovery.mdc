@@ -94,9 +94,20 @@ And a section:
 
 Explain what changed, why, which assumptions broke, and how strategic direction evolved.
 
-## Product Discovery Agent (conceptual role)
+## PRD Committee (operational layer)
 
-Named hat for clarity in prompts: **Product Discovery Agent** — owns intent, assumptions, scope narrative, pivot detection, and PRD coherence — distinct from architecture or coding agents.
+Discovery is operated by a small committee of specialized agent personas in [`.cursor/agents/`](mdc:.cursor/agents/):
+
+- **Product Lead** — clarity and synthesis
+- **Challenger** — attacks weak assumptions and scope
+- **Researcher** — market, users, competition, evidence
+- **Prioritizer** — Impact / Confidence / Effort scoring
+- **PRD Editor** — writes structured deltas (only mode allowed to touch `docs/prd/`)
+- **Scope Guardian** — prevents inflation and drift
+
+Invoke via the [`/prd`](mdc:.cursor/commands/prd.md) orchestrator with a mode: `discover`, `challenge`, `review`, `prioritize`, `update`, `summarize`.
+
+The committee follows the discussion → extraction → proposal → validation → write flow above. Only `/prd update` writes files.
 
 ## Relation to specs and services
 
