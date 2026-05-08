@@ -48,7 +48,7 @@ Existing files under `docs/` may be read as project context, but not copied as r
 1. Before reading `docs/prd/PRD.md` or `docs/prd/state.md`, if either file is missing or empty, suggest `/prd init` instead of assuming the PRD exists.
 2. Read `docs/prd/PRD.md` — the active PRD.
 3. Read `docs/prd/state.md` — version, direction, last major change.
-4. **Apply SISO only in `update`, `challenge`, and `prioritize` modes.** In `discover`, `note`, `questions`, and `converge`, all user input is treated as raw discovery material regardless of ambiguity level. Never return SISO ORANGE or RED for a product insight given during discovery.
+4. **SISO classification for `/prd update`:** `/prd update` is a structured persistence workflow — not implementation, specs, tickets, or architecture. SISO must not block it as execution. It still requires explicit persistence approval through a Patch Intent Summary or full PRD Delta Proposal (see Mode: update below). In `discover`, `note`, `questions`, and `converge`, all user input is treated as raw discovery material. Never return SISO ORANGE or RED for a product insight given during discovery.
 
 ## Mode: init
 
@@ -184,20 +184,83 @@ Output: ranked table with KEEP / DEFER / CUT / TEST-FIRST decisions + explicit c
 
 `/prd update` is the only mode allowed to write `docs/prd/PRD.md`, `docs/prd/state.md`, `docs/prd/history.md`, or `docs/prd/archive/`. All other modes must not write to those files. Discovery modes (`discover`, `note`, `questions`) may write to `docs/prd/notes/` and `docs/prd/questions/` — those are capture artifacts (see Discovery artifacts below).
 
-### Update approval rule
+`/prd update` is a structured persistence workflow. It is not implementation, specs, tickets, or architecture — SISO must not block it. It still requires explicit persistence approval through a Patch Intent Summary or full PRD Delta Proposal.
 
-`/prd update` **may write files only if the immediately preceding assistant turn contained a complete PRD Delta Proposal.**
+### Default: Patch Intent Summary
 
-A complete PRD Delta Proposal must include:
-- target file(s)
-- exact section(s)
-- before content (or "n/a — new section")
-- after content
-- rationale
-- version bump decision
-- explicit list of files that will **not** be touched
+For low-risk patches where **all** of the following are true, produce a **Patch Intent Summary** instead of a full PRD Delta Proposal:
 
-If no complete PRD Delta Proposal exists in the immediately preceding turn, respond:
+- Content to persist is already present in prior discovery notes, answered questions, or the immediately preceding convergence proposal.
+- The update is a PRD/status/state patch, not a version bump.
+- No group is being promoted to `committed`.
+- No implementation specs, tickets, architecture, or code will be created.
+- `history.md` and `archive/` will not be touched.
+- The patch can be applied mechanically from existing project context.
+
+**Patch Intent Summary format:**
+
+```txt
+Patch Intent Summary
+
+Files to change:
+- docs/prd/PRD.md — <short description>
+- docs/prd/state.md — <short description>
+
+Files not touched:
+- docs/prd/history.md
+- docs/prd/archive/
+- docs/prd/notes/
+- docs/prd/questions/
+- docs/product-decisions/
+
+Patch type:
+- patch | version bump
+
+Content source:
+- <notes file / answered questions / convergence proposal / user-approved checkpoint>
+
+Safety:
+- no status promoted to committed
+- no implementation specs/tickets/architecture
+- no history/archive update
+- unresolved blockers remain listed
+
+Approval required:
+Reply `approved` to apply.
+Reply `preview` to see the full before/after diff first.
+```
+
+**Hard rule:** Do not print full PRD sections in chat during Patch Intent Summary mode.
+
+### When to use full PRD Delta Proposal
+
+Use a full PRD Delta Proposal with exact Before/After only when:
+
+- User explicitly replies `preview`
+- Version bump
+- `history.md` or `archive/` will be touched
+- Deleting existing content
+- Replacing an already active non-scaffold PRD section
+- Promoting status to `validated`, `committed`, or implementation-ready
+- Changing ICE by more than ±1
+- Changing source of truth, buyer surface, merchant surface, payment model, or market/language after they were already persisted
+- User explicitly asks to review exact wording before write
+
+Otherwise, prefer Patch Intent Summary.
+
+### Approval behavior
+
+If the previous assistant turn contained a **Patch Intent Summary**:
+- `approved` — apply the patch described in the summary
+- `preview` — show the full PRD Delta Proposal with exact Before/After
+- `cancel` — stop the update
+
+If the previous assistant turn contained a **full PRD Delta Proposal**:
+- `approved` — apply the exact delta
+
+Never accept `ok` alone as persistence approval.
+
+If no Patch Intent Summary or PRD Delta Proposal exists in the immediately preceding turn, respond:
 
 ```txt
 No approved PRD delta exists yet.
@@ -205,28 +268,44 @@ No approved PRD delta exists yet.
 Run /prd converge first to create a delta proposal, then approve it explicitly.
 ```
 
-**The word "ok" alone does not authorize a full PRD write** unless the immediately preceding assistant message contained the full PRD Delta Proposal.
+### Output after writing
 
-Before writing, `/prd update` must restate:
-- files to be changed
-- files not to be touched
-- whether `history.md` / `archive/` will be touched
-- whether this is a patch or a version bump
+After `approved`, write files immediately. Do not reprint the full written content.
 
-Then wait for explicit approval: **approved**
+**Final response format:**
+
+```txt
+Updated:
+- <file> — <short change>
+- <file> — <short change>
+
+Not touched:
+- <file/group>
+- <file/group>
+
+Remaining open questions:
+- <Q-ID if any> — <question>
+or
+- None
+
+Next recommended command:
+- /prd questions | /prd challenge | /prd converge | /prd prioritize
+```
+
+**Hard rule:** Do not echo full PRD content after writing. The file is the source of truth.
 
 ### Procedure
 
-1. PRD Builder skill produces a delta proposal: target file, section, before/after, rationale, version-bump decision.
-2. Challenger verifies every addition has a paired cut, deferral, or kill criterion.
-3. **Surface readiness check** — for any group whose Status is being written or promoted:
+1. PRD Builder skill assesses whether Patch Intent Summary or full PRD Delta Proposal is required (see rules above).
+2. Produce the appropriate format and wait for approval.
+3. Challenger verifies every addition has a paired cut, deferral, or kill criterion.
+4. **Surface readiness check** — for any group whose Status is being written or promoted:
    - If any required surface field (buyer entry point, buyer-facing surface, merchant operating surface, source of truth, market/language) is UNKNOWN, Status MUST be `validated-with-open-surface` (not `validated`, not `committed`) and the `Surface Blockers` list MUST be persisted verbatim.
    - Confidence in the persisted ICE tuple MUST respect the surface cap (≤ 4 when applicable).
    - A promotion to `validated` or `committed` requires written confirmation that all required surface fields are resolved.
-4. Wait for explicit human approval (see approval rule above).
-5. On approval, apply the smallest edit. If version bump: add a row to `docs/prd/history.md`, copy current PRD.md to `docs/prd/archive/PRD-v<N>.md`, then update PRD.md + state.md.
+5. On `approved`, apply the smallest edit. Output only the compact final response format — do not echo file content. If version bump: add a row to `docs/prd/history.md`, copy current PRD.md to `docs/prd/archive/PRD-v<N>.md`, then update PRD.md + state.md.
 
-**A PRD patch is not a version bump.** Do not write `docs/prd/history.md` or `docs/prd/archive/` for a patch unless the user explicitly approved those files in the PRD Delta Proposal.
+**A PRD patch is not a version bump.** Do not write `docs/prd/history.md` or `docs/prd/archive/` for a patch unless the user explicitly approved those files.
 
 ## Discovery artifacts
 

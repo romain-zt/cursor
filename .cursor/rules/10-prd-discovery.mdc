@@ -126,3 +126,21 @@ Discovery artifacts are **not** PRD persistence.
 - Scaffold is **never** archived automatically.
 
 **Status precision.** Do not say "all groups validated" if any group status is `exploratory`, `validated-with-open-surface`, `unvalidated`, or `candidate`. Use exact status language at all times.
+
+## Real-time capture vs persisted PRD
+
+The workflow has two write speeds:
+
+**1. Real-time capture** (low risk — always allowed during discovery):
+- `docs/prd/notes/` — written immediately during `/prd discover`, `/prd note`, and `/prd questions`
+- `docs/prd/questions/open-questions.md` — updated immediately during discovery
+
+**2. Persisted PRD** (gated — only through `/prd update` after approval):
+- `docs/prd/PRD.md`
+- `docs/prd/state.md`
+- `docs/prd/history.md`
+- `docs/prd/archive/`
+
+For persisted PRD writes, prefer **Patch Intent Summary** for low-risk patches. Use full Before/After only for risky changes or when the user explicitly replies `preview`.
+
+**The assistant must avoid duplicating large PRD content in chat.** Chat carries intent, risks, and approval state. Files carry the full document content.

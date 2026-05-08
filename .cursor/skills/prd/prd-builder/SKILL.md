@@ -540,6 +540,30 @@ These always require approval:
 
 **Hard rule:** Do not write `docs/prd/history.md` or `docs/prd/archive/` for a patch unless the approved delta proposal explicitly names those files. Do not archive scaffold automatically. Do not update `history.md` for a patch unless explicitly approved.
 
+## 8.x Low-token persistence mode
+
+Default persistence mode is **Patch Intent Summary**, not full Before/After.
+
+Use Patch Intent Summary for low-risk patches where:
+
+- Content source is prior discovery notes, answered questions, or the immediately preceding convergence proposal.
+- No version bump.
+- `history.md` and `archive/` will not be touched.
+- No content is being deleted.
+- No group is being promoted to `validated`, `committed`, or implementation-ready.
+- No risky surface change (source of truth, buyer/merchant surface, payment model, market/language) after those fields were already persisted.
+
+Patch Intent Summary must be specific enough for human approval but must not duplicate the full PRD content in chat.
+
+After the user replies:
+- `approved` → apply the summarized patch directly, output only the compact final response
+- `preview` → show the full PRD Delta Proposal with exact Before/After
+- `cancel` → stop
+
+After applying, **never echo full file content**. Report: changed files, not-touched files, remaining open questions, next recommended command.
+
+Full Before/After PRD Delta Proposals are still required for risky changes (see command spec).
+
 ## 9. Collaboration
 
 | Need | Delegate to | When |
@@ -572,6 +596,9 @@ The skill is the construction and persistence surface. The agents provide viewpo
 | Saying "all groups validated" when any group is `exploratory`, `validated-with-open-surface`, `unvalidated`, or `candidate` | Forbidden | Use precise status language: "candidate", "drafted", "checkpoint approved", "validated-with-open-surface", "validated", "committed" |
 | Inferring "ok" as approval of the whole PRD, all groups, or file persistence | Forbidden | "ok" validates the current checkpoint only |
 | Generating a build sequence before 3+ groups are validated in separate prior turns | Forbidden | Premature sequencing hides unresolved surface decisions |
+| Printing full PRD content in chat before writing a low-risk patch | Wrong | Use Patch Intent Summary; full content belongs in files |
+| Echoing full PRD content after writing | Forbidden | Report changed files only; the file is the source of truth |
+| Showing full Before/After for scaffold-to-first-content patches when content source is already in notes or convergence | Wrong | Use Patch Intent Summary unless user explicitly replies `preview` |
 
 ## 11. Guardrails
 
