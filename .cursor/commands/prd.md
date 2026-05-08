@@ -10,6 +10,7 @@
 
 | Mode | Lead | Purpose |
 |------|------|---------|
+| `init` | PRD Bootstrap | Initialize missing docs workspace from `.cursor/templates/prd/` |
 | `discover` | PRD Builder skill | Open product discovery, free-form capture |
 | `questions` | PRD Question Loop | Ask the next unresolved discovery question |
 | `note` | PRD Question Loop | Capture one insight as a discovery note, update question queue |
@@ -44,9 +45,21 @@ Existing files under `docs/` may be read as project context, but not copied as r
 
 ## Pre-flight
 
-1. Read `docs/prd/PRD.md` — the active PRD.
-2. Read `docs/prd/state.md` — version, direction, last major change.
-3. **Apply SISO only in `update`, `challenge`, and `prioritize` modes.** In `discover`, `note`, `questions`, and `converge`, all user input is treated as raw discovery material regardless of ambiguity level. Never return SISO ORANGE or RED for a product insight given during discovery.
+1. Before reading `docs/prd/PRD.md` or `docs/prd/state.md`, if either file is missing or empty, suggest `/prd init` instead of assuming the PRD exists.
+2. Read `docs/prd/PRD.md` — the active PRD.
+3. Read `docs/prd/state.md` — version, direction, last major change.
+4. **Apply SISO only in `update`, `challenge`, and `prioritize` modes.** In `discover`, `note`, `questions`, and `converge`, all user input is treated as raw discovery material regardless of ambiguity level. Never return SISO ORANGE or RED for a product insight given during discovery.
+
+## Mode: init
+
+Initialize or repair the `docs/` PRD workspace from `.cursor/templates/prd/`.
+
+- Create missing directories and missing/empty files.
+- Never overwrite non-empty project docs.
+- Use only `.cursor/templates/prd/` as the canonical source.
+- Do not run discovery or convergence.
+
+See `.cursor/commands/prd-init.md` for the full spec.
 
 ## Mode: discover
 

@@ -32,7 +32,23 @@ Do not activate for technical architecture, implementation, sprint planning, or 
 
 Before starting, read `docs/prd/PRD.md` and `docs/prd/state.md` (when present). If missing, offer to initialize from `.cursor/templates/prd/` via `/prd update`.
 
-**Templates:** Canonical reusable document templates live under `.cursor/templates/prd/`. Project docs under `docs/prd/` and `docs/product-decisions/` are generated or edited project instances. Do not treat project docs as workflow templates. When initializing a missing PRD doc, question queue, note, history file, state file, or product decision, copy/adapt from `.cursor/templates/prd/` first.
+## Canonical Templates
+
+Canonical reusable document templates live under `.cursor/templates/prd/`.
+
+Project files under `docs/prd/` and `docs/product-decisions/` are generated or edited project instances, not template sources.
+
+Do not use `docs/prd/notes/README.md`, `docs/prd/questions/open-questions.md`, `docs/prd/PRD.md`, `docs/prd/state.md`, `docs/prd/history.md`, or `docs/product-decisions/*.md` as canonical templates.
+
+When creating or reinitializing a discovery note, use `.cursor/templates/prd/discovery-note.template.md`.
+
+When creating or reinitializing the open question queue, use `.cursor/templates/prd/open-questions.template.md`.
+
+When creating or reinitializing PRD/state/history/product-decision files, use the matching file under `.cursor/templates/prd/`.
+
+Existing files under `docs/` may be read as project context, but not copied as reusable templates.
+
+`docs/prd/notes/README.md` is allowed to explain the local notes folder for humans, but it is not the source of truth for the note entry format. If it conflicts with `.cursor/templates/prd/discovery-note.template.md`, the `.cursor/templates/` version wins.
 
 ## 2.5 Discovery Note Mode
 

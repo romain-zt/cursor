@@ -63,6 +63,28 @@ Before proposing changes, read persisted state:
 
 If missing or stale, offer to initialize from `.cursor/templates/prd/` — do not assume an unwritten PRD.
 
+## Bootstrap from templates
+
+`.cursor/**` must be sufficient to regenerate the PRD docs workspace.
+
+If `docs/**` is missing, incomplete, or empty:
+- do not infer project state
+- do not use stale memory
+- run or suggest `/prd init`
+- initialize from `.cursor/templates/prd/`
+- never copy from existing `docs/**` as template source
+
+Required bootstrap targets:
+- `docs/prd/PRD.md`
+- `docs/prd/state.md`
+- `docs/prd/history.md`
+- `docs/prd/archive/.gitkeep`
+- `docs/prd/notes/`
+- `docs/prd/questions/open-questions.md`
+- `docs/product-decisions/README.md`
+
+Non-empty project docs must not be overwritten.
+
 ## Version Bumps
 
 Create a new version only when:

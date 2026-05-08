@@ -45,6 +45,19 @@ Use:
 
 Create them if missing during `/prd discover`, `/prd note`, or `/prd questions` — initialize from `.cursor/templates/prd/discovery-note.template.md` and `.cursor/templates/prd/open-questions.template.md` respectively.
 
+## Bootstrap fallbacks
+
+If `docs/prd/questions/open-questions.md` is missing or empty during `/prd questions`, initialize it from `.cursor/templates/prd/open-questions.template.md`.
+
+If `docs/prd/notes/` is missing during `/prd note` or `/prd discover`, create the directory. Create the first note from `.cursor/templates/prd/discovery-note.template.md` only when there is actual user input to capture.
+
+Do not touch:
+- existing non-empty docs
+- specs
+- tickets
+- code
+- architecture
+
 ## Discovery note format
 
 Append every meaningful user insight as meeting-style notes:
