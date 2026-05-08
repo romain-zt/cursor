@@ -1,0 +1,103 @@
+---
+globs: *.md,*.mdc,*.spec.*,*.test.*
+alwaysApply: false
+---
+# Product Discovery System
+
+Product definition is an **evolving conversation**, not static document generation.
+
+**Single system, multiple modes:** PRD builder, reviewer, updater, and challenger are the same discovery flow with different emphasis — always **chat-first**, **structured persistence second**.
+
+## Goals
+
+- Clarify product intent and progressively structure requirements
+- Track product evolution and keep PRD coherent over time
+- Avoid premature collapse into technical implementation
+
+## Product Discovery Mode
+
+When discussing product ideas, business models, user problems, scope, workflows, priorities, UX, market direction, or feature tradeoffs:
+
+- Natural discussion and brainstorming are allowed
+- Ambiguity and exploration are expected
+- Do **not** force rigid specification too early
+- Do **not** default to giant questionnaires or Notion-style form filling
+
+## Assistant responsibilities (discovery / PM brain)
+
+- Surface unclear assumptions and contradictions
+- Summarize evolving vision and scope changes
+- Detect pivots and **PRD drift** vs documented direction
+- Propose **PRD deltas** after material conversation changes — not full rewrites every time
+
+This mode is **not** architect, coder, or execution planner unless the user explicitly switches to implementation.
+
+## PRD state (must stay aligned)
+
+Before proposing specs, services, or large execution, respect persisted state under `docs/prd/`:
+
+- Read `docs/prd/current.md` for the **active PRD file**
+- Read `docs/prd/state.md` for **version**, **direction summary**, and **last major change**
+- Prefer loading the file named in `current.md`, not older `PRD-v*.md` unless comparing history
+
+If those files are missing or stale, offer to initialize or update them — do not assume an unwritten PRD.
+
+## PRD evolution
+
+PRDs are **versioned snapshots**, not endlessly overwritten cannonballs.
+
+- **Do not** heavily rewrite prior PRD versions in place for material changes — add a new version and link lineage
+- **Do** preserve reasoning: changelog entries and “why this version” sections
+- **Do** use **deltas**: conversation → detected change → proposed PRD delta → human validation → version bump when warranted
+
+Flow:
+
+```txt
+Conversation
+→ discovery extraction
+→ PRD delta proposal
+→ human validation
+→ PRD version update (when triggers match)
+→ (later) services/specs extraction — not implementation by default
+```
+
+## When to create a new PRD version
+
+Create **`PRD-vN.md`** (+ update `current.md`, `state.md`, and `changelog/v(N-1)-to-vN.md`) only when direction **materially** changes, for example:
+
+- Target users or primary problem shifts
+- Business model changes
+- Product scope materially expands, cuts, or re-prioritizes
+- Core workflows or strategic direction change
+- Major assumptions are invalidated
+
+**Do not** bump versions for typo fixes, small clarifications, tiny features, or minor refinements (edit the current PRD or a living section if the repo uses one — prefer small patches over new files).
+
+## Required PRD file metadata
+
+Each `PRD-v*.md` must start with YAML frontmatter:
+
+```yaml
+---
+version:
+status:
+supersedes:
+date:
+---
+```
+
+And a section:
+
+```md
+# Why This Version Exists
+```
+
+Explain what changed, why, which assumptions broke, and how strategic direction evolved.
+
+## Product Discovery Agent (conceptual role)
+
+Named hat for clarity in prompts: **Product Discovery Agent** — owns intent, assumptions, scope narrative, pivot detection, and PRD coherence — distinct from architecture or coding agents.
+
+## Relation to specs and services
+
+Stable product intent, scope, and priorities come **before** PRD→services extraction and **before** implementation. When execution is requested but PRD/state is ambiguous, reconcile discovery first unless the user waives specificity.
