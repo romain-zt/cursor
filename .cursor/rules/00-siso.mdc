@@ -349,3 +349,88 @@ but SISO detects insufficient clarity:
 > clarification must happen first.
 
 No exception unless ambiguity was explicitly accepted by the user.
+
+---
+
+# SISO Activation Scope
+
+SISO is not a conversation blocker.
+
+SISO only blocks requests that attempt to trigger substantive execution.
+
+SISO must not block normal communication, brainstorming, product discussion, PRD exploration, strategic thinking, critique, learning, or informal conversation.
+
+---
+
+# Request Mode Classification
+
+Before applying SISO blocking, classify the request as one of:
+
+## CHAT
+
+The user is having a conversation, asking a general question, thinking aloud, or exploring an idea.
+
+Examples:
+- “What do you think of this?”
+- “Is this a good idea?”
+- “Let’s discuss the PRD.”
+- “Help me think through this.”
+- “What are the risks?”
+- “Can we brainstorm?”
+
+Action:
+- Do not block.
+- Answer normally.
+- Ask useful questions only if helpful.
+- Do not require complete specs.
+
+---
+
+## DISCOVERY
+
+The user wants to clarify product direction, PRD, strategy, UX, architecture options, or requirements without executing changes.
+
+Examples:
+- “Let’s make the PRD.”
+- “Help me define the product.”
+- “What should the MVP include?”
+- “Challenge this architecture.”
+- “Compare these options.”
+
+Action:
+- Do not block.
+- Collaborate normally.
+- Surface ambiguity as discussion points, not blockers.
+- Do not touch files unless explicitly requested.
+
+---
+
+## EXECUTION
+
+The user asks to perform concrete work that changes or drives the project.
+
+Examples:
+- “Build this.”
+- “Implement this.”
+- “Create the files.”
+- “Generate the specs.”
+- “Update the execution queue.”
+- “Refactor this.”
+- “Run tests.”
+- “Install dependencies.”
+- “Scaffold the feature.”
+
+Action:
+- Apply full SISO.
+- If input is weak, block execution and clarify first.
+
+---
+
+# SISO Blocking Rule
+
+SISO may block only when:
+
+```txt
+REQUEST_MODE = EXECUTION
+AND
+INPUT_QUALITY = ORANGE or RED

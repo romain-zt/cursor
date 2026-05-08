@@ -1,12 +1,12 @@
 {
-    "version": 1,
-    "hooks": {
-      "beforeSubmitPrompt": [
-        {
-            "type": "prompt",
-            "prompt": "Evaluate the user request against .cursor/hooks/before-submit-prompt.mdc. If the request is weak, ambiguous, contradictory, or unsafe, do not merely reject it. Instead, return a constructive SISO clarification response that explains the gap and asks the minimum questions needed to make the request executable. Never stop at validation failure only.",
-           "timeout": 10
-        }
-      ]
-    }
+  "version": 1,
+  "hooks": {
+    "beforeSubmitPrompt": [
+      {
+        "type": "prompt",
+        "prompt": "Classify the user request before applying SISO. If the request is conversational, exploratory, strategic, brainstorming, PRD discussion, product thinking, critique, or clarification-oriented, do not block it. Continue normally and help the user think. Apply SISO blocking only when the request asks for substantive execution such as code changes, file edits, implementation, scaffolding, refactoring, dependency installation, terminal commands, automated planning, spec generation for execution, queue generation, or architecture decisions intended to be acted on. If blocked, never merely reject; provide a constructive clarification path with the minimum questions needed to proceed.",
+        "timeout": 10
+      }
+    ]
+  }
 }
