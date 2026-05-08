@@ -4,8 +4,8 @@
 
 Before applying any SISO check, classify the user request:
 
-- If the request is PRD discovery, product thinking, a raw founder insight, an answer to an open question, or informal product clarification → **do not block**. Route to the PRD Question Loop: capture raw input, update `docs/prd/notes/` and `docs/prd/questions/open-questions.md`, then ask exactly one next question. Writes to these files are always allowed.
-- If the request is `/prd update`, implementation specs, tickets, architecture for execution, code edits, dependency changes, terminal commands, or non-note/non-question file mutations → apply full SISO.
+- If the request is PRD discovery, product thinking, a raw founder insight, an answer to an open question, informal product clarification, `/prd discover`, `/prd note`, `/prd questions`, or `/prd converge` → **do not block**. `/prd converge` is a read-only synthesis mode — it produces a proposal in chat only and writes no files. Route to the PRD Question Loop for capture modes. Writes to `docs/prd/notes/` and `docs/prd/questions/open-questions.md` are always allowed.
+- If the request is `/prd update`, implementation specs, tickets, architecture for execution, code edits, dependency changes, terminal commands, or mutations to `PRD.md`, `state.md`, `history.md`, or `archive/` → apply full SISO.
 
 ---
 

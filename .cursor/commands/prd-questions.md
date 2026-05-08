@@ -11,6 +11,24 @@ This command is intentionally human-first:
 - no implementation
 - no architecture
 
+## Templates
+
+Canonical reusable document templates live under `.cursor/templates/prd/`.
+
+Project files under `docs/prd/` and `docs/product-decisions/` are generated or edited project instances, not template sources.
+
+Do not use `docs/prd/notes/README.md`, `docs/prd/questions/open-questions.md`, `docs/prd/PRD.md`, `docs/prd/state.md`, `docs/prd/history.md`, or `docs/product-decisions/*.md` as canonical templates.
+
+When creating or reinitializing a discovery note, use `.cursor/templates/prd/discovery-note.template.md`.
+
+When creating or reinitializing the open question queue, use `.cursor/templates/prd/open-questions.template.md`.
+
+When creating or reinitializing PRD/state/history/product-decision files, use the matching file under `.cursor/templates/prd/`.
+
+Existing files under `docs/` may be read as project context, but not copied as reusable templates.
+
+`docs/prd/notes/README.md` is allowed to explain the local notes folder for humans, but it is not the source of truth for the note entry format. If it conflicts with `.cursor/templates/prd/discovery-note.template.md`, the `.cursor/templates/` version wins.
+
 ## Pre-flight
 
 1. Read `docs/prd/PRD.md`
@@ -18,7 +36,7 @@ This command is intentionally human-first:
 3. Read `docs/prd/questions/open-questions.md`
 4. Read the latest relevant note in `docs/prd/notes/`
 
-If `open-questions.md` is missing, create it (empty scaffold) — it is a capture artifact, not a PRD write.
+If `open-questions.md` is missing, create it from `.cursor/templates/prd/open-questions.template.md` — it is a capture artifact, not a PRD write.
 
 ## Behavior
 

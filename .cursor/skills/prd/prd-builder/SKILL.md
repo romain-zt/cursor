@@ -30,7 +30,9 @@ Activate when:
 
 Do not activate for technical architecture, implementation, sprint planning, or roadmaps.
 
-Before starting, read `docs/prd/PRD.md` and `docs/prd/state.md` (when present). If missing, offer to initialize via `/prd update`.
+Before starting, read `docs/prd/PRD.md` and `docs/prd/state.md` (when present). If missing, offer to initialize from `.cursor/templates/prd/` via `/prd update`.
+
+**Templates:** Canonical reusable document templates live under `.cursor/templates/prd/`. Project docs under `docs/prd/` and `docs/product-decisions/` are generated or edited project instances. Do not treat project docs as workflow templates. When initializing a missing PRD doc, question queue, note, history file, state file, or product decision, copy/adapt from `.cursor/templates/prd/` first.
 
 ## 2.5 Discovery Note Mode
 
@@ -38,7 +40,7 @@ During open discovery (`/prd discover`, `/prd note`, or informal PRD conversatio
 
 When the user gives an insight, business rule, correction, or clarification:
 
-1. Append it to `docs/prd/notes/YYYY-MM-DD-<topic>-discovery-note.md` (see format in that folder).
+1. Append it to `docs/prd/notes/YYYY-MM-DD-<topic>-discovery-note.md` (format: see `.cursor/templates/prd/discovery-note.template.md`).
 2. Interpret the likely product meaning — 1–3 lines.
 3. Identify the PRD implication — 1–3 lines.
 4. Ask **at most one** follow-up question. Stop.
@@ -46,6 +48,32 @@ When the user gives an insight, business rule, correction, or clarification:
 **One-question rule.** Never ask more than one question at a time during discovery. Ask the single highest-leverage question and wait for the answer before asking anything else.
 
 **Convergence is explicit.** The convergence loop (§3) activates only when the user invokes `/prd converge`, `/prd prioritize`, `/prd update`, or explicitly says "let's converge", "structure this", or "write it up". Open discovery does not auto-escalate.
+
+## 2.6 Convergence Safety
+
+Convergence is synthesis, not persistence.
+
+When `/prd converge` is invoked:
+
+1. Read discovery notes and answered questions.
+2. Produce a convergence proposal.
+3. Draft **at most one** primary feature group candidate.
+4. List other possible feature groups as **candidates only** (names, no full drafts).
+5. Ask **one** validation question.
+6. Stop.
+
+Do not:
+- validate groups automatically
+- generate multiple full feature groups in one pass
+- produce a build sequence unless 3+ groups were validated in **prior separate turns**
+- write files
+- update `history.md` or `archive/`
+- archive scaffold
+- mark content as persisted
+- call content "validated" unless the user **explicitly** validated it in the immediately preceding turn
+- infer approval from "ok" outside the current checkpoint
+
+**Checkpoint scope.** If the user replies "ok", that validates only the current checkpoint — not the whole PRD, not all groups, and not file persistence. If the user wants to continue, continue one checkpoint or one group at a time.
 
 ## 3.0 Group type
 
@@ -471,6 +499,11 @@ These always require approval:
 **Section:** <section name>
 **Change type:** patch | new section | version bump
 
+**Files that will be changed:** <list>
+**Files that will NOT be touched:** <list>
+**history.md / archive/ touched:** yes | no
+**Patch or version bump:** patch | version bump
+
 ### Before
 <exact current text or "n/a — new section">
 
@@ -481,13 +514,15 @@ These always require approval:
 - <1–3 lines tying to validated decisions>
 ```
 
-3. Wait for human approval.
-4. On approval, apply the smallest possible edit.
-5. If version bump is triggered:
+3. Wait for human approval — the user must reply **approved**. "ok" alone is not sufficient.
+4. On approval, apply the **smallest possible edit** matching the approved proposal exactly.
+5. If version bump is triggered (and explicitly approved in the delta proposal):
    1. Add a row to `docs/prd/history.md` (version, date, why)
    2. Copy current `PRD.md` to `docs/prd/archive/PRD-v<N>.md`
    3. Update `PRD.md` with new content and increment frontmatter version
    4. Update `state.md`
+
+**Hard rule:** Do not write `docs/prd/history.md` or `docs/prd/archive/` for a patch unless the approved delta proposal explicitly names those files. Do not archive scaffold automatically. Do not update `history.md` for a patch unless explicitly approved.
 
 ## 9. Collaboration
 
@@ -517,6 +552,10 @@ The skill is the construction and persistence surface. The agents provide viewpo
 | Marking Status `validated` while a required surface field is UNKNOWN | Forbidden | Use `validated-with-open-surface`. Misrepresenting readiness corrupts every downstream decision. |
 | Lifting the Confidence cap because the group "feels right" | Wrong | The cap is mechanical — only resolution or explicit waiver lifts it |
 | Proposing implementation specs from a `validated-with-open-surface` group | Forbidden | Block until surface resolves or the user waives in writing |
+| Treating technical feasibility assumptions as product facts | Forbidden | Examples: "Stripe 0€ session works", "WhatsApp bot delivers all booking states", "Shopify order sync maps cleanly". Record as assumptions/risks unless verified. |
+| Saying "all groups validated" when any group is `exploratory`, `validated-with-open-surface`, `unvalidated`, or `candidate` | Forbidden | Use precise status language: "candidate", "drafted", "checkpoint approved", "validated-with-open-surface", "validated", "committed" |
+| Inferring "ok" as approval of the whole PRD, all groups, or file persistence | Forbidden | "ok" validates the current checkpoint only |
+| Generating a build sequence before 3+ groups are validated in separate prior turns | Forbidden | Premature sequencing hides unresolved surface decisions |
 
 ## 11. Guardrails
 

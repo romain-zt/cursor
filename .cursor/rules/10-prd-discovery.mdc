@@ -32,6 +32,28 @@ Before any feature group is treated as implementation-ready, its **product surfa
 
 The Challenger agent enforces these checks (`FALSE CONVERGENCE RISK` reports). `/prd update` refuses to persist `validated` / `committed` while required surface fields remain UNKNOWN.
 
+## Templates
+
+Canonical reusable document templates live under `.cursor/templates/prd/`. Project docs under `docs/prd/` and `docs/product-decisions/` are generated or edited project instances. Do not treat project docs as workflow templates. When initializing a missing PRD doc, question queue, note, history file, state file, or product decision, copy/adapt from `.cursor/templates/prd/` first.
+
+## Canonical Templates
+
+Canonical reusable document templates live under `.cursor/templates/prd/`.
+
+Project files under `docs/prd/` and `docs/product-decisions/` are generated or edited project instances, not template sources.
+
+Do not use `docs/prd/notes/README.md`, `docs/prd/questions/open-questions.md`, `docs/prd/PRD.md`, `docs/prd/state.md`, `docs/prd/history.md`, or `docs/product-decisions/*.md` as canonical templates.
+
+When creating or reinitializing a discovery note, use `.cursor/templates/prd/discovery-note.template.md`.
+
+When creating or reinitializing the open question queue, use `.cursor/templates/prd/open-questions.template.md`.
+
+When creating or reinitializing PRD/state/history/product-decision files, use the matching file under `.cursor/templates/prd/`.
+
+Existing files under `docs/` may be read as project context, but not copied as reusable templates.
+
+`docs/prd/notes/README.md` is allowed to explain the local notes folder for humans, but it is not the source of truth for the note entry format. If it conflicts with `.cursor/templates/prd/discovery-note.template.md`, the `.cursor/templates/` version wins.
+
 ## PRD State
 
 Before proposing changes, read persisted state:
@@ -39,7 +61,7 @@ Before proposing changes, read persisted state:
 - `docs/prd/PRD.md` — the active PRD (always current)
 - `docs/prd/state.md` — version, direction summary, last major change
 
-If missing or stale, offer to initialize — do not assume an unwritten PRD.
+If missing or stale, offer to initialize from `.cursor/templates/prd/` — do not assume an unwritten PRD.
 
 ## Version Bumps
 
@@ -60,3 +82,25 @@ When bumping, follow this sequence:
 4. Update `state.md`
 
 Old versions stay readable in `archive/`.
+
+## Convergence vs Persistence
+
+Discovery artifacts are **not** PRD persistence.
+
+| Artifact | Location | Allowed in |
+|---|---|---|
+| Raw captured input | `docs/prd/notes/` | `discover`, `note`, `questions` |
+| Question queue | `docs/prd/questions/` | `discover`, `note`, `questions` |
+| Synthesis proposal | chat only | `converge` |
+| PRD persistence | `docs/prd/PRD.md`, `state.md`, `history.md`, `archive/` | `update` only, after approved delta |
+
+`/prd converge` must never write `PRD.md`, `state.md`, `history.md`, or `archive/`.
+
+`/prd update` must never discover new content. If new content appears during an update turn, stop and return to `/prd note` or `/prd converge`.
+
+**Patch behavior:**
+- `PRD.md` and `state.md` patches are allowed only after an approved delta proposal.
+- `history.md` and `archive/` updates are allowed only for approved version bumps, or explicitly approved scaffold archival.
+- Scaffold is **never** archived automatically.
+
+**Status precision.** Do not say "all groups validated" if any group status is `exploratory`, `validated-with-open-surface`, `unvalidated`, or `candidate`. Use exact status language at all times.
