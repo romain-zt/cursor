@@ -1,6 +1,6 @@
 # PRD Committee
 
-A small, specialized set of agent personas that govern product discovery and PRD coherence in this repo.
+Two specialized agent viewpoints that govern product discovery alongside the PRD Builder skill.
 
 This is **AI-assisted product governance**, not "AI generates PRDs". Discussion drives discovery; the PRD is updated only via reviewed deltas.
 
@@ -8,57 +8,31 @@ This is **AI-assisted product governance**, not "AI generates PRDs". Discussion 
 
 | Agent | File | Responsibility |
 |-------|------|----------------|
-| Product Lead | [`prd-product-lead.md`](./prd-product-lead.md) | Drives product clarity and synthesis |
-| Challenger | [`prd-challenger.md`](./prd-challenger.md) | Attacks weak assumptions and scope |
-| Researcher | [`prd-researcher.md`](./prd-researcher.md) | Market, users, competition, context |
-| Prioritizer | [`prd-prioritizer.md`](./prd-prioritizer.md) | ICE scoring (Impact, Confidence, Ease) and sequencing |
-| PRD Editor | [`prd-editor.md`](./prd-editor.md) | Writes clean structured PRD deltas |
-| Scope Guardian | [`prd-scope-guardian.md`](./prd-scope-guardian.md) | Prevents PRD inflation and drift |
+| Challenger | [`prd-challenger.md`](./prd-challenger.md) | Attacks weak assumptions, scope inflation, and drift |
+| Researcher | [`prd-researcher.md`](./prd-researcher.md) | Market, users, competition, evidence tagging |
+
+## Operational core
+
+The [`prd-builder`](../../skills/prd/prd-builder/SKILL.md) skill drives the convergence loop: feature group construction, ICE scoring, gated delta proposals, and approved PRD updates. The agents provide adversarial and evidence viewpoints — they do not drive the workflow.
 
 ## Operating principle
 
 ```txt
-conversation
-↓
-challenge
-↓
-clarification
-↓
-organization
-↓
-prioritization
-↓
-PRD synthesis
-```
-
-The committee does **not** rewrite the PRD on every turn. Instead:
-
-```txt
-discussion
-↓
-structured extraction
-↓
-PRD update proposal
-↓
-human validation
-↓
-PRD write/update (only when warranted)
+conversation → challenge → clarification → prioritization → PRD delta → validation → write
 ```
 
 ## How to invoke
 
-Use the [`/prd`](../commands/prd.md) orchestrator command with a mode:
+Use the [`/prd`](../../commands/prd.md) command:
 
-- `/prd discover` — open product discovery (Product Lead leads)
+- `/prd discover` — open product discovery (PRD Builder skill leads)
 - `/prd challenge` — stress-test current direction (Challenger leads)
-- `/prd review` — full committee review of current PRD
-- `/prd prioritize` — re-rank scope using the ICE model (Impact / Confidence / Ease)
-- `/prd update` — extract a PRD delta proposal from recent discussion (Editor leads)
-- `/prd summarize` — produce a short, structured snapshot of current product understanding
+- `/prd prioritize` — re-rank scope using ICE
+- `/prd update` — propose and write a PRD delta
 
 ## Hard rules
 
 - No technical architecture, frameworks, or implementation in committee output.
-- No bulk PRD rewrites during chat — only proposed deltas, validated then written.
-- Versioning, file layout, and update triggers follow [`.cursor/rules/10-prd-discovery.mdc`](../rules/10-prd-discovery.mdc).
+- No bulk PRD rewrites — only proposed deltas, validated then written.
+- Versioning and update triggers follow [`.cursor/rules/10-prd-discovery.mdc`](../../rules/10-prd-discovery.mdc).
 - Persisted state lives under [`docs/prd/`](../../docs/prd/) and [`docs/product-decisions/`](../../docs/product-decisions/).

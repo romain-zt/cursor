@@ -1,6 +1,4 @@
-# /prd — PRD Committee orchestrator
-
-Run the PRD Committee in a specific mode. The committee lives in [`.cursor/agents/`](../agents/prd/).
+# /prd — PRD Discovery Orchestrator
 
 ## Usage
 
@@ -10,125 +8,54 @@ Run the PRD Committee in a specific mode. The committee lives in [`.cursor/agent
 
 ## Modes
 
-| Mode | Lead agent | Purpose |
-|------|------------|---------|
-| `discover` | Product Lead | Open product discovery / clarify direction |
-| `challenge` | Challenger | Stress-test current assumptions and scope |
-| `review` | Product Lead (full committee) | Full review of the active PRD |
-| `prioritize` | Prioritizer | Re-rank scope using ICE (Impact / Confidence / Ease) |
-| `update` | PRD Editor | Extract a PRD delta proposal from recent discussion |
-| `summarize` | Product Lead | Short structured snapshot of current understanding |
+| Mode | Lead | Purpose |
+|------|------|---------|
+| `discover` | PRD Builder skill | Open product discovery, convergence loop |
+| `challenge` | Challenger agent | Stress-test assumptions, scope, drift |
+| `prioritize` | PRD Builder skill | Re-rank feature groups using ICE |
+| `update` | PRD Builder skill | Propose and write a PRD delta |
 
-If no mode is given, ask the user which mode they want — never default to `update` (writing PRD is the most expensive action).
+If no mode is given, ask the user which mode they want.
 
-## Universal pre-flight (run for every mode)
+## Pre-flight (every mode)
 
-1. Read [`docs/prd/current.md`](../../docs/prd/current.md) → identify active PRD file.
-2. Read [`docs/prd/state.md`](../../docs/prd/state.md) → version, direction, last major change.
-3. Read the active PRD file (do not load older versions unless comparing history).
-4. Apply [`SISO`](../rules/00-siso.mdc) classification on the user's framing. If RED/ORANGE, clarify before invoking the committee.
-5. Honor [`10-prd-discovery.mdc`](../rules/10-prd-discovery.mdc): chat-first, deltas over rewrites, no premature implementation.
+1. Read `docs/prd/PRD.md` — the active PRD.
+2. Read `docs/prd/state.md` — version, direction, last major change.
+3. Apply SISO. If RED/ORANGE, clarify before proceeding.
 
-## Mode: `discover`
+## Mode: discover
 
-Lead: **Product Lead**. Support: Researcher, Challenger.
+The PRD Builder skill drives the convergence loop (one feature group at a time). Researcher tags evidence. Challenger attacks weak logic. No file writes — output is structured discussion.
 
-Flow:
+## Mode: challenge
 
-1. Product Lead surfaces the actual product problem and unclear assumptions.
-2. Researcher tags claims as `[VALIDATED]` / `[INFERRED]` / `[ASSUMED]` / `[UNKNOWN]`.
-3. Challenger attacks weak logic.
-4. Product Lead summarizes evolving understanding and unresolved decisions.
-5. **Do not** write to `docs/prd/`. Output is structured discussion only.
+Challenger leads. Reads active PRD and recent discussion. Produces: assumption → risk → test or kill criterion. Flags drift against state.md. Researcher labels evidence quality. No file writes.
 
-## Mode: `challenge`
+## Mode: prioritize
 
-Lead: **Challenger**. Support: Scope Guardian, Researcher.
+PRD Builder skill enumerates feature groups and scores each on ICE:
 
-Flow:
+- **Impact** (1–10): user + business value
+- **Confidence** (1–10): evidence quality (not enthusiasm)
+- **Ease** (1–10): realistic cost, inverted (10 = trivial)
 
-1. Pull the active PRD direction and recent discussion.
-2. Challenger produces an explicit list: assumption → risk → suggested test or kill criterion.
-3. Scope Guardian flags drift vs `state.md` direction.
-4. Researcher labels which contested claims have evidence.
-5. Output: prioritized risk/kill list. **No writes.**
+Formula: `score = Impact × Confidence × Ease / 100` (max 10.0).
 
-## Mode: `review`
+Output: ranked table with KEEP / DEFER / CUT / TEST-FIRST decisions + explicit cut list. No file writes.
 
-Lead: **Product Lead** (full committee).
+## Mode: update
 
-Flow:
+`/prd update` is the only mode allowed to propose PRD file changes and, after explicit human approval, apply them. All other modes are read/discussion-only and must not touch `docs/prd/`.
 
-1. Product Lead reads active PRD section by section.
-2. For each section, every relevant agent annotates: clarity, evidence, scope, priority.
-3. Output a single review report:
-   - what is solid,
-   - what is weak,
-   - what is missing,
-   - what should be cut,
-   - whether a version bump is warranted.
-4. **No writes.** If changes are warranted, recommend `/prd update`.
+1. PRD Builder skill produces a delta proposal: target file, section, before/after, rationale, version-bump decision.
+2. Challenger verifies every addition has a paired cut, deferral, or kill criterion.
+3. Wait for human approval.
+4. On approval, apply the smallest edit. If version bump: add a row to `docs/prd/history.md`, copy current PRD.md to `docs/prd/archive/PRD-v<N>.md`, then update PRD.md + state.md.
 
-## Mode: `prioritize`
-
-Lead: **Prioritizer**. Support: Researcher (Confidence), Challenger (Ease honesty), Scope Guardian (cuts).
-
-Flow:
-
-1. Enumerate current scope candidates from the active PRD + recent discussion.
-2. Score each on the **ICE** model: **Impact (1–10)**, **Confidence (1–10)**, **Ease (1–10)**.
-3. Capture the tuple as `Impact,Confidence,Ease` (e.g. `8,6,7`).
-4. Compute `score = Impact + Confidence + Ease` (max 30). Higher = higher priority. Tie-break: higher Ease, then higher Confidence.
-5. Output a ranked table with explicit `KEEP / DEFER / CUT / TEST-FIRST` decisions.
-6. Scope Guardian publishes the cut list.
-7. **No writes** unless user runs `/prd update` afterward.
-
-## Mode: `update`
-
-Lead: **PRD Editor**. Support: Product Lead, Scope Guardian.
-
-This is the **only** mode that proposes file writes.
-
-Flow:
-
-1. Verify recent discussion contains validated committee output (not raw chat).
-2. Editor produces a **PRD Delta Proposal** block (see [`prd-editor.md`](../agents/prd-editor.md)):
-   - target file,
-   - section,
-   - change type: `patch` | `new section` | `version bump`,
-   - exact before / after,
-   - rationale,
-   - whether it triggers a version bump.
-3. Scope Guardian checks: every addition has a paired cut, deferral, or kill criterion.
-4. **Wait for human approval.**
-5. On approval, apply the smallest possible edit. If a version bump is triggered:
-   - create `docs/prd/PRD-vN+1.md` with frontmatter + `# Why This Version Exists`,
-   - update `docs/prd/current.md`,
-   - update `docs/prd/state.md` (`CURRENT_PRD_VERSION`, direction, `LAST_MAJOR_CHANGE`),
-   - add `docs/prd/changelog/v(N)-to-v(N+1).md`.
-6. If a discrete decision was made, propose `docs/product-decisions/PD-00n.md` referenced from the PRD.
-
-## Mode: `summarize`
-
-Lead: **Product Lead**.
-
-Flow:
-
-1. Read active PRD + `state.md`.
-2. Produce a tight snapshot (≤ 30 lines):
-   - Direction one-liner
-   - Target users
-   - Core problem
-   - In-scope (top 3–5)
-   - Explicitly out-of-scope (top 3–5)
-   - Top open questions
-   - Top risks
-3. **No writes.** This is a working memory pass, not a PRD update.
-
-## Hard rules across all modes
+## Hard rules
 
 - Chat-first, deltas over rewrites.
-- No technical architecture, frameworks, or implementation.
+- No technical architecture or implementation.
 - No file writes outside `update` mode.
-- No version bumps without the triggers in [`10-prd-discovery.mdc`](../rules/10-prd-discovery.mdc).
-- Drift between conversation and `state.md` is surfaced, not silently absorbed.
+- No version bumps without the triggers in `10-prd-discovery.mdc`.
+- Drift between conversation and state.md is surfaced, not silently absorbed.

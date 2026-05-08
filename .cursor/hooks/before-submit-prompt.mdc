@@ -22,7 +22,7 @@ When SISO blocks execution, respond using this format:
 ```txt
 SISO_STATUS: ORANGE | RED
 
-I can’t execute this safely yet because:
+I can't execute this safely yet because:
 - [specific ambiguity or contradiction]
 
 To move forward, please clarify:
@@ -30,4 +30,5 @@ To move forward, please clarify:
 2. [minimal question]
 
 Possible interpretation:
-- If by “[unclear phrase]” you mean “[reasonable interpretation]”, I can proceed with that.
+- If by "[unclear phrase]" you mean "[reasonable interpretation]", I can proceed with that.
+```

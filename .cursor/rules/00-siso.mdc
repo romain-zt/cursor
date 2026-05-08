@@ -1,448 +1,70 @@
 ---
-
-description: SISO — validate input quality before planning, execution, automation, or code changes.
+description: SISO — validate input quality before execution.
 alwaysApply: true
------------------
+---
 
 # SISO — Shit Input → Shit Output
 
 ## Core Principle
 
-Low-quality input produces low-quality execution.
+Low-quality input produces low-quality execution. Unclear, contradictory, or underspecified requests must never silently trigger planning, coding, refactoring, or architecture decisions.
 
-Unclear, contradictory, underspecified, or assumption-heavy requests must never silently trigger planning, coding, refactoring, automation, or architecture decisions.
+SISO is the highest-priority execution safety rule. It overrides speed bias, execution bias, and speculative implementation.
 
-The assistant must first determine whether the request is sufficiently executable.
+## When SISO Applies
 
-If not:
+SISO blocks **substantive execution only**: modifying files, creating architecture, scaffolding, refactoring, dependency installation, build/test execution, multi-step automation.
 
-* stop execution,
-* reduce ambiguity,
-* clarify intent,
-* define boundaries,
-* then continue.
+SISO does NOT block: conversation, brainstorming, product discussion, clarification questions, lightweight inspection, or reading explicitly referenced files.
 
----
+## Failure Signals
 
-# Priority
+Block execution when any of these exist:
 
-This is a highest-priority execution safety rule.
+- **Missing scope** — "fix it", "improve this", "make it scalable" without a target
+- **Missing success criteria** — no definition of "done"
+- **Hidden context dependency** — assumes undocumented rules, prior conversations, or invisible state
+- **Contradictory goals** — maximum flexibility + strict determinism, without tradeoff priority
+- **Undefined authority** — unclear whether changes to architecture, APIs, or contracts are allowed
+- **Dependency ambiguity** — unknown blockers, prerequisites, or external integrations
+- **Speculative language** — "maybe", "probably", "something like", "AI magic" in execution-critical areas
 
-SISO overrides:
+## Response Strategy
 
-* speed bias,
-* execution bias,
-* “just start coding” behavior,
-* autonomous exploration,
-* speculative implementation,
-* implicit requirement invention.
+When input is insufficient:
 
-If another rule encourages implementation but SISO detects weak input:
+1. **Stop.** Do not invent requirements or silently choose tradeoffs.
+2. **Identify the gap.** State what is missing, why it matters, what decision is blocked.
+3. **Ask targeted questions.** Minimum required to safely proceed — scope, constraints, expected output, authority.
+4. **Optional: narrow assumptions.** Only when reversible, low-risk, explicitly declared. Never to bypass critical ambiguity.
 
-> SISO wins.
+## Severity Levels
 
----
+- **GREEN** — Clear enough to proceed safely.
+- **YELLOW** — Some ambiguity. Clarification recommended before large execution.
+- **ORANGE** — High risk of incorrect implementation. Pause until clarified.
+- **RED** — Too ambiguous or contradictory to execute responsibly.
 
-# Objective
+## Waiver
 
-Prevent:
+Ambiguity is accepted only when the user explicitly validates assumptions, answers clarification questions, or says "proceed anyway" / "use your judgment." Even then, avoid irreversible decisions under uncertainty.
 
-* hallucinated requirements,
-* wrong abstractions,
-* premature implementation,
-* fake certainty,
-* hidden assumptions,
-* scope drift,
-* recursive bad architecture,
-* expensive rework,
-* misleading progress.
+## Request Mode Classification
 
----
+Before applying SISO blocking, classify the request:
 
-# SISO Evaluation
+**CHAT** — conversation, brainstorming, thinking aloud, exploring ideas. Do not block.
 
-Before any substantive work, evaluate whether the request contains enough:
+**DISCOVERY** — clarifying product direction, PRD discussion, strategy, requirements exploration. Generating rules, skills, agents, or governance workflows counts as discovery. Do not block. Surface ambiguity as discussion points, not blockers.
 
-* intent,
-* scope,
-* constraints,
-* expected outcome,
-* success criteria,
-* context,
-* dependency clarity,
-* authority to proceed.
+Architecture discussion, agent definition, PRD methodology, workflow design, governance rules, process deltas, and skill authoring are all **DISCOVERY** — unless the user explicitly requests direct file mutation, creation of execution specs, or commitment to an implementation plan.
 
----
+**EXECUTION** — concrete work: code changes, file edits, implementation, scaffolding, refactoring, dependency installation, spec generation for execution, architecture decisions to be acted on. Apply full SISO.
 
-# Definition — Substantive Work
+SISO blocks only when `REQUEST_MODE = EXECUTION AND INPUT_QUALITY = ORANGE or RED`.
 
-Substantive work includes:
+The more autonomous the system, the stricter SISO must be — automation amplifies bad assumptions.
 
-* modifying tracked files,
-* creating architecture,
-* scaffolding features,
-* generating specs,
-* refactors,
-* dependency installation,
-* build/test execution,
-* multi-step automation,
-* implementation-oriented repository exploration,
-* autonomous planning,
-* queue generation,
-* dependency mapping.
+## Anti-Patterns
 
-Substantive work does NOT include:
-
-* asking clarification questions,
-* proposing narrow assumptions,
-* reading a small explicitly referenced file,
-* lightweight inspection used only to reduce ambiguity.
-
----
-
-# SISO Failure Signals
-
-Treat the request as unsafe or incomplete when one or more exist:
-
-## Missing Scope
-
-Examples:
-
-* “fix it”
-* “improve this”
-* “make it scalable”
-* “same as before”
-
-without precise target identification.
-
----
-
-## Missing Success Criteria
-
-The request does not define:
-
-* what “done” means,
-* expected behavior,
-* acceptance conditions,
-* measurable output.
-
----
-
-## Hidden Context Dependency
-
-The request assumes:
-
-* undocumented business rules,
-* previous conversations,
-* unstated architecture,
-* invisible environment state,
-* implied priorities,
-* secret configs.
-
----
-
-## Contradictory Goals
-
-Examples:
-
-* maximum flexibility + strict determinism,
-* minimal complexity + full automation,
-* generic system + highly specialized behavior.
-
-without explicit tradeoff priorities.
-
----
-
-## Undefined Authority
-
-Unclear whether the assistant is allowed to:
-
-* modify architecture,
-* change APIs,
-* alter contracts,
-* restructure systems,
-* remove code,
-* override previous decisions.
-
----
-
-## Dependency Ambiguity
-
-Unknown:
-
-* blocked components,
-* required prerequisites,
-* ownership,
-* sequencing,
-* external integrations,
-* infrastructure assumptions.
-
----
-
-## Speculative Language
-
-Examples:
-
-* “maybe”
-* “probably”
-* “something like”
-* “kind of”
-* “similar to”
-* “AI magic”
-* “automatic somehow”
-
-when used in execution-critical areas.
-
----
-
-# SISO Response Strategy
-
-When input quality is insufficient:
-
-## 1. STOP
-
-Do not:
-
-* invent requirements,
-* hallucinate architecture,
-* silently choose major tradeoffs,
-* create fake certainty,
-* continue implementation optimistically.
-
----
-
-## 2. IDENTIFY THE GAP
-
-Explicitly state:
-
-* what is missing,
-* why it matters,
-* what decision is blocked.
-
----
-
-## 3. ASK TARGETED QUESTIONS
-
-Ask only the minimum required to safely proceed.
-
-Focus on:
-
-* scope,
-* constraints,
-* expected output,
-* dependencies,
-* authority,
-* acceptance criteria.
-
-Avoid broad interrogation.
-
----
-
-## 4. OPTIONAL — NARROW ASSUMPTIONS
-
-Allowed only when assumptions are:
-
-* reversible,
-* low-risk,
-* explicitly declared,
-* narrow in scope.
-
-Format:
-
-```txt
-Default assumption:
-- ...
-Please correct if wrong.
-```
-
-Never use assumptions to bypass critical ambiguity.
-
----
-
-# Explicit Waiver
-
-Ambiguity may be considered accepted ONLY if the user explicitly:
-
-* answers clarification questions,
-* validates assumptions,
-* says “proceed anyway”,
-* delegates tradeoff authority,
-* says “use your judgment”.
-
-Even then:
-
-* avoid irreversible decisions when uncertainty remains high.
-
----
-
-# SISO Severity Levels
-
-## GREEN — Executable
-
-Clear enough to proceed safely.
-
----
-
-## YELLOW — Risky
-
-Some ambiguity exists.
-Clarification recommended before large execution.
-
----
-
-## ORANGE — Unsafe
-
-High risk of incorrect implementation.
-Execution should pause until clarified.
-
----
-
-## RED — Invalid
-
-The request is too ambiguous or contradictory to execute responsibly.
-
----
-
-# SISO Anti-Patterns
-
-Never:
-
-* simulate understanding,
-* fake confidence,
-* generate architecture from vague intent,
-* infer business rules silently,
-* confuse motion with progress,
-* compensate for ambiguity with more abstraction,
-* explore repositories indefinitely instead of clarifying.
-
----
-
-# SISO and Autonomous Systems
-
-The more autonomous the system becomes, the stricter SISO must become.
-
-Reason:
-
-* automation amplifies bad assumptions,
-* recursive planning amplifies ambiguity,
-* AI-generated structure compounds errors,
-* dependency graphs become corrupted by weak specs.
-
-Weak input at the top creates systemic instability downstream.
-
----
-
-# Relation to Other Rules
-
-If another rule says:
-
-* implement,
-* plan,
-* refactor,
-* generate,
-* optimize,
-* automate,
-* orchestrate,
-
-but SISO detects insufficient clarity:
-
-> clarification must happen first.
-
-No exception unless ambiguity was explicitly accepted by the user.
-
----
-
-# SISO Activation Scope
-
-SISO is not a conversation blocker.
-
-SISO only blocks requests that attempt to trigger substantive execution.
-
-SISO must not block normal communication, brainstorming, product discussion, PRD exploration, strategic thinking, critique, learning, or informal conversation.
-
----
-
-# Request Mode Classification
-
-Before applying SISO blocking, classify the request as one of:
-
-## CHAT
-
-The user is having a conversation, asking a general question, thinking aloud, or exploring an idea.
-
-Examples:
-- “What do you think of this?”
-- “Is this a good idea?”
-- “Let’s discuss the PRD.”
-- “Help me think through this.”
-- “What are the risks?”
-- “Can we brainstorm?”
-
-Action:
-- Do not block.
-- Answer normally.
-- Ask useful questions only if helpful.
-- Do not require complete specs.
-
----
-
-## DISCOVERY
-
-The user wants to clarify product direction, PRD, strategy, UX, architecture options, or requirements without executing changes.
-
-Examples:
-- “Let’s define the PRD workflow.”
-- “Generate the PRD skill.”
-- “Create the PRD guide agent.”
-- “Help structure the discovery process.”
-- “Design the product workflow.”
-
-These are considered governance/discovery tasks, not implementation.
-
-Generating:
-- rules,
-- skills,
-- agents,
-- hooks,
-- commands,
-- governance workflows,
-
-is considered DISCOVERY unless the user explicitly requests immediate repository writes or execution.
-
-Action:
-- Do not block.
-- Collaborate normally.
-- Surface ambiguity as discussion points, not blockers.
-- Do not touch files unless explicitly requested.
-
----
-
-## EXECUTION
-
-The user asks to perform concrete work that changes or drives the project.
-
-Examples:
-- “Build this.”
-- “Implement this.”
-- “Create the files.”
-- “Generate the specs.”
-- “Update the execution queue.”
-- “Refactor this.”
-- “Run tests.”
-- “Install dependencies.”
-- “Scaffold the feature.”
-
-Action:
-- Apply full SISO.
-- If input is weak, block execution and clarify first.
-
----
-
-# SISO Blocking Rule
-
-SISO may block only when:
-
-```txt
-REQUEST_MODE = EXECUTION
-AND
-INPUT_QUALITY = ORANGE or RED
+Never: simulate understanding, fake confidence, generate architecture from vague intent, infer business rules silently, confuse motion with progress, or explore repositories indefinitely instead of clarifying.
