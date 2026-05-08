@@ -178,7 +178,7 @@ Each axis is scored **1–10**.
 | **Confidence** | Pure guess | Reasonable inference, weak data | Validated with direct user evidence |
 | **Ease** | Massive cost, deep unknowns | Real work, known approach | Trivial to ship and operate |
 
-Note: **Ease** is inverted from "Effort" — higher = easier. Higher tuple values across all three axes mean higher priority.
+Note: **Ease** = "how easy is this to ship and operate" — higher means easier. Higher tuple values across all three axes mean higher priority.
 
 ### Score interpretation
 
