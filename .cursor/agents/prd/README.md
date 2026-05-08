@@ -25,7 +25,10 @@ conversation → challenge → clarification → prioritization → PRD delta �
 
 Use the [`/prd`](../../commands/prd.md) command:
 
-- `/prd discover` — open product discovery (PRD Builder skill leads)
+- `/prd discover` — open product discovery, freeform capture (PRD Builder skill leads)
+- `/prd questions` — ask the next unresolved discovery question (PRD Question Loop)
+- `/prd note` — capture one insight as a discovery note, update question queue
+- `/prd converge` — synthesize notes into a proposed PRD delta (PRD Builder skill leads)
 - `/prd challenge` — stress-test current direction (Challenger leads)
 - `/prd prioritize` — re-rank scope using ICE
 - `/prd update` — propose and write a PRD delta

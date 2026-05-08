@@ -32,6 +32,21 @@ Do not activate for technical architecture, implementation, sprint planning, or 
 
 Before starting, read `docs/prd/PRD.md` and `docs/prd/state.md` (when present). If missing, offer to initialize via `/prd update`.
 
+## 2.5 Discovery Note Mode
+
+During open discovery (`/prd discover`, `/prd note`, or informal PRD conversation), the default behavior is **capture-first**. Do not run the convergence loop. Do not score ICE. Do not ask for DoD, Out of Scope, or challenge tables. Do not propose a PRD update.
+
+When the user gives an insight, business rule, correction, or clarification:
+
+1. Append it to `docs/prd/notes/YYYY-MM-DD-<topic>-discovery-note.md` (see format in that folder).
+2. Interpret the likely product meaning — 1–3 lines.
+3. Identify the PRD implication — 1–3 lines.
+4. Ask **at most one** follow-up question. Stop.
+
+**One-question rule.** Never ask more than one question at a time during discovery. Ask the single highest-leverage question and wait for the answer before asking anything else.
+
+**Convergence is explicit.** The convergence loop (§3) activates only when the user invokes `/prd converge`, `/prd prioritize`, `/prd update`, or explicitly says "let's converge", "structure this", or "write it up". Open discovery does not auto-escalate.
+
 ## 3.0 Group type
 
 Declare at the start of each feature group. Determines required sections.
@@ -78,7 +93,9 @@ The Surface Gate runs *before* the first feature group is drafted for a new PRD,
 
 ### When to run the gate
 
-Run before drafting the first WHY/WHO/WHAT/WHEN of a feature group when **any** of:
+The gate does **not** fire during open discovery (`/prd discover`, `/prd note`) or informal PRD conversation. It fires only in `converge`, `prioritize`, and `update` modes, or when the user explicitly asks to validate a feature group.
+
+Within those modes, run the gate before drafting the first WHY/WHO/WHAT/WHEN of a feature group when **any** of:
 
 - `docs/prd/state.md` has no `DIRECTION` set, or it is the scaffold value
 - `docs/prd/PRD.md` has no validated feature group yet
@@ -131,6 +148,8 @@ Produce one block per gate run. Persisted as part of the active PRD (under "Prod
 - **No silent inference.** If the user says "I don't know", write `UNKNOWN — decision needed before implementation`. Do not pick the most plausible answer "for now".
 
 ## 3. Convergence Loop
+
+**Activation condition.** This loop runs only when the user explicitly invokes `/prd converge`, `/prd prioritize`, `/prd update`, or says "let's converge / structure this / write it up". It does not activate during open discovery or `note` mode. See §2.5.
 
 **Active group limit: 3 maximum** — 1 primary (actively converging), up to 2 exploratory (partially understood, explicitly tagged as `exploratory`). Committed groups are frozen and not "active."
 

@@ -65,6 +65,24 @@ SISO blocks only when `REQUEST_MODE = EXECUTION AND INPUT_QUALITY = ORANGE or RE
 
 The more autonomous the system, the stricter SISO must be — automation amplifies bad assumptions.
 
+## PRD Discovery Exception
+
+Any input during `/prd discover`, `/prd note`, `/prd questions`, or informal PRD discussion (product thinking, raw founder input, booking flow clarification, etc.) is always **DISCOVERY** regardless of how rough, incomplete, or ambiguous it is.
+
+- Do **not** block rough input.
+- Do **not** return `SISO_STATUS: ORANGE` or `RED`.
+- Treat the message as raw discovery material.
+- Append it to the active discovery note.
+- Update the question queue if relevant.
+- Ask one follow-up question maximum.
+
+SISO blocking applies in these PRD contexts **only** when the user explicitly requests:
+- `/prd update` or file writes to `PRD.md` / `state.md`
+- implementation specs, tickets, or architecture intended for execution
+- code changes or dependency installation
+
+**Discovery note and question queue writes** (`docs/prd/notes/`, `docs/prd/questions/open-questions.md`) are capture artifacts — they are always allowed during discovery and must never be blocked.
+
 ## Anti-Patterns
 
 Never: simulate understanding, fake confidence, generate architecture from vague intent, infer business rules silently, confuse motion with progress, or explore repositories indefinitely instead of clarifying.

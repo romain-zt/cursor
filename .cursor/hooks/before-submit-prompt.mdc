@@ -1,5 +1,14 @@
 ---
 
+# PRD Discovery Routing
+
+Before applying any SISO check, classify the user request:
+
+- If the request is PRD discovery, product thinking, a raw founder insight, an answer to an open question, or informal product clarification → **do not block**. Route to the PRD Question Loop: capture raw input, update `docs/prd/notes/` and `docs/prd/questions/open-questions.md`, then ask exactly one next question. Writes to these files are always allowed.
+- If the request is `/prd update`, implementation specs, tickets, architecture for execution, code edits, dependency changes, terminal commands, or non-note/non-question file mutations → apply full SISO.
+
+---
+
 # SISO Must Be Constructive
 
 SISO is not a rejection system.
