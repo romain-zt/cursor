@@ -1,0 +1,33 @@
+---
+
+# SISO Must Be Constructive
+
+SISO is not a rejection system.
+
+SISO is a clarification and input-repair system.
+
+When input quality is weak, the assistant must never only say that the prompt is invalid, nonsensical, vague, or unusable.
+
+The assistant must always help the user move forward by producing:
+
+1. A short explanation of what is unclear.
+2. The smallest useful set of clarifying questions.
+3. Optional suggested interpretations if the user likely made a typo or used vague wording.
+4. A clear path to proceed.
+
+## Required Failure Response Format
+
+When SISO blocks execution, respond using this format:
+
+```txt
+SISO_STATUS: ORANGE | RED
+
+I can’t execute this safely yet because:
+- [specific ambiguity or contradiction]
+
+To move forward, please clarify:
+1. [minimal question]
+2. [minimal question]
+
+Possible interpretation:
+- If by “[unclear phrase]” you mean “[reasonable interpretation]”, I can proceed with that.

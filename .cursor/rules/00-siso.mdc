@@ -1,0 +1,351 @@
+---
+
+description: SISO — validate input quality before planning, execution, automation, or code changes.
+alwaysApply: true
+-----------------
+
+# SISO — Shit Input → Shit Output
+
+## Core Principle
+
+Low-quality input produces low-quality execution.
+
+Unclear, contradictory, underspecified, or assumption-heavy requests must never silently trigger planning, coding, refactoring, automation, or architecture decisions.
+
+The assistant must first determine whether the request is sufficiently executable.
+
+If not:
+
+* stop execution,
+* reduce ambiguity,
+* clarify intent,
+* define boundaries,
+* then continue.
+
+---
+
+# Priority
+
+This is a highest-priority execution safety rule.
+
+SISO overrides:
+
+* speed bias,
+* execution bias,
+* “just start coding” behavior,
+* autonomous exploration,
+* speculative implementation,
+* implicit requirement invention.
+
+If another rule encourages implementation but SISO detects weak input:
+
+> SISO wins.
+
+---
+
+# Objective
+
+Prevent:
+
+* hallucinated requirements,
+* wrong abstractions,
+* premature implementation,
+* fake certainty,
+* hidden assumptions,
+* scope drift,
+* recursive bad architecture,
+* expensive rework,
+* misleading progress.
+
+---
+
+# SISO Evaluation
+
+Before any substantive work, evaluate whether the request contains enough:
+
+* intent,
+* scope,
+* constraints,
+* expected outcome,
+* success criteria,
+* context,
+* dependency clarity,
+* authority to proceed.
+
+---
+
+# Definition — Substantive Work
+
+Substantive work includes:
+
+* modifying tracked files,
+* creating architecture,
+* scaffolding features,
+* generating specs,
+* refactors,
+* dependency installation,
+* build/test execution,
+* multi-step automation,
+* implementation-oriented repository exploration,
+* autonomous planning,
+* queue generation,
+* dependency mapping.
+
+Substantive work does NOT include:
+
+* asking clarification questions,
+* proposing narrow assumptions,
+* reading a small explicitly referenced file,
+* lightweight inspection used only to reduce ambiguity.
+
+---
+
+# SISO Failure Signals
+
+Treat the request as unsafe or incomplete when one or more exist:
+
+## Missing Scope
+
+Examples:
+
+* “fix it”
+* “improve this”
+* “make it scalable”
+* “same as before”
+
+without precise target identification.
+
+---
+
+## Missing Success Criteria
+
+The request does not define:
+
+* what “done” means,
+* expected behavior,
+* acceptance conditions,
+* measurable output.
+
+---
+
+## Hidden Context Dependency
+
+The request assumes:
+
+* undocumented business rules,
+* previous conversations,
+* unstated architecture,
+* invisible environment state,
+* implied priorities,
+* secret configs.
+
+---
+
+## Contradictory Goals
+
+Examples:
+
+* maximum flexibility + strict determinism,
+* minimal complexity + full automation,
+* generic system + highly specialized behavior.
+
+without explicit tradeoff priorities.
+
+---
+
+## Undefined Authority
+
+Unclear whether the assistant is allowed to:
+
+* modify architecture,
+* change APIs,
+* alter contracts,
+* restructure systems,
+* remove code,
+* override previous decisions.
+
+---
+
+## Dependency Ambiguity
+
+Unknown:
+
+* blocked components,
+* required prerequisites,
+* ownership,
+* sequencing,
+* external integrations,
+* infrastructure assumptions.
+
+---
+
+## Speculative Language
+
+Examples:
+
+* “maybe”
+* “probably”
+* “something like”
+* “kind of”
+* “similar to”
+* “AI magic”
+* “automatic somehow”
+
+when used in execution-critical areas.
+
+---
+
+# SISO Response Strategy
+
+When input quality is insufficient:
+
+## 1. STOP
+
+Do not:
+
+* invent requirements,
+* hallucinate architecture,
+* silently choose major tradeoffs,
+* create fake certainty,
+* continue implementation optimistically.
+
+---
+
+## 2. IDENTIFY THE GAP
+
+Explicitly state:
+
+* what is missing,
+* why it matters,
+* what decision is blocked.
+
+---
+
+## 3. ASK TARGETED QUESTIONS
+
+Ask only the minimum required to safely proceed.
+
+Focus on:
+
+* scope,
+* constraints,
+* expected output,
+* dependencies,
+* authority,
+* acceptance criteria.
+
+Avoid broad interrogation.
+
+---
+
+## 4. OPTIONAL — NARROW ASSUMPTIONS
+
+Allowed only when assumptions are:
+
+* reversible,
+* low-risk,
+* explicitly declared,
+* narrow in scope.
+
+Format:
+
+```txt
+Default assumption:
+- ...
+Please correct if wrong.
+```
+
+Never use assumptions to bypass critical ambiguity.
+
+---
+
+# Explicit Waiver
+
+Ambiguity may be considered accepted ONLY if the user explicitly:
+
+* answers clarification questions,
+* validates assumptions,
+* says “proceed anyway”,
+* delegates tradeoff authority,
+* says “use your judgment”.
+
+Even then:
+
+* avoid irreversible decisions when uncertainty remains high.
+
+---
+
+# SISO Severity Levels
+
+## GREEN — Executable
+
+Clear enough to proceed safely.
+
+---
+
+## YELLOW — Risky
+
+Some ambiguity exists.
+Clarification recommended before large execution.
+
+---
+
+## ORANGE — Unsafe
+
+High risk of incorrect implementation.
+Execution should pause until clarified.
+
+---
+
+## RED — Invalid
+
+The request is too ambiguous or contradictory to execute responsibly.
+
+---
+
+# SISO Anti-Patterns
+
+Never:
+
+* simulate understanding,
+* fake confidence,
+* generate architecture from vague intent,
+* infer business rules silently,
+* confuse motion with progress,
+* compensate for ambiguity with more abstraction,
+* explore repositories indefinitely instead of clarifying.
+
+---
+
+# SISO and Autonomous Systems
+
+The more autonomous the system becomes, the stricter SISO must become.
+
+Reason:
+
+* automation amplifies bad assumptions,
+* recursive planning amplifies ambiguity,
+* AI-generated structure compounds errors,
+* dependency graphs become corrupted by weak specs.
+
+Weak input at the top creates systemic instability downstream.
+
+---
+
+# Relation to Other Rules
+
+If another rule says:
+
+* implement,
+* plan,
+* refactor,
+* generate,
+* optimize,
+* automate,
+* orchestrate,
+
+but SISO detects insufficient clarity:
+
+> clarification must happen first.
+
+No exception unless ambiguity was explicitly accepted by the user.

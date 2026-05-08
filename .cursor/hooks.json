@@ -1,0 +1,12 @@
+{
+    "version": 1,
+    "hooks": {
+      "beforeSubmitPrompt": [
+        {
+            "type": "prompt",
+            "prompt": "Evaluate the user request against .cursor/hooks/before-submit-prompt.mdc. If the request is weak, ambiguous, contradictory, or unsafe, do not merely reject it. Instead, return a constructive SISO clarification response that explains the gap and asks the minimum questions needed to make the request executable. Never stop at validation failure only.",
+           "timeout": 10
+        }
+      ]
+    }
+}
