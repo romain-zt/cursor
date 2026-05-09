@@ -1,6 +1,6 @@
 ---
 name: feature-area-builder
-description: Drives Feature Area decomposition — maps PRD Feature Groups to Feature Areas, runs readiness checks, and proposes Scope Slices. `scaffold` writes initial Feature Area markdown from an approved map (only mode that may create Feature Area files). `scaffold-slices` writes Scope Slice markdown from an approved slice proposal (only mode that may create or fill `docs/product/scope-slices/*.md`). `promote` applies the narrow validated transition on an existing Feature Area file after CLEAR. Map, validate, slice, and check are proposal or checker-only. Never writes user stories, specs, tasks, or architecture.
+description: Drives Feature Area decomposition — maps PRD Feature Groups to Feature Areas, runs readiness checks, and proposes Scope Slices. `scaffold` writes initial Feature Area markdown from an approved map (only mode that may create Feature Area files). `scaffold-slices` writes Scope Slice markdown from an approved slice proposal (only mode that may create or initially fill `docs/product/scope-slices/*.md`). `refine-slice` edits product-level sections of one Scope Slice. `promote-slice` applies the narrow ready-for-user-stories transition after CLEAR (SS-01–SS-10, CC-01–CC-05). `promote` applies the narrow validated transition on a Feature Area file after CLEAR. Map, validate, slice, and check are proposal or checker-only. Never writes user stories, specs, tasks, or architecture.
 disable-model-invocation: true
 ---
 
@@ -49,6 +49,8 @@ When running **`scaffold` immediately after** the user approves a Feature Area M
 
 When running **`scaffold-slices` immediately after** the user approves a Scope Slice proposal from **`slice`** in **this same conversation**, **reuse** the Context Brief from `slice` — do not re-run the Lead.
 
+`refine-slice` and `promote-slice` do **not** require Feature Area Lead pre-flight (same as `check`).
+
 If no brief exists and one is required, request it before proceeding.
 
 ## 4. Mode: map
@@ -62,7 +64,7 @@ Convert PRD Feature Groups into a proposed Feature Area map.
    - Does it map 1-to-1 to a Feature Area, or does it contain multiple distinct user-value clusters?
    - Split criterion: more than ~5 distinct user-value clusters inside one group → propose multiple Feature Areas.
    - If a Feature Group is too vague to name user-value clusters: flag it as not-ready-to-map and surface the missing clarity.
-3. Apply terminology conversion: PRD "Feature Group" → Feature Area in all output. Do not carry Feature Group naming forward.
+3. Apply terminology conversion: PRD "Feature Group" → Feature Area in all output. Do not carry Feature Group naming forward **except** **PRD Source** citations where the section title in `docs/prd/PRD.md` is literally *Feature Groups* (§ reference only).
 4. Cross-check every proposed Feature Area against the v0 exclusion list in `.cursor/rules/feature-area-workflow.mdc` §6. If a proposed area is entirely deferred, mark it `deferred` and exclude from the active list.
 5. Check existing `docs/product/feature-areas/` files for overlap or gaps.
 6. Invoke Scope Critic (`.cursor/agents/feature-area/scope-critic.md`) to review the proposal before presenting it to the user.
@@ -230,13 +232,13 @@ Materialize an **approved** Scope Slice proposal into files. Governed by `.curso
 2. **Skip** if the file exists and is non-empty; list in output.
 3. If missing or empty-only: instantiate from **`.cursor/templates/product/scope-slice.template.md`**.
 4. **Fill only** the product-level sections listed in `.cursor/commands/feature-area.md` Mode: scaffold-slices (Parent Feature Area, Status, flags, User Value, Exact Boundary, credit/sharing/feedback impacts, Dependencies, Blockers, Acceptance-Level Outcome, Changelog). Default **Status** to `exploratory` unless the proposal row was `blocked` or `deferred`.
-5. Leave **UX States**, **Data Touched**, and **Readiness for User Stories** (and embedded verdict) as template placeholders for later work.
+5. Leave **UX States**, **Data Touched**, and **Readiness for User Stories** (and embedded verdict) for **`refine-slice`** / **`promote-slice`** per `.cursor/commands/feature-area.md` (scaffold leaves UX States and Data Touched empty; Readiness is promotion-only).
 6. **Do not** modify PRD, Feature Area files, or paths outside the allowed Scope Slice filenames.
 7. **Do not** invent implementation detail; use product-level TBD where sources are insufficient; set `NEED_HUMAN: true` only when story writing is blocked.
 
 ### Output
 
-Use the result format in `.cursor/commands/feature-area.md` (Created / Skipped / next `/feature-area check` per file).
+Use the result format in `.cursor/commands/feature-area.md` (Created / Skipped / next `/feature-area refine-slice` per file).
 
 ## 10. Mode: check
 
@@ -252,7 +254,41 @@ Run the scope-readiness checker against any Feature Area or Scope Slice file.
 3. Run all applicable checks from `.cursor/checkers/scope-readiness-checker.md`.
 4. Output the summary table with advancement verdict.
 
-Note: `check` mode does not require Feature Area Lead pre-flight. It is a mechanical checker run.
+Note: `check`, `refine-slice`, and `promote-slice` modes do not require Feature Area Lead pre-flight. It is a mechanical checker run or governed slice edit/promotion.
+
+## 10.1 Mode: refine-slice
+
+Edit **product-level** sections of **one** Scope Slice file. Governed by `.cursor/commands/feature-area.md` Mode: refine-slice.
+
+### Behavior
+
+1. Resolve `docs/product/scope-slices/<one file>.md`.
+2. Complete standard reads (§2) before editing.
+3. **Allowed edits** — only sections listed in the command doc (User Value through Acceptance-Level Outcome, UX States, Data Touched, Status flag lines); **no** Status → `ready-for-user-stories`, **no** Readiness checklist or Verdict, **no** Changelog, **no** Parent Feature Area except broken-link fix.
+4. Ground in parent Feature Area, PRD, open questions; **PRD-allowed product-level terms** per `.cursor/checkers/scope-readiness-checker.md`.
+5. **Do not** write user stories, specs, tasks, architecture, services, APIs, or implementation detail.
+
+### Output
+
+Use the result format in `.cursor/commands/feature-area.md`.
+
+## 10.2 Mode: promote-slice
+
+Apply the narrow **ready-for-user-stories** transition after **CLEAR** (SS-01–SS-10, CC-01–CC-05). Governed by `.cursor/commands/feature-area.md` Mode: promote-slice.
+
+### Behavior
+
+1. Complete standard reads (§2).
+2. Read the Scope Slice and `docs/prd/questions/open-questions.md`.
+3. **Gate before write:** file under `docs/product/scope-slices/`; parent Feature Area exists and `validated`; `Status` is `exploratory` (if already `ready-for-user-stories`, **no-op**; if `blocked`/`deferred`, stop); `NEED_HUMAN` / `NEED_UPDATE` false; blockers consistent with SS-09.
+4. Run SS-01–SS-10 and CC-01–CC-05. Verdict must be **CLEAR**; otherwise output checker table / failure summary and **do not write**.
+5. **Only if CLEAR**, apply **only** the four edits defined in `.cursor/commands/feature-area.md` Mode: promote-slice (Status, Readiness checklist all `[x]`, Verdict line, Changelog row).
+
+No other sections or files.
+
+### Output
+
+Use the result format in `.cursor/commands/feature-area.md` (including no-op and BLOCKED cases).
 
 ## 11. Collaboration
 
@@ -266,7 +302,7 @@ Do not replicate the agents' work — invoke them and incorporate their output.
 
 ## 12. Handoff to User Story authoring
 
-Feature Area Builder scope covers Feature Area and Scope Slice **proposals** and **materialization** via `/feature-area scaffold` and `/feature-area scaffold-slices`; user story authoring is out of scope.
+Materialized Scope Slices are **`exploratory`** until product-level gaps are closed with **`/feature-area refine-slice`**, **`/feature-area check`** passes SS-01–SS-10 and CC-01–CC-05, and **`/feature-area promote-slice`** applies (or manual equivalent). User story authoring is out of scope for this skill.
 
 When a Scope Slice file exists with `Status: ready-for-user-stories` and `NEED_HUMAN: false`, the next step is user story authoring. That layer is governed by a separate workflow — this skill does not drive it.
 
@@ -286,21 +322,22 @@ Refer to the user story workflow for next steps.
 |---|---|
 | Creating Feature Area files outside `scaffold`, or editing Feature Area files outside `scaffold` / `promote` allowed scope | Forbidden |
 | Using `promote` to change anything beyond the four defined edits | Forbidden |
-| Creating or filling Scope Slice files except via `/feature-area scaffold-slices` after approved proposal (or human manual use of template) | Forbidden |
+| Creating or **initially** filling Scope Slice files except via `/feature-area scaffold-slices` after approved proposal (or human manual use of template) | Forbidden |
+| Editing Scope Slice **product-level** sections outside **`refine-slice`** allowed sections, or promoting to `ready-for-user-stories` outside **`promote-slice`** narrow transition (or equivalent manual edits) | Forbidden |
 | Naming architecture, services, or runtime decisions | Forbidden |
 | Writing user stories, specs, or tasks | Forbidden |
 | Proposing Scope Slices before FA is validated | Forbidden |
 | Skipping Feature Area Lead pre-flight on initial map, validate, promote, slice, scaffold-slices, or cold-start scaffold | Wrong |
 | Skipping Scope Critic review on map or slice proposals | Wrong |
-| Using "Feature Group" terminology in any output | Wrong — use "Feature Area" |
-| Claiming `validated` or `ready-for-user-stories` without the file reflecting it | Forbidden — use `/feature-area promote` after CLEAR for Feature Areas, or update the artifact through the correct workflow |
+| Using "Feature Group" terminology in narratives or area naming | Wrong — use "Feature Area" (**exception:** PRD Source line may cite § whose title is *Feature Groups*) |
+| Claiming `validated` or `ready-for-user-stories` without the file reflecting it | Forbidden — use `/feature-area promote` after CLEAR for Feature Areas; use `/feature-area promote-slice` after CLEAR for Scope Slices |
 | Proceeding past NEED_HUMAN=true without explicit user approval | Forbidden |
 | Silently working around a NEED_UPDATE flag | Forbidden — surface it |
 | Creating Scope Slices directly from a PRD Feature Group | Forbidden — Feature Area decomposition must happen first |
 
 ## 14. Guardrails
 
-- **Creation vs promotion.** `/feature-area scaffold` creates Feature Area markdown. `/feature-area scaffold-slices` creates or fills Scope Slice markdown (non-empty files skipped). `/feature-area promote` applies only the predefined validated-transition edits. Map, validate, slice, check: no file creation for those artifact types.
+- **Creation vs promotion vs refinement.** `/feature-area scaffold` creates Feature Area markdown. `/feature-area scaffold-slices` creates or initially fills Scope Slice markdown (non-empty files skipped). `/feature-area refine-slice` edits product-level body sections of one Scope Slice. `/feature-area promote` applies only the predefined validated-transition edits on a Feature Area. `/feature-area promote-slice` applies only the predefined ready-for-user-stories transition on a Scope Slice. Map, validate, slice, check: no Feature Area or Scope Slice **creation**; check does not write.
 - **One mode at a time.** Do not run map + slice in one response.
 - **Explicit blockers.** Any FAIL in the checker blocks advancement — do not paper over it with prose.
 - **Terminology precision.** Feature Area, Scope Slice, User Story, Spec, Task — no synonyms, no shortcuts.

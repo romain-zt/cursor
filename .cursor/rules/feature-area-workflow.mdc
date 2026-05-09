@@ -88,10 +88,14 @@ If a Scope Slice cannot be fully described without naming technical layers, it i
 When transitioning from PRD to execution:
 
 - Convert each broad PRD Feature Group into one or more Feature Areas using this workflow.
-- Do not carry "Feature Group" naming into `docs/product/` artifacts.
+- Do not carry "Feature Group" naming into `docs/product/` artifacts **except** **PRD Source** (or equivalent) citations where `docs/prd/PRD.md` section title is literally *Feature Groups* — cite the § only.
 - A single PRD Feature Group may map to multiple Feature Areas — split before decomposing.
 - Do not create Scope Slices directly from a PRD Feature Group without first creating and validating a Feature Area.
-- New documents under `docs/product/` must use Feature Area / Scope Slice terminology exclusively.
+- New documents under `docs/product/` must use Feature Area / Scope Slice terminology exclusively in narrative, names, and tables.
+
+### PRD-allowed product-level terms
+
+Use **only** as **product** behavior or constraints grounded in **`docs/prd/PRD.md`** — not as architecture. Canonical list and rules: **Allowed product-level terms (PRD)** in `.cursor/checkers/scope-readiness-checker.md`.
 
 ### Service
 
@@ -119,11 +123,12 @@ The following are strictly forbidden at each layer:
 - Treating a Feature Area as implementation-ready
 
 **At Scope Slice stage:**
-- Creating tasks before Scope Slices are validated
+- Creating tasks before Scope Slices are marked `ready-for-user-stories`
 - Writing implementation specs before user stories
 - Inventing data models, API designs, or service boundaries
-- Naming third-party integrations as implementation details (Stripe, etc. may be named as product-level constraints, not architecture)
-- Creating Scope Slice markdown under `docs/product/scope-slices/` **except** via `/feature-area scaffold-slices` after user approval of the `/feature-area slice` proposal (with parent Feature Area `validated` and `NEED_HUMAN: false`), or ordinary human/manual use of the template — forbidden for agents/commands
+- Naming third-party integrations as **implementation** (product-level constraints named in the PRD, including terms in **Allowed product-level terms (PRD)** in `.cursor/checkers/scope-readiness-checker.md`, are allowed when grounded in the PRD)
+- **Creating** Scope Slice markdown under `docs/product/scope-slices/` **except** via `/feature-area scaffold-slices` after user approval of the `/feature-area slice` proposal (with parent Feature Area `validated` and `NEED_HUMAN: false`), **or** ordinary human/manual use of the template — forbidden for agents/commands
+- **Editing** Scope Slice body content **except** via `/feature-area refine-slice` (allowed product-level sections only), **`/feature-area scaffold-slices`** (initial fill from approved proposal), **`/feature-area promote-slice`** (narrow transition only), or ordinary human/manual edits — forbidden for agents/commands
 
 **At all stages:**
 - Task slicing directly from `docs/prd/PRD.md`
@@ -139,7 +144,11 @@ The following are strictly forbidden at each layer:
 
 - A Feature Area in `exploratory` status **may** list candidate Scope Slices in its Candidate Scope Slices section (names + one-line descriptions only).
 - After `/feature-area validate <name>` returns **CLEAR**, **`/feature-area promote <name>`** may apply the predefined file updates (status, readiness checklist, verdict, changelog row) so the artifact matches `validated`; manual edits remain valid.
-- Formal Scope Slice documents (files under `docs/product/scope-slices/`) **may only be created** after the Feature Area is marked `validated`, via `/feature-area scaffold-slices <name>` after an approved `/feature-area slice` proposal, or by manually instantiating `.cursor/templates/product/scope-slice.template.md`.
+
+### Scope Slice lifecycle
+
+- Formal Scope Slice documents (files under `docs/product/scope-slices/`) **may only be created** after the Feature Area is marked `validated`, via `/feature-area scaffold-slices <name>` after an approved `/feature-area slice` proposal, or by manually instantiating `.cursor/templates/product/scope-slice.template.md`. New files default to **`exploratory`** and are **not** story-ready until refined.
+- Scope Slice **product-level** sections not completed at scaffold (`UX States`, `Data Touched`, etc.) are completed with **`/feature-area refine-slice`**; **`/feature-area promote-slice`** applies the narrow **ready-for-user-stories** transition only after SS-01–SS-10 and CC-01–CC-05 are **CLEAR** per `.cursor/commands/feature-area.md`.
 - User stories may only be written after a Scope Slice is marked `ready-for-user-stories`.
 
 ### Feature Area → Scope Slices
@@ -159,7 +168,7 @@ A Feature Area may be decomposed into Scope Slices only when:
 
 A Scope Slice may produce user stories only when:
 
-- [ ] Status is `ready-for-user-stories`
+- [ ] Status is `ready-for-user-stories` (set via **`/feature-area promote-slice`** after **CLEAR**, or manual equivalent — not by `refine-slice` or `scaffold-slices` alone)
 
 - [ ] User value is stated without implementation language
 - [ ] Exact boundary is defined (included + excluded behaviors)

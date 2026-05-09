@@ -1,1 +1,8 @@
-docs
+# Track PRD and product decomposition trees; ignore other paths under docs/
+docs/*
+!docs/prd/
+!docs/prd/**
+!docs/product/
+!docs/product/**
+!docs/product-decisions/
+!docs/product-decisions/**

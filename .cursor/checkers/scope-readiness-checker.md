@@ -108,7 +108,7 @@ Cross-reference PRD `Hard v0 exclusions` section:
 
 ### FA-08 · No architecture invented
 
-> The Feature Area document contains no data models, API designs, service boundaries, runtime decisions, or technology choices (except product-level constraints named in the PRD, e.g. "Stripe", "web app").
+> The Feature Area document contains no data models, API designs, service boundaries, runtime decisions, or technology choices beyond **PRD-allowed product-level terms** (see **Allowed product-level terms (PRD)** below).
 
 **FAIL signals:**
 - Database schema references
@@ -132,7 +132,7 @@ Cross-reference PRD `Hard v0 exclusions` section:
 
 Run when evaluating whether a Scope Slice is ready for user story writing.
 
-Scope Slices newly created by `/feature-area scaffold-slices` may **not** yet satisfy every check in Part 2 (for example SS-03) until template sections not filled during scaffold are completed — a BLOCKED verdict is expected until refinement.
+**After `/feature-area scaffold-slices`:** new Scope Slice files are expected to be **`exploratory`** and **not** story-ready. Part 2 will often return **BLOCKED** (e.g. SS-03) until product-level gaps are closed via **`/feature-area refine-slice`**. Advancement to **`ready-for-user-stories`** uses **`/feature-area promote-slice`** only after SS-01–SS-10 and CC-01–CC-05 are **CLEAR** (SS-11 is satisfied by that transition, not as a pre-write gate).
 
 ### SS-01 · Single user value
 
@@ -169,7 +169,7 @@ Scope Slices newly created by `/feature-area scaffold-slices` may **not** yet sa
 
 ### SS-04 · No implementation details
 
-> The document contains no database tables, API routes, component names, framework choices, or runtime decisions.
+> The document contains no database tables, API routes, component names, framework choices, or runtime decisions. **PRD-allowed product-level terms** (see below) are permitted when they describe product behavior or constraints, not implementation structure.
 
 **FAIL signals:**
 - "The POST /api/credits endpoint..."
@@ -254,12 +254,27 @@ For Zedos v0 owner milestones:
 
 > Valid Scope Slice statuses are: `exploratory`, `blocked`, `deferred`, `ready-for-user-stories`. The status `validated` is not valid for Scope Slices.
 >
-> If the slice has passed all Part 2 checks and has no unresolved NEED_HUMAN flag, status must be `ready-for-user-stories`. User stories may not be written until this status is set.
+> If the slice has passed SS-01–SS-10 and CC-01–CC-05 with no unresolved NEED_HUMAN flag, status must be `ready-for-user-stories` (set via **`/feature-area promote-slice`** after a **CLEAR** checker run, or equivalent manual edits). User stories may not be written until this status is set.
 
 **FAIL signals:**
 - Status is `validated` (not a valid Scope Slice status — `validated` belongs to Feature Areas only; use `ready-for-user-stories` instead)
 - Status is `ready-for-user-stories` with unresolved NEED_HUMAN
-- Status is `ready-for-user-stories` but SS-01 through SS-10 have failures
+- Status is `ready-for-user-stories` but SS-01 through SS-10 or CC-01–CC-05 have failures
+
+---
+
+## Allowed product-level terms (PRD)
+
+These phrases may appear in Feature Area and Scope Slice artifacts when grounded in **`docs/prd/PRD.md`** as **product-level** behavior or constraints — not as architecture (no stack, schemas, or endpoints):
+
+- Stripe (payments constraint / flow)
+- web app (surface / channel)
+- credit ledger (credit accounting concept)
+- saved payment method
+- noindex (SEO / indexing disposition)
+- Cursor setup — **only** when the PRD defers it or marks it out-of-scope for v0 (cite the PRD passage)
+
+Do not treat this list as permission to add implementation detail beyond what the PRD states.
 
 ---
 
