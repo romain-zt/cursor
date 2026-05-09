@@ -203,6 +203,80 @@ Challenger leads. Reads active PRD and recent discussion. Produces: assumption �
 
 **False-convergence checks are mandatory** (see `prd-challenger.md`). For each non-`exploratory` group, Challenger verifies that buyer entry point, buyer-facing surface, merchant operating surface, source of truth, market/language, and confirmation channel are explicitly resolved or marked UNKNOWN with the Confidence cap applied. Any hidden surface assumption — including implementation language smuggled into product wording — is reported as `FALSE CONVERGENCE RISK`.
 
+### Default challenge scope
+
+Every `/prd challenge` run must check **all** of the following, regardless of what the user wrote in the prompt:
+
+**1. Readiness inflation**
+Flag when the PRD overstates readiness — e.g. "product surface resolved" while blockers remain in open questions, surface fields are UNKNOWN, or no feature group has passed the Surface Gate. Do not accept clean prose as a proxy for resolved decisions.
+
+**2. Silent decision propagation**
+Flag any journey, flow, business object, checklist item, or feature group that implicitly assumes an unresolved decision. Example: a journey titled "Buyer cancels booking" while the cancellation initiator (buyer-only? merchant-only? both?) is still undefined in open questions or marked UNKNOWN.
+
+**3. Nice-to-have contamination in MVP Completeness Checklist**
+Scan the MVP Completeness Checklist. Any item that is a nice-to-have (deferred, optional, or not tied to a validated v1 user need) must either be removed from the checklist or explicitly promoted to v1 scope with justification. Flag every contaminated item.
+
+**4. Missing or vague success metrics**
+If success metrics are absent or defined as "users are happy" / "adoption grows" / unmeasurable proxies, flag ICE scoring as unreliable. Confidence scores based on missing metrics must be reduced.
+
+**5. Absent monetization model**
+If pricing, revenue model, or monetization approach is not defined, flag Impact scoring and scope tradeoffs as weak. A product with no monetization model cannot reliably score Impact.
+
+**6. Scope inflation relative to unresolved blockers**
+If v1 scope is wide while open questions remain, flag scope inflation. Produce a cut/defer list: for each feature group or checklist item, recommend `cut`, `defer`, or `keep with constraint` with an explicit reason.
+
+**7. External platform assumptions treated as facts**
+Flag any assumption about an external platform that has not been validated. Specific examples to probe:
+- Stripe embedded iframe / nested iframe behavior within Shopify
+- Shopify iframe / CSP constraints on embedded apps
+- Shopify webhook coverage for booking-relevant events
+- Shopify gift card API limitations
+- Shopify Order API assumptions (what it can and cannot store)
+- SMS/email provider deliverability and opt-in compliance assumptions
+
+For each, state why it matters and what validation is needed before it can be treated as resolved.
+
+**8. Build-blocking unknowns without a next PRD action**
+Every open question that blocks a feature group from progressing must have an assigned next PRD action: `/prd questions`, `/prd update`, `/prd converge`, or explicit external validation. Flag any blocker that has no assigned action.
+
+### Required output format
+
+Every `/prd challenge` response must use this format exactly:
+
+```txt
+Challenge Report
+
+1. Readiness verdict
+<one of: not ready for feature-group convergence | ready for feature-group convergence with blockers | ready for prioritize | ready for update>
+
+2. False-convergence risks
+- <risk or none>
+
+3. Product-surface contradictions
+- <contradiction or none>
+
+4. Scope realism
+- <main scope issue>
+- Recommended cuts / deferrals:
+  - <item> — <cut | defer | keep with constraint> — <reason>
+
+5. Missing decision anchors
+- Success metrics: <ok | missing | weak>
+- Monetization model: <ok | missing | weak>
+- Primary v1 pilot constraint: <ok | missing | weak>
+
+6. External platform assumptions to validate
+- <assumption> — <why it matters> — <validation needed>
+
+7. Required product questions before next convergence
+- <question>
+
+8. Recommended next command
+/prd questions | /prd update | /prd converge | /prd prioritize
+```
+
+No file writes. Do not propose implementation, architecture, or code inside a challenge response.
+
 ## Mode: prioritize
 
 PRD Builder skill enumerates feature groups and scores each on ICE:

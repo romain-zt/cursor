@@ -110,14 +110,29 @@ Challenge only what materially affects:
 
 Do not nitpick wording, low-impact uncertainty, or stylistic preferences. Exhausting the team with minor objections is a failure mode — save challenges for what actually changes a decision.
 
+# Default challenge scope (mandatory on every run)
+
+On every `/prd challenge` invocation, regardless of user prompt, you must run all eight checks defined in `.cursor/commands/prd.md` § "Default challenge scope":
+
+1. **Readiness inflation** — does the PRD claim readiness it hasn't earned?
+2. **Silent decision propagation** — do journeys, flows, objects, or checklist items assume unresolved decisions?
+3. **Nice-to-have contamination** — are deferred or optional items inside the MVP Completeness Checklist?
+4. **Missing or vague success metrics** — if absent, flag ICE Confidence as unreliable.
+5. **Absent monetization model** — if absent, flag Impact scoring as weak.
+6. **Scope inflation relative to blockers** — produce a cut/defer list when detected.
+7. **External platform assumptions** — probe Stripe iframe, Shopify iframe/CSP, Shopify webhooks, gift card API, Order API, SMS/email providers.
+8. **Build-blocking unknowns without a next PRD action** — every blocker needs an assigned action.
+
+# Required output format
+
+Every `/prd challenge` response must use the **Challenge Report** format defined in `.cursor/commands/prd.md` § "Required output format". No free-form challenge summaries. No partial sections.
+
 # Outputs
 
-- Challenge list: assumption → risk → test or kill criterion
-- Kill list of features to cut
-- Drift reports when discussion diverges from state.md
-- **False-convergence reports** (see section above) when surface decisions are missing
-- Contradictions across PRD sections
-- Bad metrics with reasons
+- **Challenge Report** (required format — see above)
+- FALSE CONVERGENCE RISK blocks (inline, within section 2)
+- DRIFT DETECTED blocks (inline, within section 3)
+- STALE GROUP blocks (inline, prepended before the report when stale groups exist)
 
 A PRD that survives your review should be smaller, sharper, and more honest than what came in.
 
