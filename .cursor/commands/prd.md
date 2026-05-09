@@ -86,12 +86,14 @@ Human-first discovery loop driven by `docs/prd/questions/open-questions.md`.
 
 See `.cursor/commands/prd-questions.md` for the full spec. Short version:
 
-1. Read `docs/prd/questions/open-questions.md`.
-2. Find the highest-priority `open` question (lowest priority number, then lowest ID).
-3. Ask **only that one question**. No table. No summary.
-4. Do not write to `PRD.md`. Do not run convergence, ICE, or Surface Gate.
-5. After the user answers, update the discovery note and question file, then ask the next open question.
-6. When no open questions remain, suggest `/prd converge`.
+1. Read `docs/prd/PRD.md`, `docs/prd/state.md`, `docs/prd/questions/open-questions.md`, and the latest relevant discovery note (see `prd-questions.md` Pre-flight).
+2. If the Active queue has no `open` rows, **mandatorily scan** `docs/prd/PRD.md` for unresolved blockers (sections and triggers listed in `prd-questions.md`). Append deduplicated `open` rows to `open-questions.md` for each gap not already in the queue.
+3. Find the highest-priority `open` question (lowest priority number, then lowest ID).
+4. Ask **only that one question**. No table. No summary.
+5. Do not write to `PRD.md`. Do not run convergence, ICE, or Surface Gate.
+6. After the user answers, update the discovery note and question file (including **Superseded answered questions** annotations when the answer overrides earlier Answered rows — see `.cursor/commands/prd-questions.md`), then repeat from step 2.
+7. Recommend `/prd converge` **only when** the Active queue has no `open` rows **and** the mandatory PRD blocker scan finds nothing that requires a new question.
+8. Never instruct the user to manually repopulate blockers via `/prd note`.
 
 ## Mode: note
 
@@ -100,7 +102,7 @@ Capture user input as a discovery note and update the question queue.
 1. Append the raw input to the active discovery note (`docs/prd/notes/YYYY-MM-DD-<topic>-discovery-note.md`).
 2. Interpret the likely product meaning in 1–3 lines.
 3. Identify the PRD implication in 1–3 lines.
-4. If the input opens or answers a question, update `docs/prd/questions/open-questions.md`.
+4. If the input opens or answers a question, update `docs/prd/questions/open-questions.md` (including **Superseded answered questions** handling when the insight contradicts an earlier Answered row — see `.cursor/commands/prd-questions.md`).
 5. Ask **one** follow-up question maximum. Stop.
 
 Do not propose PRD updates.
@@ -134,7 +136,7 @@ Used after the global product picture is coherent enough to define one feature g
 
 `/prd converge` **may**:
 1. Read `docs/prd/PRD.md`, `docs/prd/state.md`, `docs/prd/notes/`, and `docs/prd/questions/open-questions.md`.
-2. Synthesize the latest discovery into a proposal.
+2. Synthesize the latest discovery into a proposal, applying **Current truth resolution** when interpreting **Answered** queue rows (see `.cursor/commands/prd-questions.md`) so superseded answers are not revived as current facts.
 3. Produce either:
    - one **Global PRD Enrichment Proposal** (target A), OR
    - one **Primary Feature Group Candidate** with other candidate groups listed by name only (target B)
@@ -239,6 +241,15 @@ For each, state why it matters and what validation is needed before it can be tr
 **8. Build-blocking unknowns without a next PRD action**
 Every open question that blocks a feature group from progressing must have an assigned next PRD action: `/prd questions`, `/prd update`, `/prd converge`, or explicit external validation. Flag any blocker that has no assigned action.
 
+**9. Stale answered-question contradictions**
+Apply **Current truth resolution** (`.cursor/commands/prd-questions.md`). Flag when incompatible implications remain across **Answered** rows without clear temporal/supersession ordering — especially when an older row still reads as definitive.
+
+**10. Answered queue conflicts with PRD.md or state.md**
+Flag when persisted `docs/prd/PRD.md` or `docs/prd/state.md` disagrees with facts implied by **Answered** queue cells that lack a supersession annotation or that were never reconciled after `/prd update`.
+
+**11. Missing supersession markers**
+Flag when later discovery (newer answered row, discovery note, or persisted PRD change) **changes, narrows, or contradicts** an earlier **Answered** row but that older row was **not** annotated (e.g. `SUPERSEDED by Q-NNN …`). Recommend `/prd questions` (capture pass) or annotating via the next `/prd update` per orchestrator rules — never silent merge.
+
 ### Required output format
 
 Every `/prd challenge` response must use this format exactly:
@@ -293,6 +304,8 @@ Output: ranked table with KEEP / DEFER / CUT / TEST-FIRST decisions + explicit c
 
 `/prd update` is the only mode allowed to write `docs/prd/PRD.md`, `docs/prd/state.md`, `docs/prd/history.md`, or `docs/prd/archive/`. All other modes must not write to those files. Discovery modes (`discover`, `note`, `questions`) may write to `docs/prd/notes/` and `docs/prd/questions/` — those are capture artifacts (see Discovery artifacts below).
 
+When `/prd update` persists a PRD change that **supersedes** facts previously captured in older **Answered** rows, also update `docs/prd/questions/open-questions.md` **as a capture artifact only**: annotate those older rows (Answer / PRD impact) with a supersession pointer to the governing source (`PRD.md` after write and/or the newer `Q-NNN`). **Never delete** historical Answered rows. This annotation does **not** count as PRD persistence and does **not** require a version bump — include `docs/prd/questions/open-questions.md` in the Patch Intent Summary’s **Files to change** when applicable.
+
 `/prd update` is a structured persistence workflow. It is not implementation, specs, tickets, or architecture — SISO must not block it. It still requires explicit persistence approval through a Patch Intent Summary or full PRD Delta Proposal.
 
 ### Default: Patch Intent Summary
@@ -314,12 +327,13 @@ Patch Intent Summary
 Files to change:
 - docs/prd/PRD.md — <short description>
 - docs/prd/state.md — <short description>
+- docs/prd/questions/open-questions.md — <only when supersession annotations are required — short description>
 
 Files not touched:
 - docs/prd/history.md
 - docs/prd/archive/
 - docs/prd/notes/
-- docs/prd/questions/
+- docs/prd/questions/open-questions.md — <omit this line when it appears under Files to change>
 - docs/product-decisions/
 
 Patch type:
@@ -333,6 +347,7 @@ Safety:
 - no implementation specs/tickets/architecture
 - no history/archive update
 - unresolved blockers remain listed
+- answered-queue rows are never deleted — supersession annotations only
 
 Approval required:
 Reply `approved` to apply.
@@ -413,13 +428,15 @@ Next recommended command:
    - If any required surface field (buyer entry point, buyer-facing surface, merchant operating surface, source of truth, market/language) is UNKNOWN, Status MUST be `validated-with-open-surface` (not `validated`, not `committed`) and the `Surface Blockers` list MUST be persisted verbatim.
    - Confidence in the persisted ICE tuple MUST respect the surface cap (≤ 4 when applicable).
    - A promotion to `validated` or `committed` requires written confirmation that all required surface fields are resolved.
-5. On `approved`, apply the smallest edit. Output only the compact final response format — do not echo file content. If version bump: add a row to `docs/prd/history.md`, copy current PRD.md to `docs/prd/archive/PRD-v<N>.md`, then update PRD.md + state.md.
+5. On `approved`, apply the smallest edit. Output only the compact final response format — do not echo file content. If version bump: add a row to `docs/prd/history.md`, copy current PRD.md to `docs/prd/archive/PRD-v<N>.md`, then update PRD.md + state.md. When the persisted delta supersedes older **Answered** queue facts, apply matching **supersession annotations** to `docs/prd/questions/open-questions.md` in the same approval (capture artifact only; never delete rows).
 
 **A PRD patch is not a version bump.** Do not write `docs/prd/history.md` or `docs/prd/archive/` for a patch unless the user explicitly approved those files.
 
 ## Discovery artifacts
 
 Writes to `docs/prd/notes/` and `docs/prd/questions/open-questions.md` are **capture artifacts** — they are allowed in `discover`, `note`, and `questions` modes and must not be blocked by SISO. They are not PRD persistence and do not trigger version bumps.
+
+During `/prd update`, edits to `open-questions.md` are limited to **supersession annotations** (and similar reconciliation markers) when persisted PRD changes override older answered-queue facts — still capture artifacts, not a substitute for `PRD.md`.
 
 ## Hard rules
 
@@ -428,5 +445,6 @@ Writes to `docs/prd/notes/` and `docs/prd/questions/open-questions.md` are **cap
 - No writes to `PRD.md`, `state.md`, or `history.md` outside `update` mode.
 - No version bumps without the triggers in `10-prd-discovery.mdc`.
 - Drift between conversation and state.md is surfaced, not silently absorbed.
+- Never delete **Answered** rows in `docs/prd/questions/open-questions.md`; supersede via annotation only (see `.cursor/commands/prd-questions.md`).
 - No persistence of `validated` / `committed` while required surface fields are UNKNOWN. Use `validated-with-open-surface` and persist the blockers.
 - No implementation specs, tickets, or architecture work derived from a `validated-with-open-surface` group unless the user has explicitly waived the specific blocker in writing.

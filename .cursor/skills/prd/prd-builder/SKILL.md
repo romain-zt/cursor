@@ -114,12 +114,13 @@ Convergence is synthesis, not persistence.
 When `/prd converge` is invoked:
 
 1. Read discovery notes and answered questions.
-2. Determine the converge target (see `.cursor/commands/prd.md` Mode: converge):
+2. When interpreting **Answered** queue rows, apply **Current truth resolution** (`.cursor/commands/prd-questions.md`); treat `docs/prd/PRD.md` as authoritative after persistence, prefer later answers for the same topic, and honor explicit `SUPERSEDED by Q-…` markers — do not resurrect stale answered facts.
+3. Determine the converge target (see `.cursor/commands/prd.md` Mode: converge):
    - **A — Global PRD Enrichment Proposal**: if required global PRD sections are absent or TBD while notes contain relevant material.
    - **B — Feature-Group Convergence Proposal**: if the global picture is coherent and a feature group is ready to define.
    - Produce one or the other — never both in the same response.
-3. For target A: propose the global sections to enrich, cite content sources, list open blockers, ask one validation question. Stop.
-4. For target B: draft **at most one** primary feature group candidate, list other possible groups as **candidates only** (names, no full drafts), ask one validation question. Stop.
+4. For target A: propose the global sections to enrich, cite content sources, list open blockers, ask one validation question. Stop.
+5. For target B: draft **at most one** primary feature group candidate, list other possible groups as **candidates only** (names, no full drafts), ask one validation question. Stop.
 
 Do not:
 - validate groups automatically
@@ -527,6 +528,12 @@ Default persistence mode is **Patch Intent Summary**, not full Before/After.
 - Never treat `ok` as persistence approval.
 - Never echo full PRD content after writing.
 - The PRD file is the document surface; chat is the approval/control surface.
+
+### Answered-queue supersession annotations (`open-questions.md`)
+
+When the persisted PRD/`state.md` delta **supersedes** facts implied by older **Answered** rows, apply matching annotations in `docs/prd/questions/open-questions.md` in the **same** approved write batch (capture artifact only — not a version bump). Edit **Answer** and/or **PRD impact** cells only; use explicit supersession wording per `.cursor/commands/prd-questions.md` (e.g. pointer to newer `Q-NNN` or “persisted PRD”). **Never delete** answered rows.
+
+Include `docs/prd/questions/open-questions.md` under Patch Intent Summary **Files to change** when those annotations are needed; omit when no older answered facts are overridden.
 
 ### Default: Patch Intent Summary
 

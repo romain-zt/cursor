@@ -125,9 +125,30 @@ Do not block informal language, typos, fragments, contradictions, or rough found
 
 Capture it, interpret it, and ask one follow-up question.
 
+## Empty queue invariant
+
+An empty `Active queue` does not mean discovery questions are complete.
+
+Before saying:
+
+```txt
+No remaining open discovery questions.
+
+Next recommended step:
+- /prd converge
+```
+
+you MUST:
+
+1. Scan `docs/prd/PRD.md` using the **PRD blocker scan** in `.cursor/commands/prd-questions.md` (sections: Surface Blockers; MVP Completeness Checklist; Open before implementation-readiness; Risks & Assumptions; Success Metrics; Integration Boundaries; Configuration Matrix).
+2. If the scan finds unresolved blockers, TBD fields, provider TBDs, validation-needed items, or explicit “open” items not already covered by the queue, append deduplicated `open` rows to `docs/prd/questions/open-questions.md` and ask **only** the highest-priority new question.
+3. Output the “No remaining open discovery questions” + `/prd converge` message **only** when the Active queue has no `open` rows **after** that scan and repopulation.
+
+Never tell the user to manually add PRD blockers via `/prd note` instead of running this scan.
+
 ## When to stop
 
-If no open questions remain, respond **exactly**:
+If the mandatory PRD blocker scan (see `.cursor/commands/prd-questions.md`) finds nothing to add **and** the Active queue has no `open` rows, respond **exactly**:
 
 ```txt
 No remaining open discovery questions.

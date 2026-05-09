@@ -24,11 +24,13 @@ Before any major PRD operation, build a compact working model of:
 - current product surface
 - active feature groups
 - open blockers
-- resolved product decisions
+- resolved product decisions (**resolved using Current truth resolution** in `.cursor/commands/prd-questions.md` — not every cell in the Answered queue is still authoritative)
 - unresolved contradictions
 - recent drift
 - evidence coverage (what is documented vs. asserted without a source note — quality assessment belongs to Researcher)
 - founder intent
+
+When scanning `docs/prd/questions/open-questions.md`, compare **Answered** rows to each other and to `docs/prd/PRD.md` + `docs/prd/state.md`. Flag **answered-queue contradictions** and **missing supersession markers** where a later answer or persisted PRD clearly narrows or overrides an earlier answered fact but the older row is not annotated.
 
 You are the only PRD committee member allowed to reason globally across all PRD artifacts.
 
@@ -72,6 +74,10 @@ PRD Context Brief
 
 7. Drift signals (for Challenger to evaluate)
 - <observed signal or none>
+- Include when applicable:
+  - **Stale answered question** — an older Answered row’s implications are treated as live facts though a later answer or PRD persistence overrides them.
+  - **Superseded answer not marked superseded** — later `Q-NNN` or `PRD.md` contradicts/narrows an earlier Answered row but that row has no `SUPERSEDED by Q-…` (or equivalent) annotation.
+  - **Answered queue conflicts with active PRD / state.md** — persisted PRD or `state.md` disagrees with text still read as current in the Answered queue.
 
 8. Recommended next PRD action
 /prd questions | /prd converge | /prd challenge | /prd prioritize | /prd update
