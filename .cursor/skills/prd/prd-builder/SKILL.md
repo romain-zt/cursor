@@ -80,6 +80,16 @@ Do not:
 
 **Checkpoint scope.** If the user replies "ok", that validates only the current checkpoint — not the whole PRD, not all groups, and not file persistence. If the user wants to continue, continue one checkpoint or one group at a time.
 
+## 2.7 PRD Lead Pre-flight
+
+`/prd converge`, `/prd prioritize`, and `/prd update` require a current PRD Lead Context Brief before PRD Builder acts.
+
+Rules:
+- On the **initial invocation** of `converge`, `prioritize`, or `update`, confirm that a PRD Lead Context Brief has been produced for this command flow (see `.cursor/agents/prd/prd-lead.md`).
+- The brief is context reconstruction only — not validation, not a convergence proposal, not persistence approval.
+- **Do not re-run PRD Lead** when the user responds `approved`, `preview`, or `cancel` to an existing Patch Intent Summary or PRD Delta Proposal. Those responses resume an active approval flow.
+- If no brief exists and the user did not produce one earlier in the session, prompt for it before proceeding.
+
 ## 3.0 Group type
 
 Declare at the start of each feature group. Determines required sections.
@@ -189,6 +199,10 @@ Produce one block per gate run. Persisted as part of the active PRD (under "Prod
 The primary group drives the current loop. Exploratory groups may be named and partially drafted but not scored or persisted until elevated to primary. Exploratory groups dormant for more than 14 days must be re-challenged before reactivation — not resumed silently.
 
 Avoid unlimited parallel discovery — three open fronts is already aggressive.
+
+### 3.0 PRD Lead pre-flight
+
+Confirm a PRD Lead Context Brief exists for this command flow (see §2.7). If missing, request it before proceeding.
 
 ### 3.1 Surface the candidate feature group
 
@@ -445,6 +459,8 @@ Plus:
 `/prd update` is persistence, not discovery.
 
 Default persistence mode is **Patch Intent Summary**, not full Before/After.
+
+**PRD Lead pre-flight**: confirm a PRD Lead Context Brief exists for this `/prd update` flow (see §2.7) before assessing Patch Intent Summary vs. full PRD Delta Proposal. Do not re-run on `approved`, `preview`, or `cancel`.
 
 ### Invariants
 
