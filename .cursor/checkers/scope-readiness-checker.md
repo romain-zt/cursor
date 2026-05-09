@@ -132,6 +132,8 @@ Cross-reference PRD `Hard v0 exclusions` section:
 
 Run when evaluating whether a Scope Slice is ready for user story writing.
 
+Scope Slices newly created by `/feature-area scaffold-slices` may **not** yet satisfy every check in Part 2 (for example SS-03) until template sections not filled during scaffold are completed — a BLOCKED verdict is expected until refinement.
+
 ### SS-01 · Single user value
 
 > The User Value section states exactly one user benefit in one sentence, without implementation language.

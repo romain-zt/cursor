@@ -2,7 +2,7 @@
 
 Two specialized agents that govern Feature Area decomposition from PRD Feature Groups toward Scope Slices.
 
-This is **AI-assisted decomposition governance**: proposals and checks precede decomposition; **`/feature-area scaffold`** writes Feature Area markdown from an approved Feature Area Map. The Feature Area Builder skill drives the workflow; the agents provide context reconstruction and adversarial review.
+This is **AI-assisted decomposition governance**: proposals and checks precede decomposition; **`/feature-area scaffold`** writes Feature Area markdown from an approved Feature Area Map; **`/feature-area scaffold-slices`** writes Scope Slice markdown from an approved `/feature-area slice` proposal. The Feature Area Builder skill drives the workflow; the agents provide context reconstruction and adversarial review.
 
 ## Members
 
@@ -13,7 +13,7 @@ This is **AI-assisted decomposition governance**: proposals and checks precede d
 
 ## Operational core
 
-The [`feature-area-builder`](../../skills/feature-area/feature-area-builder/SKILL.md) skill drives the decomposition loop: PRD-to-Feature-Area mapping, **`scaffold` file writes** after approval, checker-based validation, and Scope Slice proposals. Feature Area Lead and Scope Critic provide context and adversarial viewpoints — they do not drive the workflow.
+The [`feature-area-builder`](../../skills/feature-area/feature-area-builder/SKILL.md) skill drives the decomposition loop: PRD-to-Feature-Area mapping, **`scaffold` file writes** after map approval, checker-based validation, Scope Slice proposals, and **`scaffold-slices` file writes** after slice approval. Feature Area Lead and Scope Critic provide context and adversarial viewpoints — they do not drive the workflow.
 
 ## Operating principle
 
@@ -34,12 +34,22 @@ The [`feature-area-builder`](../../skills/feature-area/feature-area-builder/SKIL
   → builder runs FA-01–FA-09 + CC checks
   → verdict: CLEAR | BLOCKED
 
+/feature-area promote <name>
+  → [feature-area-lead context brief]
+  → builder re-runs FA-01–FA-09 + CC checks; if CLEAR and status exploratory, narrow file update to validated
+  → if already validated: no-op
+
 /feature-area slice <name>
   → [feature-area-lead context brief]
   → builder confirms validated status + no NEED_HUMAN
   → builder proposes Scope Slices
   → [scope-critic reviews proposal]
-  → user creates Scope Slice files
+  → user approves proposal
+
+/feature-area scaffold-slices <name>
+  → [feature-area-lead context brief — reuse from slice when same-thread; brief first on cold-start]
+  → builder writes docs/product/scope-slices/<fa-kebab>--<slice-kebab>.md from approved proposal + template
+  → skips existing non-empty Scope Slice files
 
 /feature-area check <artifact-path>
   → builder runs checker (no lead pre-flight needed)
@@ -53,7 +63,9 @@ Use the [`/feature-area`](../../commands/feature-area.md) command:
 - `/feature-area map` — read PRD, propose a Feature Area map
 - `/feature-area scaffold` — after approval, write initial Feature Area markdown from template
 - `/feature-area validate <name>` — run FA-01–FA-09 checks against a Feature Area file
+- `/feature-area promote <name>` — after CLEAR, apply the exploratory → validated transition fields on the Feature Area file
 - `/feature-area slice <name>` — propose Scope Slices for a validated Feature Area
+- `/feature-area scaffold-slices <name>` — after approval, create or fill Scope Slice files from template
 - `/feature-area check <artifact-path>` — run the scope-readiness checker against any artifact
 
 ## Governed by
@@ -65,6 +77,6 @@ Use the [`/feature-area`](../../commands/feature-area.md) command:
 ## Hard rules
 
 - No technical architecture, frameworks, data models, or implementation in committee output.
-- **`/feature-area scaffold`** is the only `/feature-area` mode that creates Feature Area files under `docs/product/feature-areas/`. Agents (Lead, Critic) do not write those files — the builder does, in scaffold mode only.
+- **`/feature-area scaffold`** is the only `/feature-area` mode that **creates** Feature Area files under `docs/product/feature-areas/`. **`/feature-area scaffold-slices`** is the only `/feature-area` mode that **creates or fills** Scope Slice files under `docs/product/scope-slices/`. **`/feature-area promote`** is the only mode that **applies the automated validated transition** on an existing Feature Area file (narrow edits only). Agents (Lead, Critic) do not write those files — the builder does, in `scaffold`, `scaffold-slices`, and `promote` only, per each mode’s rules.
 - No user stories, specs, or tasks at any point.
 - Advancement gates follow `.cursor/checkers/scope-readiness-checker.md` exclusively.

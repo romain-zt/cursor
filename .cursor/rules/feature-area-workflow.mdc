@@ -113,7 +113,8 @@ The following are strictly forbidden at each layer:
 
 **At Feature Area stage:**
 - Creating tasks or user stories from a Feature Area before Scope Slices are defined
-- Creating or overwriting Feature Area markdown under `docs/product/feature-areas/` **except** via `/feature-area scaffold` after user approval (see `.cursor/commands/feature-area.md`) — forbidden for agents/commands
+- Creating Feature Area markdown under `docs/product/feature-areas/` **except** via `/feature-area scaffold` after user approval — forbidden
+- Editing Feature Area markdown **except** via `/feature-area scaffold` (creation/population from an approved map), `/feature-area promote <name>` (only the narrow validated transition defined in `.cursor/commands/feature-area.md`), or ordinary human/manual edits — forbidden for agents/commands
 - Naming architecture, services, or runtime boundaries
 - Treating a Feature Area as implementation-ready
 
@@ -122,6 +123,7 @@ The following are strictly forbidden at each layer:
 - Writing implementation specs before user stories
 - Inventing data models, API designs, or service boundaries
 - Naming third-party integrations as implementation details (Stripe, etc. may be named as product-level constraints, not architecture)
+- Creating Scope Slice markdown under `docs/product/scope-slices/` **except** via `/feature-area scaffold-slices` after user approval of the `/feature-area slice` proposal (with parent Feature Area `validated` and `NEED_HUMAN: false`), or ordinary human/manual use of the template — forbidden for agents/commands
 
 **At all stages:**
 - Task slicing directly from `docs/prd/PRD.md`
@@ -136,7 +138,8 @@ The following are strictly forbidden at each layer:
 ### Feature Area lifecycle
 
 - A Feature Area in `exploratory` status **may** list candidate Scope Slices in its Candidate Scope Slices section (names + one-line descriptions only).
-- Formal Scope Slice documents (files under `docs/product/scope-slices/`) **may only be created** after the Feature Area is marked `validated`.
+- After `/feature-area validate <name>` returns **CLEAR**, **`/feature-area promote <name>`** may apply the predefined file updates (status, readiness checklist, verdict, changelog row) so the artifact matches `validated`; manual edits remain valid.
+- Formal Scope Slice documents (files under `docs/product/scope-slices/`) **may only be created** after the Feature Area is marked `validated`, via `/feature-area scaffold-slices <name>` after an approved `/feature-area slice` proposal, or by manually instantiating `.cursor/templates/product/scope-slice.template.md`.
 - User stories may only be written after a Scope Slice is marked `ready-for-user-stories`.
 
 ### Feature Area → Scope Slices

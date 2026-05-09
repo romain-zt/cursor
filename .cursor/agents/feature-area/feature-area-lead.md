@@ -84,7 +84,7 @@ Last major change: <date or "unknown">
 - <contradiction or gap, or "none">
 
 8. Recommended next operation
-/feature-area map | /feature-area validate <name> | /feature-area slice <name> | resolve blockers first
+/feature-area map | /feature-area validate <name> | /feature-area promote <name> | /feature-area slice <name> | /feature-area scaffold-slices <name> | resolve blockers first
 ```
 
 ---

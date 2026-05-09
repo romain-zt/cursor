@@ -13,10 +13,14 @@
 | `map` | Read PRD and propose a Feature Area map — no file writes |
 | `scaffold` | After an approved Feature Area Map, write initial Feature Area files from template — Feature Area markdown only |
 | `validate <feature-area-name>` | Run FA-01–FA-09 checks against an existing Feature Area file |
+| `promote <feature-area-name>` | After CLEAR readiness, apply the narrow `exploratory` → `validated` file transition (Status, Readiness Verdict, changelog) — existing Feature Area file only |
 | `slice <feature-area-name>` | Propose candidate Scope Slices for a validated Feature Area — no file writes |
+| `scaffold-slices <feature-area-name>` | After an approved Scope Slice proposal from `slice`, create or fill Scope Slice files from template — Scope Slice markdown only |
 | `check <artifact-path>` | Run the scope-readiness checker against any Feature Area or Scope Slice file |
 
-**Safety — Feature Area file creation:** `/feature-area scaffold` is the only `/feature-area` mode that may create Feature Area markdown files under `docs/product/feature-areas/`. All other modes remain proposal/check-only for those files.
+**Safety — Feature Area files:** `/feature-area scaffold` is the only mode that may **create** Feature Area markdown under `docs/product/feature-areas/`. `/feature-area promote` is the only mode that may **apply the automated validated transition** (status, readiness checklist, verdict line, changelog row) on an existing file. All other modes remain proposal/check-only for those files.
+
+**Safety — Scope Slice files:** `/feature-area scaffold-slices` is the only mode that may **create or fill** Scope Slice markdown under `docs/product/scope-slices/`. All other modes do not write those paths.
 
 Governed by: `.cursor/rules/feature-area-workflow.mdc`
 Templates: `.cursor/templates/product/`
@@ -35,12 +39,13 @@ Before any mode executes, the Feature Area Builder skill reads in this order:
 3. `docs/prd/questions/open-questions.md` — unresolved blockers
 4. `docs/product-decisions/README.md` — durable product decisions (if the file exists)
 5. `docs/product/feature-areas/` — all existing Feature Area files (if the directory exists)
+6. `docs/product/scope-slices/` — all existing Scope Slice files (if the directory exists)
 
 Do not skip step 3. Open blockers constrain all downstream work.
 
 If `docs/prd/PRD.md` is missing or empty, stop and suggest `/prd init` before proceeding.
 
-**Feature Area Lead pre-flight (`map`, `validate`, `slice`, initial `scaffold` only):** On the initial invocation of any of these modes, the Feature Area Lead agent (`.cursor/agents/feature-area/feature-area-lead.md`) produces a Feature Area Context Brief. The builder acts only after the brief is available. Skip for `check`. Do not re-run when the user is responding to an existing proposal. When running `scaffold` immediately after approving a Feature Area Map produced in the same conversation, reuse the Context Brief produced for `map` — do not re-run the Lead.
+**Feature Area Lead pre-flight (`map`, `validate`, `promote`, `slice`, `scaffold-slices`, initial `scaffold` only):** On the initial invocation of any of these modes, the Feature Area Lead agent (`.cursor/agents/feature-area/feature-area-lead.md`) produces a Feature Area Context Brief. The builder acts only after the brief is available. Skip for `check`. Do not re-run when the user is responding to an existing proposal. When running `scaffold` immediately after approving a Feature Area Map produced in the same conversation, reuse the Context Brief produced for `map` — do not re-run the Lead. When running `scaffold-slices` immediately after approving a Scope Slice proposal produced in **this same conversation**, reuse the Context Brief produced for `slice` — do not re-run the Lead.
 
 ---
 
@@ -80,7 +85,7 @@ Verdict: <N> proposed Feature Areas, <N> require PRD clarification before they c
 
 Next step:
 - Run `/feature-area scaffold` to create initial Feature Area files from `.cursor/templates/product/feature-area.template.md`
-- Run `/feature-area validate <name>` per area before attempting Scope Slice decomposition
+- Run `/feature-area validate <name>` per area, then `/feature-area promote <name>` after CLEAR, before Scope Slice decomposition
 ```
 
 **Scope Critic review:** After the builder produces the map proposal, the Scope Critic (`.cursor/agents/feature-area/scope-critic.md`) reviews it before it is presented to the user. If the Scope Critic returns a REVISE verdict, revise the proposal before presenting.
@@ -137,7 +142,7 @@ Next recommended command:
 
 **Hard rules for scaffold mode:**
 
-- **`/feature-area scaffold` is the only `/feature-area` mode that may create Feature Area files.** All others remain proposal/check-only for Feature Area markdown.
+- **`/feature-area scaffold` is the only `/feature-area` mode that may create Feature Area files.** **`/feature-area promote`** applies only the predefined validated-transition edits on an existing file. All other modes do not modify Feature Area files.
 - No Scope Slice file creation (`docs/product/scope-slices/`).
 - Do not invoke FA readiness checks inside scaffold — defer to **`/feature-area validate`**.
 - No user stories, specs, tasks, architecture, services, APIs, data models.
@@ -154,7 +159,7 @@ Runs the FA-01–FA-09 checks from `.cursor/checkers/scope-readiness-checker.md`
 2. Read `docs/prd/questions/open-questions.md` to cross-check open blockers.
 3. Run every check in Part 1 (FA-01 through FA-09) and Cross-Cutting checks CC-02, CC-03, CC-04, CC-05.
 4. Output the summary table.
-5. If all checks pass: state that the Feature Area may be marked `validated` and Scope Slices may be proposed via `/feature-area slice <name>`.
+5. If all checks pass: state that the Feature Area may be marked `validated` via `/feature-area promote <name>` (or manually) and Scope Slices may be proposed via `/feature-area slice <name>` after `validated`.
 6. If any check fails: block advancement and state what must be resolved.
 
 ### Output format
@@ -183,7 +188,83 @@ Use the Summary Output Format defined in `.cursor/checkers/scope-readiness-check
 **Hard rules for validate mode:**
 - No file writes.
 - Do not propose Scope Slices inside a validate response.
-- Do not mark the Feature Area as `validated` in the file — the user must do that after reviewing the verdict.
+- Do not mark the Feature Area as `validated` in the file from this mode — after a CLEAR verdict, use `/feature-area promote <name>` (or update the file manually).
+
+---
+
+## Mode: promote `<feature-area-name>`
+
+Runs the same Feature Area readiness checks as `/feature-area validate`, then **only if** the advancement verdict is **CLEAR**, applies a **narrow** update to the Feature Area file. **Does not** create files; **does not** change PRD, Scope Slices, or Feature Area scope content.
+
+### Input
+
+- `<feature-area-name>` → `docs/product/feature-areas/<feature-area-name>.md` (kebab filename as used for `validate` / `slice`).
+
+### Pre-conditions (all required before any write)
+
+1. The Feature Area file exists and is non-empty.
+2. Current `Status` is `exploratory` (if already `validated`, **no-op** — do not rewrite; report only).
+3. If `Status` is `blocked` or `deferred`, stop — promotion is not allowed; explain.
+4. `NEED_HUMAN: false` and `NEED_UPDATE: false` in the file.
+5. **Open Blockers:** no unresolved blocker rows (align with FA-06 — no active blockers in the table; cross-check `docs/prd/questions/open-questions.md` as in validate).
+6. Run FA-01 through FA-09 and CC-02 through CC-05 from `.cursor/checkers/scope-readiness-checker.md` (same set as validate). If any check does not pass, **stop and do not write**.
+
+### Behavior
+
+1. Read mandatory pre-flight sources (same order as other modes).
+2. Read the Feature Area file and `docs/prd/questions/open-questions.md`.
+3. Verify pre-conditions (status, flags, Open Blockers).
+4. Run FA-01–FA-09 and CC-02–CC-05; require **CLEAR**.
+5. **Only if CLEAR:**
+   - Set `## Status` value to `validated` (replace `exploratory` only in the status line / backtick line per file convention — do not alter other sections).
+   - In `## Readiness Verdict`, set every checklist item to checked: `[x]`.
+   - Set `**Verdict:**` to `READY FOR SCOPE SLICES` (replace prior verdict text only on that line).
+   - Append one row to `## Changelog`:
+
+     `| YYYY-MM-DD | Promoted to validated after CLEAR readiness check (`/feature-area promote`) | — |`
+
+     Use the current calendar date for `YYYY-MM-DD`.
+
+6. Do not modify: PRD Source, Product Intent, In/Out of Scope, Business Objects, Journeys, Dependencies, Risks, Open Blockers body (except if the template embeds verdict inside Open Blockers — it does not), Candidate Scope Slices, or any other section not listed above.
+
+### Output format
+
+```txt
+## /feature-area promote — result
+
+Promoted:
+- docs/product/feature-areas/<feature-area-name>.md
+
+Validation:
+- FA-01–FA-09: CLEAR
+- CC-02–CC-05: CLEAR
+
+Not changed:
+- PRD files
+- Scope Slice files
+- User stories / specs / tasks
+- Feature Area scope content
+
+Next recommended command:
+/feature-area slice <feature-area-name>
+```
+
+If **no-op** (already `validated`):
+
+```txt
+## /feature-area promote — result
+
+No-op: docs/product/feature-areas/<feature-area-name>.md is already status `validated`. File not modified.
+
+Next recommended command:
+/feature-area slice <feature-area-name>
+```
+
+**Hard rules for promote mode:**
+
+- **Only** the four edits above when CLEAR; no other file or section changes.
+- No Scope Slice file creation; no user stories, specs, tasks, or architecture.
+- If validation is **BLOCKED**, output the same style of summary table as validate (or a concise failure summary) and do not write.
 
 ---
 
@@ -204,7 +285,7 @@ Cannot propose Scope Slices.
 Feature Area "<name>" has status "<current status>".
 Scope Slice decomposition requires status = validated.
 
-Run `/feature-area validate <name>` to check what is blocking advancement.
+Run `/feature-area validate <name>` to check what is blocking advancement, then `/feature-area promote <name>` after CLEAR if status is still `exploratory`.
 ```
 
 3. Confirm `NEED_HUMAN: false`. If `NEED_HUMAN: true`, stop and list the open blockers — do not propose slices until they are resolved.
@@ -236,9 +317,8 @@ Deferred (v0 exclusion):
 - <slice candidate deferred with PRD reference>
 
 Next step:
-- Create Scope Slice files from `.cursor/templates/product/scope-slice.template.md`
-  Location: docs/product/scope-slices/<feature-area-kebab>--<slice-kebab>.md
-- Run `/feature-area check <artifact-path>` after filling each file
+- Run `/feature-area scaffold-slices <feature-area-name>` to create Scope Slice files from `.cursor/templates/product/scope-slice.template.md` under `docs/product/scope-slices/<feature-area-kebab>--<slice-kebab>.md`
+- Then run `/feature-area check <artifact-path>` on each created file
 ```
 
 **Scope Critic review:** After the builder produces the slice proposal, the Scope Critic reviews it before it is presented to the user. If the Scope Critic returns a REVISE verdict, revise the proposal before presenting.
@@ -248,6 +328,73 @@ Next step:
 - No architecture, data models, API routes, or technology choices.
 - Do not write user stories, specs, or tasks.
 - Each proposed slice must deliver user value independently.
+
+---
+
+## Mode: scaffold-slices `<feature-area-name>`
+
+Creates or fills Scope Slice markdown under `docs/product/scope-slices/` from the **most recent user-approved** `/feature-area slice <feature-area-name>` proposal in the current conversation. **Writes only** paths matching `docs/product/scope-slices/<feature-area-kebab>--<slice-kebab>.md`. Does not modify PRD, Feature Area files, or any other paths.
+
+### Pre-conditions
+
+1. Read the Feature Area Builder skill (`.cursor/skills/feature-area/feature-area-builder/SKILL.md`).
+2. A Scope Slice proposal for this Feature Area must be **approved by the user in the current conversation** (the table from `/feature-area slice <feature-area-name>`, after any Scope Critic revisions — not speculative). If no approved proposal is available in-context, stop:
+
+```txt
+No approved Scope Slice proposal found in this conversation for Feature Area "<feature-area-name>".
+
+Run `/feature-area slice <feature-area-name>` first, review the proposal, approve it explicitly, then run `/feature-area scaffold-slices <feature-area-name>` again.
+```
+
+3. Read `docs/product/feature-areas/<feature-area-name>.md` (filename must match the argument). Confirm **`Status: validated`**. If not, stop with the same gate message as Mode: slice (status not validated).
+4. Confirm **`NEED_HUMAN: false`** on the parent Feature Area. If `true`, stop and list open blockers — do not create files.
+
+### Behavior
+
+1. Complete mandatory pre-flight reads (PRD state, PRD.md, open questions, product-decisions if present). Use the parent Feature Area file and `docs/prd/PRD.md` only to ground **product-level** text; never invent implementation detail.
+2. For **each row** in the approved slice proposal table, resolve:
+   - `<feature-area-kebab>` = kebab basename of the parent Feature Area file (same as `<feature-area-name>` in the path).
+   - `<slice-kebab>` = kebab-safe slice name from the proposal (must match the row’s slice identity).
+   - Target path: `docs/product/scope-slices/<feature-area-kebab>--<slice-kebab>.md`
+3. **Skip without overwrite** if the target exists and is **non-empty** (trimmed length > 0). List each skipped path in the output.
+4. If the target is **missing** or **empty-only**, write the file from **`.cursor/templates/product/scope-slice.template.md`** (preserve template structure and headings).
+5. **Fill only** these sections (product-level prose only; no user stories, specs, tasks, architecture, API routes, data models, or implementation detail):
+   - **Parent Feature Area** — correct link to `../feature-areas/<feature-area-kebab>.md` and human-readable name.
+   - **Status** — default **`exploratory`** unless the approved proposal row explicitly marked the slice **`blocked`** or **`deferred`** (use that value).
+   - **NEED_HUMAN / NEED_UPDATE** — set from proposal + parent Feature Area + PRD grounded gaps. **`NEED_HUMAN: true`** only when missing product truth **blocks** writing user stories for this slice; otherwise `false`. **`NEED_UPDATE: true`** only when templates/rules/checkers are inadequate for this slice; otherwise `false`. Use clear product-level **TBD** in body text where the approved proposal + parent FA + PRD do not supply an answer.
+   - **User Value** — from the proposal row (and parent context if needed); no invention.
+   - **Exact Boundary** — Included / Excluded behavior lists from the proposal’s boundary + parent FA in/out scope + PRD; use TBD bullets where unknown.
+   - **Credit / Payment Impact**, **Sharing / Privacy Impact**, **Feedback / Instrumentation Impact** — from proposal notes/cross-cutting row + parent FA + PRD; if none, use the template’s “None — …” style short statements.
+   - **Dependencies** — product-level only (other slices, Feature Areas, or named constraints); TBD table rows if unknown.
+   - **Blockers** — from proposal blockers column + open questions affecting this slice; align with NEED_HUMAN.
+   - **Acceptance-Level Outcome** — behavioral, from proposal + parent FA when sufficient; otherwise a short product-level TBD.
+   - **Changelog** — append one row: current date, scaffolded-from-approved `/feature-area slice` proposal via `/feature-area scaffold-slices`, author `—`.
+6. **Do not fill** (leave template placeholders / empty tables as in the template): **UX States**, **Data Touched**, **Readiness for User Stories** checklist, **Verdict** under Readiness — those are owned by later refinement and `/feature-area check`.
+7. **Do not** modify PRD, Feature Area files, or any file outside `docs/product/scope-slices/<feature-area-kebab>--<slice-kebab>.md`.
+
+### Output format
+
+```txt
+## /feature-area scaffold-slices — result
+
+Feature Area: <feature-area-kebab> (validated, NEED_HUMAN=false)
+
+Created:
+- docs/product/scope-slices/<feature-area-kebab>--<slice-kebab>.md
+
+Skipped (existing non-empty file):
+- docs/product/scope-slices/<feature-area-kebab>--<slice-kebab>.md
+
+Next recommended command:
+/feature-area check docs/product/scope-slices/<feature-area-kebab>--<slice-kebab>.md   ← per created or updated file
+```
+
+**Hard rules for scaffold-slices mode:**
+
+- **Only** `/feature-area scaffold-slices` may **create or fill** Scope Slice files under `docs/product/scope-slices/` within this command family.
+- No PRD or Feature Area mutations.
+- No overwrite of non-empty Scope Slice files.
+- No user stories, specs, tasks, architecture, services, APIs, data models.
 
 ---
 
@@ -281,7 +428,7 @@ Runs the full scope-readiness checker against any Feature Area or Scope Slice fi
 **NEED_UPDATE:** true | false
 
 Next recommended command:
-- /feature-area validate <name> | /feature-area slice <name> | resolve blockers and re-run check
+- /feature-area validate <name> | /feature-area promote <name> (after CLEAR) | /feature-area slice <name> | /feature-area scaffold-slices <name> (after approved slice proposal) | resolve blockers and re-run check
 ```
 
 **Hard rules for check mode:**
@@ -297,7 +444,9 @@ Next recommended command:
 | `map` | Context Brief (pre-flight) | Drives proposal | Reviews proposal |
 | `scaffold` | Context Brief (reuse from `map` when same-thread; else initial pre-flight) | Writes Feature Area markdown from approved map | Not invoked |
 | `validate` | Context Brief (pre-flight) | Runs checker | Not invoked |
+| `promote` | Context Brief (pre-flight) | Runs checker; narrow file update if CLEAR | Not invoked |
 | `slice` | Context Brief (pre-flight) | Drives proposal | Reviews proposal |
+| `scaffold-slices` | Context Brief (reuse from `slice` when same-thread; else initial pre-flight) | Writes Scope Slice markdown from approved proposal | Not invoked |
 | `check` | Not invoked | Runs checker | Not invoked |
 
 Read `.cursor/agents/feature-area/README.md` for the full operating principle.
@@ -307,9 +456,10 @@ Read `.cursor/agents/feature-area/README.md` for the full operating principle.
 ## Hard rules (all modes)
 
 - No task slicing, user stories, specs, or architecture at any point (**`scaffold` included** — it fills template sections from PRD sources only).
-- **`/feature-area scaffold` is the only mode that may create or populate** `docs/product/feature-areas/*.md`. Do not write those files from map, validate, slice, or check.
+- **`/feature-area scaffold` is the only mode that may create** `docs/product/feature-areas/*.md`. **`/feature-area promote`** is the only mode that may apply the automated **validated transition** (status, readiness checklist, verdict, changelog row) on an existing Feature Area file. Do not write or rewrite Feature Area files from map, validate, slice, `scaffold-slices`, check, or promote beyond what promote explicitly allows.
+- **`/feature-area scaffold-slices` is the only mode that may create or fill** `docs/product/scope-slices/<feature-area-kebab>--<slice-kebab>.md`, and only from a user-approved `/feature-area slice` proposal with parent Feature Area gates satisfied. Do not write Scope Slice files from map, validate, promote, slice, or check.
 - Do not skip levels in the hierarchy: PRD → Feature Area → Scope Slice.
-- Do not mark any artifact as `validated` or `ready-for-user-stories` in response text — the user must update the file.
+- Do not mark a Feature Area `validated` via map, validate, slice, or check — use **`/feature-area promote`** after CLEAR or edit manually. Do not mark Scope Slices `ready-for-user-stories` in lieu of updating those files through their own workflow.
 - Do not carry "Feature Group" terminology into any output — use "Feature Area" exclusively.
 - Any `NEED_HUMAN=true` flag blocks advancement until the user explicitly resolves it.
 - Any `NEED_UPDATE=true` flag must surface a description of what is missing before proceeding.

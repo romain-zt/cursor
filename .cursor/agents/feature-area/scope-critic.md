@@ -89,7 +89,7 @@ Flag every terminology mismatch.
 
 Invoke after a `/feature-area map` proposal — before Feature Area files are created.
 
-Invoke after a `/feature-area slice` proposal — before Scope Slice files are created.
+Invoke after a `/feature-area slice` proposal — before `/feature-area scaffold-slices` runs.
 
 Do not invoke during `/feature-area validate` or `/feature-area check` — those modes run the mechanical checker; critique there is redundant.
 
