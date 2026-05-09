@@ -76,7 +76,7 @@ Any input during `/prd discover`, `/prd note`, `/prd questions`, or informal PRD
 - Update the question queue if relevant.
 - Ask one follow-up question maximum.
 
-**`/prd update`** (and file writes to `PRD.md` / `state.md`) is a structured PRD workflow command — always treat it as **DISCOVERY**. It synthesizes prior discovery material into the PRD; it does not require SISO evaluation.
+`/prd update` is a structured PRD persistence workflow. It is not implementation, specs, tickets, architecture, dependency installation, terminal execution, or code mutation. SISO must not block `/prd update` as execution. However, `/prd update` still requires explicit persistence approval through a Patch Intent Summary + `approved`, or a full PRD Delta Proposal + `approved`. Never treat `ok` as persistence approval.
 
 SISO blocking applies in these PRD contexts **only** when the user explicitly requests:
 - implementation specs, tickets, or architecture intended for execution

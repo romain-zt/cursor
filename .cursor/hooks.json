@@ -1,12 +1,4 @@
 {
   "version": 1,
-  "hooks": {
-    "beforeSubmitPrompt": [
-      {
-        "type": "prompt",
-        "prompt": "Classify the request. These are always safe — do not block: PRD discovery, product thinking, raw founder insight, answer to an open question, informal product clarification, /prd discover, /prd note, /prd questions, /prd converge. /prd converge is a read-only synthesis mode that writes no files. Writes to docs/prd/notes/ and docs/prd/questions/ are capture artifacts — always allowed. Apply SISO only for: /prd update, mutations to PRD.md / state.md / history.md / archive/, implementation specs, tickets, architecture for execution, code edits, dependency changes, terminal commands. The hook must not run convergence or update logic itself.",
-        "timeout": 10
-      }
-    ]
-  }
+  "hooks": {}
 }

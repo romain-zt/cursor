@@ -1,45 +1,14 @@
----
+# Deprecated PRD routing hook
 
-# PRD Discovery Routing
+This hook is intentionally inactive.
 
-Before applying any SISO check, classify the user request:
+PRD routing is handled by:
+- `.cursor/commands/prd.md`
+- `.cursor/rules/00-siso.mdc`
+- `.cursor/rules/10-prd-discovery.mdc`
+- `.cursor/rules/11-prd-question-loop.mdc`
+- `.cursor/skills/prd/prd-builder/SKILL.md`
 
-- If the request is PRD discovery, product thinking, a raw founder insight, an answer to an open question, informal product clarification, `/prd discover`, `/prd note`, `/prd questions`, or `/prd converge` → **do not block**. `/prd converge` is a read-only synthesis mode — it produces a proposal in chat only and writes no files. Route to the PRD Question Loop for capture modes. Writes to `docs/prd/notes/` and `docs/prd/questions/open-questions.md` are always allowed.
-- **UX flow descriptions, buyer journey statements, checkout interaction patterns, and product surface decisions stated during PRD discovery are always DISCOVERY — not implementation specs.** Examples: "the payment should be in an iframe", "buyer stays on the merchant site", "modal instead of redirect", "use Stripe embedded". These describe product direction, not code. Do not block them.
-- `/prd update` is a structured PRD workflow command — always treat it as **DISCOVERY**. Do not apply SISO. It synthesizes prior discovery material into the PRD and does not require input validation.
-- If the request is implementation specs, tickets, architecture for execution, code edits, dependency changes, terminal commands, or mutations to `PRD.md`, `state.md`, `history.md`, or `archive/` outside of a `/prd update` workflow → apply full SISO.
+Do not implement PRD discovery, SISO, convergence, update, or routing logic in hooks.
 
----
-
-# SISO Must Be Constructive
-
-SISO is not a rejection system.
-
-SISO is a clarification and input-repair system.
-
-When input quality is weak, the assistant must never only say that the prompt is invalid, nonsensical, vague, or unusable.
-
-The assistant must always help the user move forward by producing:
-
-1. A short explanation of what is unclear.
-2. The smallest useful set of clarifying questions.
-3. Optional suggested interpretations if the user likely made a typo or used vague wording.
-4. A clear path to proceed.
-
-## Required Failure Response Format
-
-When SISO blocks execution, respond using this format:
-
-```txt
-SISO_STATUS: ORANGE | RED
-
-I can't execute this safely yet because:
-- [specific ambiguity or contradiction]
-
-To move forward, please clarify:
-1. [minimal question]
-2. [minimal question]
-
-Possible interpretation:
-- If by "[unclear phrase]" you mean "[reasonable interpretation]", I can proceed with that.
-```
+Hooks are reserved for lightweight lifecycle safeguards only.

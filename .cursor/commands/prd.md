@@ -14,10 +14,10 @@
 | `discover` | PRD Builder skill | Open product discovery, free-form capture |
 | `questions` | PRD Question Loop | Ask the next unresolved discovery question |
 | `note` | PRD Question Loop | Capture one insight as a discovery note, update question queue |
-| `converge` | PRD Builder skill | Synthesize notes into a proposed PRD delta |
-| `challenge` | Challenger agent | Stress-test assumptions, scope, drift |
-| `prioritize` | PRD Builder skill | Re-rank feature groups using ICE |
-| `update` | PRD Builder skill | Persist an approved delta |
+| `converge` | PRD Lead → PRD Builder skill | Reconstruct product context, then synthesize notes into a proposed PRD delta |
+| `challenge` | PRD Lead → Challenger agent | Reconstruct product context, then stress-test assumptions, scope, drift |
+| `prioritize` | PRD Lead → PRD Builder skill | Reconstruct product context, then re-rank feature groups using ICE |
+| `update` | PRD Lead → PRD Builder skill | Reconstruct product context, then persist an approved delta |
 
 If no mode is given:
 
@@ -27,28 +27,18 @@ If no mode is given:
 
 ## Templates
 
-Canonical reusable document templates live under `.cursor/templates/prd/`.
+Canonical template rules live in `.cursor/rules/10-prd-discovery.mdc`.
 
-Project files under `docs/prd/` and `docs/product-decisions/` are generated or edited project instances, not template sources.
-
-Do not use `docs/prd/notes/README.md`, `docs/prd/questions/open-questions.md`, `docs/prd/PRD.md`, `docs/prd/state.md`, `docs/prd/history.md`, or `docs/product-decisions/*.md` as canonical templates.
-
-When creating or reinitializing a discovery note, use `.cursor/templates/prd/discovery-note.template.md`.
-
-When creating or reinitializing the open question queue, use `.cursor/templates/prd/open-questions.template.md`.
-
-When creating or reinitializing PRD/state/history/product-decision files, use the matching file under `.cursor/templates/prd/`.
-
-Existing files under `docs/` may be read as project context, but not copied as reusable templates.
-
-`docs/prd/notes/README.md` is allowed to explain the local notes folder for humans, but it is not the source of truth for the note entry format. If it conflicts with `.cursor/templates/prd/discovery-note.template.md`, the `.cursor/templates/` version wins.
+Use `.cursor/templates/prd/` as the only reusable source for generated PRD docs.
+Never use `docs/**` files as templates.
 
 ## Pre-flight
 
 1. Before reading `docs/prd/PRD.md` or `docs/prd/state.md`, if either file is missing or empty, suggest `/prd init` instead of assuming the PRD exists.
 2. Read `docs/prd/PRD.md` — the active PRD.
 3. Read `docs/prd/state.md` — version, direction, last major change.
-4. **SISO classification for `/prd update`:** `/prd update` is a structured persistence workflow — not implementation, specs, tickets, or architecture. SISO must not block it as execution. It still requires explicit persistence approval through a Patch Intent Summary or full PRD Delta Proposal (see Mode: update below). In `discover`, `note`, `questions`, and `converge`, all user input is treated as raw discovery material. Never return SISO ORANGE or RED for a product insight given during discovery.
+4. **PRD Lead pre-flight (converge / challenge / prioritize / update only):** On the **initial invocation** of any of these modes, invoke the PRD Lead agent (`.cursor/agents/prd/prd-lead.md`) to produce a PRD Context Brief. The mode's lead agent acts only after the brief is available. Skip for `init`, `discover`, `questions`, and `note`. **Do not run pre-flight again when the user responds `approved`, `preview`, or `cancel` to an existing Patch Intent Summary or PRD Delta Proposal** — those responses resume an active approval flow and must not be interrupted.
+5. **SISO classification for `/prd update`:** `/prd update` is a structured persistence workflow — not implementation, specs, tickets, or architecture. SISO must not block it as execution. It still requires explicit persistence approval through a Patch Intent Summary or full PRD Delta Proposal (see Mode: update below). In `discover`, `note`, `questions`, and `converge`, all user input is treated as raw discovery material. Never return SISO ORANGE or RED for a product insight given during discovery.
 
 ## Mode: init
 
@@ -263,9 +253,9 @@ Never accept `ok` alone as persistence approval.
 If no Patch Intent Summary or PRD Delta Proposal exists in the immediately preceding turn, respond:
 
 ```txt
-No approved PRD delta exists yet.
+No Patch Intent Summary or full PRD Delta Proposal exists yet.
 
-Run /prd converge first to create a delta proposal, then approve it explicitly.
+Run `/prd update` with a clear persistence target, or run `/prd converge` first if the content has not been synthesized yet.
 ```
 
 ### Output after writing
@@ -296,6 +286,7 @@ Next recommended command:
 
 ### Procedure
 
+0. **PRD Lead pre-flight** — on initial invocation, PRD Lead produces the PRD Context Brief (see Pre-flight step 4). PRD Builder skill acts after the brief is available. Skip on `approved`, `preview`, or `cancel` responses.
 1. PRD Builder skill assesses whether Patch Intent Summary or full PRD Delta Proposal is required (see rules above).
 2. Produce the appropriate format and wait for approval.
 3. Challenger verifies every addition has a paired cut, deferral, or kill criterion.

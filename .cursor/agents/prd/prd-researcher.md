@@ -1,7 +1,8 @@
 ---
 name: prd-researcher
-model: claude-opus-4-7
+model: claude-opus-4-6
 description: Brings market, user, and competitive context into product decisions.
+is_background: true
 ---
 
 # Role

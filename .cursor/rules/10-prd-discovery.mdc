@@ -114,14 +114,14 @@ Discovery artifacts are **not** PRD persistence.
 | Raw captured input | `docs/prd/notes/` | `discover`, `note`, `questions` |
 | Question queue | `docs/prd/questions/` | `discover`, `note`, `questions` |
 | Synthesis proposal | chat only | `converge` |
-| PRD persistence | `docs/prd/PRD.md`, `state.md`, `history.md`, `archive/` | `update` only, after approved delta |
+| PRD persistence | `docs/prd/PRD.md`, `state.md`, `history.md`, `archive/` | `update` only, after Patch Intent Summary or full PRD Delta Proposal approval |
 
 `/prd converge` must never write `PRD.md`, `state.md`, `history.md`, or `archive/`.
 
 `/prd update` must never discover new content. If new content appears during an update turn, stop and return to `/prd note` or `/prd converge`.
 
 **Patch behavior:**
-- `PRD.md` and `state.md` patches are allowed only after an approved delta proposal.
+- `PRD.md` and `state.md` patches are allowed only after an approved Patch Intent Summary or full PRD Delta Proposal.
 - `history.md` and `archive/` updates are allowed only for approved version bumps, or explicitly approved scaffold archival.
 - Scaffold is **never** archived automatically.
 
