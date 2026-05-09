@@ -113,6 +113,7 @@ The following are strictly forbidden at each layer:
 
 **At Feature Area stage:**
 - Creating tasks or user stories from a Feature Area before Scope Slices are defined
+- Creating or overwriting Feature Area markdown under `docs/product/feature-areas/` **except** via `/feature-area scaffold` after user approval (see `.cursor/commands/feature-area.md`) — forbidden for agents/commands
 - Naming architecture, services, or runtime boundaries
 - Treating a Feature Area as implementation-ready
 

@@ -11,9 +11,12 @@
 | Mode | Purpose |
 |------|---------|
 | `map` | Read PRD and propose a Feature Area map — no file writes |
+| `scaffold` | After an approved Feature Area Map, write initial Feature Area files from template — Feature Area markdown only |
 | `validate <feature-area-name>` | Run FA-01–FA-09 checks against an existing Feature Area file |
 | `slice <feature-area-name>` | Propose candidate Scope Slices for a validated Feature Area — no file writes |
 | `check <artifact-path>` | Run the scope-readiness checker against any Feature Area or Scope Slice file |
+
+**Safety — Feature Area file creation:** `/feature-area scaffold` is the only `/feature-area` mode that may create Feature Area markdown files under `docs/product/feature-areas/`. All other modes remain proposal/check-only for those files.
 
 Governed by: `.cursor/rules/feature-area-workflow.mdc`
 Templates: `.cursor/templates/product/`
@@ -37,7 +40,7 @@ Do not skip step 3. Open blockers constrain all downstream work.
 
 If `docs/prd/PRD.md` is missing or empty, stop and suggest `/prd init` before proceeding.
 
-**Feature Area Lead pre-flight (`map`, `validate`, `slice` only):** On the initial invocation of any of these modes, the Feature Area Lead agent (`.cursor/agents/feature-area/feature-area-lead.md`) produces a Feature Area Context Brief. The builder acts only after the brief is available. Skip for `check`. Do not re-run when the user is responding to an existing proposal.
+**Feature Area Lead pre-flight (`map`, `validate`, `slice`, initial `scaffold` only):** On the initial invocation of any of these modes, the Feature Area Lead agent (`.cursor/agents/feature-area/feature-area-lead.md`) produces a Feature Area Context Brief. The builder acts only after the brief is available. Skip for `check`. Do not re-run when the user is responding to an existing proposal. When running `scaffold` immediately after approving a Feature Area Map produced in the same conversation, reuse the Context Brief produced for `map` — do not re-run the Lead.
 
 ---
 
@@ -76,7 +79,7 @@ Open blockers that may affect the map:
 Verdict: <N> proposed Feature Areas, <N> require PRD clarification before they can be created.
 
 Next step:
-- Create Feature Area files from `.cursor/templates/product/feature-area.template.md`
+- Run `/feature-area scaffold` to create initial Feature Area files from `.cursor/templates/product/feature-area.template.md`
 - Run `/feature-area validate <name>` per area before attempting Scope Slice decomposition
 ```
 
@@ -87,6 +90,57 @@ Next step:
 - Do not name architecture, services, or runtime boundaries.
 - Do not produce Scope Slices or user stories.
 - "Feature Group" (PRD language) must be converted to "Feature Area" terminology — do not carry Feature Group naming into the proposal.
+
+---
+
+## Mode: scaffold
+
+Creates initial Feature Area files from `.cursor/templates/product/feature-area.template.md` after an **approved** Feature Area Map. **Writes only** `docs/product/feature-areas/<kebab-name>.md`; no other paths.
+
+### Pre-conditions
+
+1. Read the Feature Area Builder skill (`.cursor/skills/feature-area/feature-area-builder/SKILL.md`).
+2. The Feature Area Map used as input must be **approved by the user in the current conversation** (table of proposed v0 Feature Areas plus any split decisions — not speculative).
+3. If no approved map is available in-context, stop and instruct the user to run `/feature-area map`, approve it, then re-run `/feature-area scaffold`.
+
+### Behavior
+
+1. Read mandatory sources in pre-flight order (PRD state, PRD.md, open questions, product-decisions/README if present).
+2. Reconcile the approved map with PRD Feature Groups — fill each new file **only from** PRD-aligned content and fields implied by that map (including PRD § references carried from the proposal).
+3. For each proposed v0 Feature Area in the approved map:
+   - Target path: `docs/product/feature-areas/<kebab-name>.md` (canonical kebab casing from Feature Area naming).
+   - If the target file **already exists** and is **non-empty** (trimmed contents length > 0): **skip** — do not modify; record under skipped outputs.
+   - If the target is missing **or exists but is empty**, write the file **from `.cursor/templates/product/feature-area.template.md`** (structure preserved; placeholders replaced with scaffolded prose).
+   - Set `Status:` to **`exploratory`** in the scaffolded artifact.
+   - Copy **`NEED_HUMAN`** and **`NEED_UPDATE`** from the approved map row **verbatim** (`true` / `false`).
+   - **Candidate Scope Slices:** populate the table **only with names + one-line descriptions** (+ `exploratory` status per row if the template column is present); no decomposition beyond what the approved map conveyed.
+   - Omit or leave minimal template placeholders for sections the map did not imply — pull additional grounding from **`docs/prd/PRD.md`** only where it directly fills those sections (intent, boundaries, journeys, dependencies, blockers-as-known). Never invent specs.
+4. **Do not:** create Scope Slice files; run validation; overwrite non-empty Feature Area files; write user stories, specs, tasks, or architecture.
+
+### Output format
+
+```txt
+## /feature-area scaffold — result
+
+Created:
+- docs/product/feature-areas/<kebab>.md
+
+Skipped (existing non-empty file):
+- docs/product/feature-areas/<kebab>.md
+
+Files needing NEED_HUMAN resolution (<NEED_HUMAN=true> preserved from approved map):
+- docs/product/feature-areas/<kebab>.md — <why from map/context if known>
+
+Next recommended command:
+/feature-area validate <kebab-name>   ← run once per created Feature Area
+```
+
+**Hard rules for scaffold mode:**
+
+- **`/feature-area scaffold` is the only `/feature-area` mode that may create Feature Area files.** All others remain proposal/check-only for Feature Area markdown.
+- No Scope Slice file creation (`docs/product/scope-slices/`).
+- Do not invoke FA readiness checks inside scaffold — defer to **`/feature-area validate`**.
+- No user stories, specs, tasks, architecture, services, APIs, data models.
 
 ---
 
@@ -241,6 +295,7 @@ Next recommended command:
 | Operation | Feature Area Lead | Feature Area Builder | Scope Critic |
 |-----------|------------------|---------------------|--------------|
 | `map` | Context Brief (pre-flight) | Drives proposal | Reviews proposal |
+| `scaffold` | Context Brief (reuse from `map` when same-thread; else initial pre-flight) | Writes Feature Area markdown from approved map | Not invoked |
 | `validate` | Context Brief (pre-flight) | Runs checker | Not invoked |
 | `slice` | Context Brief (pre-flight) | Drives proposal | Reviews proposal |
 | `check` | Not invoked | Runs checker | Not invoked |
@@ -251,7 +306,8 @@ Read `.cursor/agents/feature-area/README.md` for the full operating principle.
 
 ## Hard rules (all modes)
 
-- No task slicing, user stories, specs, or architecture at any point.
+- No task slicing, user stories, specs, or architecture at any point (**`scaffold` included** — it fills template sections from PRD sources only).
+- **`/feature-area scaffold` is the only mode that may create or populate** `docs/product/feature-areas/*.md`. Do not write those files from map, validate, slice, or check.
 - Do not skip levels in the hierarchy: PRD → Feature Area → Scope Slice.
 - Do not mark any artifact as `validated` or `ready-for-user-stories` in response text — the user must update the file.
 - Do not carry "Feature Group" terminology into any output — use "Feature Area" exclusively.

@@ -1,4 +1,4 @@
-=== .cursor/checkers/scope-readiness-checker.md ===
+=== ./.cursor/checkers/scope-readiness-checker.md ===
 # Scope Readiness Checker
 
 Governed by: `.cursor/rules/feature-area-workflow.mdc`
@@ -342,7 +342,7 @@ When running the checker, output a summary table:
 **NEED_UPDATE:** false
 ```
 
-=== .cursor/agents/feature-area/scope-critic.md ===
+=== ./.cursor/agents/feature-area/scope-critic.md ===
 ---
 name: scope-critic
 model: claude-opus-4-7
@@ -488,12 +488,12 @@ If no issues are found in any category: state "No critical issues found. Safe to
 - Do not challenge formatting, wording choices, or minor stylistic preferences — challenge only what affects scope correctness, safety, or advancement readiness.
 - A critique that blocks everything without justification is also a failure. Apply the materiality filter: challenge only what materially affects scope, safety, or downstream correctness.
 
-=== .cursor/agents/feature-area/README.md ===
+=== ./.cursor/agents/feature-area/README.md ===
 # Feature Area Committee
 
 Two specialized agents that govern Feature Area decomposition from PRD Feature Groups toward Scope Slices.
 
-This is **AI-assisted decomposition governance**, not "AI generates Feature Areas". The Feature Area Builder skill drives the workflow; the agents provide context reconstruction and adversarial review.
+This is **AI-assisted decomposition governance**: proposals and checks precede decomposition; **`/feature-area scaffold`** writes Feature Area markdown from an approved Feature Area Map. The Feature Area Builder skill drives the workflow; the agents provide context reconstruction and adversarial review.
 
 ## Members
 
@@ -504,7 +504,7 @@ This is **AI-assisted decomposition governance**, not "AI generates Feature Area
 
 ## Operational core
 
-The [`feature-area-builder`](../../skills/feature-area/feature-area-builder/SKILL.md) skill drives the decomposition loop: PRD-to-Feature-Area mapping, checker-based validation, and Scope Slice proposals. Feature Area Lead and Scope Critic provide context and adversarial viewpoints — they do not drive the workflow.
+The [`feature-area-builder`](../../skills/feature-area/feature-area-builder/SKILL.md) skill drives the decomposition loop: PRD-to-Feature-Area mapping, **`scaffold` file writes** after approval, checker-based validation, and Scope Slice proposals. Feature Area Lead and Scope Critic provide context and adversarial viewpoints — they do not drive the workflow.
 
 ## Operating principle
 
@@ -513,7 +513,12 @@ The [`feature-area-builder`](../../skills/feature-area/feature-area-builder/SKIL
   → [feature-area-lead context brief]
   → builder proposes Feature Area map
   → [scope-critic reviews proposal]
-  → user creates Feature Area files
+  → user approves map
+
+/feature-area scaffold
+  → builder writes docs/product/feature-areas/<kebab>.md from approved map + PRD
+  → (reuse Lead brief from map when same-thread; brief first on cold-start scaffold)
+  → no Scope Slice files; no FA validation in this step
 
 /feature-area validate <name>
   → [feature-area-lead context brief]
@@ -537,6 +542,7 @@ The [`feature-area-builder`](../../skills/feature-area/feature-area-builder/SKIL
 Use the [`/feature-area`](../../commands/feature-area.md) command:
 
 - `/feature-area map` — read PRD, propose a Feature Area map
+- `/feature-area scaffold` — after approval, write initial Feature Area markdown from template
 - `/feature-area validate <name>` — run FA-01–FA-09 checks against a Feature Area file
 - `/feature-area slice <name>` — propose Scope Slices for a validated Feature Area
 - `/feature-area check <artifact-path>` — run the scope-readiness checker against any artifact
@@ -550,11 +556,11 @@ Use the [`/feature-area`](../../commands/feature-area.md) command:
 ## Hard rules
 
 - No technical architecture, frameworks, data models, or implementation in committee output.
-- No Feature Area or Scope Slice files created by agents — the user creates files after reviewing proposals.
+- **`/feature-area scaffold`** is the only `/feature-area` mode that creates Feature Area files under `docs/product/feature-areas/`. Agents (Lead, Critic) do not write those files — the builder does, in scaffold mode only.
 - No user stories, specs, or tasks at any point.
 - Advancement gates follow `.cursor/checkers/scope-readiness-checker.md` exclusively.
 
-=== .cursor/agents/feature-area/feature-area-lead.md ===
+=== ./.cursor/agents/feature-area/feature-area-lead.md ===
 ---
 name: feature-area-lead
 model: claude-opus-4-7
@@ -655,7 +661,7 @@ Last major change: <date or "unknown">
 - If open questions in `docs/prd/questions/open-questions.md` directly block any Feature Area's decomposition, list them explicitly — do not summarize them away.
 - If `NEED_HUMAN=true` is set on any existing artifact, flag it prominently.
 
-=== .cursor/agents/prd/prd-lead.md ===
+=== ./.cursor/agents/prd/prd-lead.md ===
 ---
 name: prd-lead
 model: claude-opus-4-7
@@ -743,7 +749,7 @@ PRD Context Brief
 
 PRD Lead surfaces drift signals and open blockers as observations. Challenger evaluates and reports on them — PRD Lead does not produce adversarial verdicts.
 
-=== .cursor/agents/prd/README.md ===
+=== ./.cursor/agents/prd/README.md ===
 # PRD Committee
 
 Three specialized agents that govern product discovery alongside the PRD Builder skill.
@@ -790,7 +796,7 @@ Use the [`/prd`](../../commands/prd.md) command:
 - Versioning and update triggers follow [`.cursor/rules/10-prd-discovery.mdc`](../../rules/10-prd-discovery.mdc).
 - Persisted state lives under [`docs/prd/`](../../docs/prd/) and [`docs/product-decisions/`](../../docs/product-decisions/).
 
-=== .cursor/agents/prd/prd-researcher.md ===
+=== ./.cursor/agents/prd/prd-researcher.md ===
 ---
 name: prd-researcher
 model: claude-opus-4-6
@@ -863,7 +869,7 @@ Do not write PRD prose. Your outputs feed the discovery loop — the PRD Builder
 - Cite sources or label `[ASSUMED]`.
 - Defer to humans for primary research; never fabricate user quotes.
 
-=== .cursor/agents/prd/prd-challenger.md ===
+=== ./.cursor/agents/prd/prd-challenger.md ===
 ---
 name: prd-challenger
 model: gpt-5.5
@@ -1017,7 +1023,7 @@ STALE GROUP: <name>
 
 Do not silently skip stale groups. A stale committed group is a risk that compounds silently.
 
-=== .cursor/hooks/before-submit-prompt.mdc ===
+=== ./.cursor/hooks/before-submit-prompt.mdc ===
 # Deprecated PRD routing hook
 
 This hook is intentionally inactive.
@@ -1033,12 +1039,12 @@ Do not implement PRD discovery, SISO, convergence, update, or routing logic in h
 
 Hooks are reserved for lightweight lifecycle safeguards only.
 
-=== .cursor/hooks.json ===
+=== ./.cursor/hooks.json ===
 {
   "version": 1,
   "hooks": {}
 }
-=== .cursor/rules/10-prd-discovery.mdc ===
+=== ./.cursor/rules/10-prd-discovery.mdc ===
 ---
 globs: docs/prd/**,.cursor/commands/prd.md,.cursor/skills/prd/**
 alwaysApply: false
@@ -1186,7 +1192,7 @@ For persisted PRD writes, prefer **Patch Intent Summary** for low-risk patches. 
 
 **The assistant must avoid duplicating large PRD content in chat.** Chat carries intent, risks, and approval state. Files carry the full document content.
 
-=== .cursor/rules/feature-area-workflow.mdc ===
+=== ./.cursor/rules/feature-area-workflow.mdc ===
 ---
 description: Governs the PRD → Feature Area → Scope Slice → User Story → Spec → Task decomposition workflow. Apply whenever an agent reads the PRD, decomposes product scope, produces Feature Areas or Scope Slices, or begins pre-spec work.
 globs:
@@ -1302,6 +1308,7 @@ The following are strictly forbidden at each layer:
 
 **At Feature Area stage:**
 - Creating tasks or user stories from a Feature Area before Scope Slices are defined
+- Creating or overwriting Feature Area markdown under `docs/product/feature-areas/` **except** via `/feature-area scaffold` after user approval (see `.cursor/commands/feature-area.md`) — forbidden for agents/commands
 - Naming architecture, services, or runtime boundaries
 - Treating a Feature Area as implementation-ready
 
@@ -1458,7 +1465,7 @@ Never:
 - Mark a Scope Slice as `ready-for-user-stories` while it has unresolved `NEED_HUMAN` flags
 - Treat "PRD READY ENOUGH" as authorization for task slicing
 
-=== .cursor/rules/00-siso.mdc ===
+=== ./.cursor/rules/00-siso.mdc ===
 ---
 description: SISO — validate input quality before execution.
 alwaysApply: true
@@ -1551,7 +1558,7 @@ SISO blocking applies in these PRD contexts **only** when the user explicitly re
 
 Never: simulate understanding, fake confidence, generate architecture from vague intent, infer business rules silently, confuse motion with progress, or explore repositories indefinitely instead of clarifying.
 
-=== .cursor/rules/11-prd-question-loop.mdc ===
+=== ./.cursor/rules/11-prd-question-loop.mdc ===
 ---
 description: Human-first PRD discovery question loop.
 globs: docs/prd/**,.cursor/commands/prd.md,.cursor/commands/prd-questions.md,.cursor/skills/prd/**
@@ -1719,7 +1726,7 @@ When `/prd converge` is later invoked, it must synthesize **only one primary fea
 
 Writes to `docs/prd/notes/` and `docs/prd/questions/open-questions.md` are **capture artifacts**, not PRD persistence or implementation. They are allowed in discovery mode and must not be blocked by SISO.
 
-=== .cursor/templates/product/scope-slice.template.md ===
+=== ./.cursor/templates/product/scope-slice.template.md ===
 <!--
   Scope Slice Template
   Location: .cursor/templates/product/scope-slice.template.md
@@ -1876,7 +1883,7 @@ Writes to `docs/prd/notes/` and `docs/prd/questions/open-questions.md` are **cap
 |------|--------|--------|
 |      |        |        |
 
-=== .cursor/templates/product/feature-area.template.md ===
+=== ./.cursor/templates/product/feature-area.template.md ===
 <!--
   Feature Area Template
   Location: .cursor/templates/product/feature-area.template.md
@@ -2020,7 +2027,7 @@ Writes to `docs/prd/notes/` and `docs/prd/questions/open-questions.md` are **cap
 |------|--------|--------|
 |      |        |        |
 
-=== .cursor/templates/prd/product-decision.template.md ===
+=== ./.cursor/templates/prd/product-decision.template.md ===
 ---
 id: {{DECISION_ID}}
 status: proposed
@@ -2047,7 +2054,7 @@ related_prd_version: {{PRD_VERSION}}
 - PRD: `docs/prd/PRD.md`
 - Related notes: {{RELATED_NOTES_OR_NONE}}
 
-=== .cursor/templates/prd/state.template.md ===
+=== ./.cursor/templates/prd/state.template.md ===
 <!--
   PRD State Tracker — agents read this before loading PRD.md.
   This file is project-scoped and generated from `.cursor/templates/prd/state.template.md`.
@@ -2061,7 +2068,7 @@ related_prd_version: {{PRD_VERSION}}
 
 **Active PRD:** always `docs/prd/PRD.md`.
 
-=== .cursor/templates/prd/discovery-note.template.md ===
+=== ./.cursor/templates/prd/discovery-note.template.md ===
 # {{PRODUCT_OR_TOPIC}} Discovery Note — {{DATE}}
 
 Source: {{SOURCE}}
@@ -2092,7 +2099,7 @@ Rules:
 - Notes are input material, not PRD persistence.
 - Content from notes reaches PRD.md only through `/prd converge` → approved delta → `/prd update`.
 
-=== .cursor/templates/prd/PRD.template.md ===
+=== ./.cursor/templates/prd/PRD.template.md ===
 ---
 version: v1
 status: draft
@@ -2183,7 +2190,7 @@ date: {{DATE}}
 - {{RISK_OR_ASSUMPTION_1}}
 - {{RISK_OR_ASSUMPTION_2}}
 
-=== .cursor/templates/prd/history.template.md ===
+=== ./.cursor/templates/prd/history.template.md ===
 # PRD Version History
 
 Lightweight log of version bumps and explicitly approved major patches.
@@ -2197,7 +2204,7 @@ Rules:
 - Version bumps require archive creation.
 - Patches do not require archive/history updates unless explicitly approved.
 
-=== .cursor/templates/prd/product-decisions-readme.template.md ===
+=== ./.cursor/templates/prd/product-decisions-readme.template.md ===
 # Product Decisions
 
 Small, durable decision records complement versioned PRDs.
@@ -2208,7 +2215,7 @@ Small, durable decision records complement versioned PRDs.
 - Product decisions are project-scoped generated docs.
 - The reusable template lives in `.cursor/templates/prd/product-decision.template.md`.
 
-=== .cursor/templates/prd/open-questions.template.md ===
+=== ./.cursor/templates/prd/open-questions.template.md ===
 # PRD Open Questions
 
 ## Active queue
@@ -2230,7 +2237,7 @@ Rules:
 - Lowest priority number first, then lowest ID.
 - Do not keep duplicate open + answered rows for the same question.
 
-=== .cursor/commands/feature-area.md ===
+=== ./.cursor/commands/feature-area.md ===
 # /feature-area — Feature Area Workflow
 
 ## Usage
@@ -2244,9 +2251,12 @@ Rules:
 | Mode | Purpose |
 |------|---------|
 | `map` | Read PRD and propose a Feature Area map — no file writes |
+| `scaffold` | After an approved Feature Area Map, write initial Feature Area files from template — Feature Area markdown only |
 | `validate <feature-area-name>` | Run FA-01–FA-09 checks against an existing Feature Area file |
 | `slice <feature-area-name>` | Propose candidate Scope Slices for a validated Feature Area — no file writes |
 | `check <artifact-path>` | Run the scope-readiness checker against any Feature Area or Scope Slice file |
+
+**Safety — Feature Area file creation:** `/feature-area scaffold` is the only `/feature-area` mode that may create Feature Area markdown files under `docs/product/feature-areas/`. All other modes remain proposal/check-only for those files.
 
 Governed by: `.cursor/rules/feature-area-workflow.mdc`
 Templates: `.cursor/templates/product/`
@@ -2270,7 +2280,7 @@ Do not skip step 3. Open blockers constrain all downstream work.
 
 If `docs/prd/PRD.md` is missing or empty, stop and suggest `/prd init` before proceeding.
 
-**Feature Area Lead pre-flight (`map`, `validate`, `slice` only):** On the initial invocation of any of these modes, the Feature Area Lead agent (`.cursor/agents/feature-area/feature-area-lead.md`) produces a Feature Area Context Brief. The builder acts only after the brief is available. Skip for `check`. Do not re-run when the user is responding to an existing proposal.
+**Feature Area Lead pre-flight (`map`, `validate`, `slice`, initial `scaffold` only):** On the initial invocation of any of these modes, the Feature Area Lead agent (`.cursor/agents/feature-area/feature-area-lead.md`) produces a Feature Area Context Brief. The builder acts only after the brief is available. Skip for `check`. Do not re-run when the user is responding to an existing proposal. When running `scaffold` immediately after approving a Feature Area Map produced in the same conversation, reuse the Context Brief produced for `map` — do not re-run the Lead.
 
 ---
 
@@ -2309,7 +2319,7 @@ Open blockers that may affect the map:
 Verdict: <N> proposed Feature Areas, <N> require PRD clarification before they can be created.
 
 Next step:
-- Create Feature Area files from `.cursor/templates/product/feature-area.template.md`
+- Run `/feature-area scaffold` to create initial Feature Area files from `.cursor/templates/product/feature-area.template.md`
 - Run `/feature-area validate <name>` per area before attempting Scope Slice decomposition
 ```
 
@@ -2320,6 +2330,57 @@ Next step:
 - Do not name architecture, services, or runtime boundaries.
 - Do not produce Scope Slices or user stories.
 - "Feature Group" (PRD language) must be converted to "Feature Area" terminology — do not carry Feature Group naming into the proposal.
+
+---
+
+## Mode: scaffold
+
+Creates initial Feature Area files from `.cursor/templates/product/feature-area.template.md` after an **approved** Feature Area Map. **Writes only** `docs/product/feature-areas/<kebab-name>.md`; no other paths.
+
+### Pre-conditions
+
+1. Read the Feature Area Builder skill (`.cursor/skills/feature-area/feature-area-builder/SKILL.md`).
+2. The Feature Area Map used as input must be **approved by the user in the current conversation** (table of proposed v0 Feature Areas plus any split decisions — not speculative).
+3. If no approved map is available in-context, stop and instruct the user to run `/feature-area map`, approve it, then re-run `/feature-area scaffold`.
+
+### Behavior
+
+1. Read mandatory sources in pre-flight order (PRD state, PRD.md, open questions, product-decisions/README if present).
+2. Reconcile the approved map with PRD Feature Groups — fill each new file **only from** PRD-aligned content and fields implied by that map (including PRD § references carried from the proposal).
+3. For each proposed v0 Feature Area in the approved map:
+   - Target path: `docs/product/feature-areas/<kebab-name>.md` (canonical kebab casing from Feature Area naming).
+   - If the target file **already exists** and is **non-empty** (trimmed contents length > 0): **skip** — do not modify; record under skipped outputs.
+   - If the target is missing **or exists but is empty**, write the file **from `.cursor/templates/product/feature-area.template.md`** (structure preserved; placeholders replaced with scaffolded prose).
+   - Set `Status:` to **`exploratory`** in the scaffolded artifact.
+   - Copy **`NEED_HUMAN`** and **`NEED_UPDATE`** from the approved map row **verbatim** (`true` / `false`).
+   - **Candidate Scope Slices:** populate the table **only with names + one-line descriptions** (+ `exploratory` status per row if the template column is present); no decomposition beyond what the approved map conveyed.
+   - Omit or leave minimal template placeholders for sections the map did not imply — pull additional grounding from **`docs/prd/PRD.md`** only where it directly fills those sections (intent, boundaries, journeys, dependencies, blockers-as-known). Never invent specs.
+4. **Do not:** create Scope Slice files; run validation; overwrite non-empty Feature Area files; write user stories, specs, tasks, or architecture.
+
+### Output format
+
+```txt
+## /feature-area scaffold — result
+
+Created:
+- docs/product/feature-areas/<kebab>.md
+
+Skipped (existing non-empty file):
+- docs/product/feature-areas/<kebab>.md
+
+Files needing NEED_HUMAN resolution (<NEED_HUMAN=true> preserved from approved map):
+- docs/product/feature-areas/<kebab>.md — <why from map/context if known>
+
+Next recommended command:
+/feature-area validate <kebab-name>   ← run once per created Feature Area
+```
+
+**Hard rules for scaffold mode:**
+
+- **`/feature-area scaffold` is the only `/feature-area` mode that may create Feature Area files.** All others remain proposal/check-only for Feature Area markdown.
+- No Scope Slice file creation (`docs/product/scope-slices/`).
+- Do not invoke FA readiness checks inside scaffold — defer to **`/feature-area validate`**.
+- No user stories, specs, tasks, architecture, services, APIs, data models.
 
 ---
 
@@ -2474,6 +2535,7 @@ Next recommended command:
 | Operation | Feature Area Lead | Feature Area Builder | Scope Critic |
 |-----------|------------------|---------------------|--------------|
 | `map` | Context Brief (pre-flight) | Drives proposal | Reviews proposal |
+| `scaffold` | Context Brief (reuse from `map` when same-thread; else initial pre-flight) | Writes Feature Area markdown from approved map | Not invoked |
 | `validate` | Context Brief (pre-flight) | Runs checker | Not invoked |
 | `slice` | Context Brief (pre-flight) | Drives proposal | Reviews proposal |
 | `check` | Not invoked | Runs checker | Not invoked |
@@ -2484,7 +2546,8 @@ Read `.cursor/agents/feature-area/README.md` for the full operating principle.
 
 ## Hard rules (all modes)
 
-- No task slicing, user stories, specs, or architecture at any point.
+- No task slicing, user stories, specs, or architecture at any point (**`scaffold` included** — it fills template sections from PRD sources only).
+- **`/feature-area scaffold` is the only mode that may create or populate** `docs/product/feature-areas/*.md`. Do not write those files from map, validate, slice, or check.
 - Do not skip levels in the hierarchy: PRD → Feature Area → Scope Slice.
 - Do not mark any artifact as `validated` or `ready-for-user-stories` in response text — the user must update the file.
 - Do not carry "Feature Group" terminology into any output — use "Feature Area" exclusively.
@@ -2492,7 +2555,7 @@ Read `.cursor/agents/feature-area/README.md` for the full operating principle.
 - Any `NEED_UPDATE=true` flag must surface a description of what is missing before proceeding.
 - Do not proceed past a known open blocker in `docs/prd/questions/open-questions.md` without explicit user approval.
 
-=== .cursor/commands/prd-questions.md ===
+=== ./.cursor/commands/prd-questions.md ===
 # /prd questions — Human-first PRD question loop
 
 ## Purpose
@@ -2661,7 +2724,7 @@ Modes that consume the queue (`/prd converge`, PRD Lead pre-flight, Challenger, 
 - Writes to `docs/prd/notes/` and `docs/prd/questions/open-questions.md` are allowed — they are capture artifacts.
 - **Never delete** answered rows from `open-questions.md`. Historical answers stay visible; supersession is done **only** via annotation (Answer / PRD impact text or explicit supersession note), never by removing rows.
 
-=== .cursor/commands/prd.md ===
+=== ./.cursor/commands/prd.md ===
 # /prd — PRD Discovery Orchestrator
 
 ## Usage
@@ -3113,7 +3176,7 @@ During `/prd update`, edits to `open-questions.md` are limited to **supersession
 - No persistence of `validated` / `committed` while required surface fields are UNKNOWN. Use `validated-with-open-surface` and persist the blockers.
 - No implementation specs, tickets, or architecture work derived from a `validated-with-open-surface` group unless the user has explicitly waived the specific blocker in writing.
 
-=== .cursor/commands/prd-init.md ===
+=== ./.cursor/commands/prd-init.md ===
 # /prd init — Initialize PRD workspace from templates
 
 ## Purpose
@@ -3198,10 +3261,10 @@ Expected next command:
 
 `/prd discover`
 
-=== .cursor/skills/feature-area/feature-area-builder/SKILL.md ===
+=== ./.cursor/skills/feature-area/feature-area-builder/SKILL.md ===
 ---
 name: feature-area-builder
-description: Drives Feature Area decomposition — maps PRD Feature Groups to Feature Areas, runs readiness checks, and proposes Scope Slices. Produces proposals for human review. Never creates files. Never writes user stories, specs, tasks, or architecture.
+description: Drives Feature Area decomposition — maps PRD Feature Groups to Feature Areas, runs readiness checks, and proposes Scope Slices. `scaffold` writes initial Feature Area markdown from an approved map (only mode that may create Feature Area files). All other modes are proposal/check-only. Never creates Scope Slice files here. Never writes user stories, specs, tasks, or architecture.
 disable-model-invocation: true
 ---
 
@@ -3239,13 +3302,15 @@ If `docs/prd/PRD.md` is missing or empty: stop and recommend `/prd init`.
 
 ## 3. Feature Area Lead Pre-flight
 
-Before executing `map`, `validate`, or `slice` modes, confirm that a Feature Area Context Brief has been produced by the Feature Area Lead (`.cursor/agents/feature-area/feature-area-lead.md`) for this command flow.
+Before executing `map`, `validate`, `slice`, or a **cold-start** `scaffold` (no in-thread approved map from `map`), confirm that a Feature Area Context Brief has been produced by the Feature Area Lead (`.cursor/agents/feature-area/feature-area-lead.md`) for this command flow.
 
 The brief is context reconstruction only — not a decomposition proposal, not a validation run, not a file write.
 
 **Do not re-run the pre-flight** when the user is responding to an existing proposal (e.g. saying "proceed" or "use your judgment" after reviewing a map proposal). Resume the active flow.
 
-If no brief exists, request it before proceeding.
+When running **`scaffold` immediately after** the user approves a Feature Area Map produced in **this same conversation**, **reuse** the Context Brief from `map` — do not re-run the Lead.
+
+If no brief exists and one is required, request it before proceeding.
 
 ## 4. Mode: map
 
@@ -3275,11 +3340,37 @@ Do not split based on technical layer or implementation complexity.
 
 ### What the map does NOT produce
 
-- Feature Area files (the user creates those from `.cursor/templates/product/feature-area.template.md`)
+- Feature Area files — use `/feature-area scaffold` after approval (writes from `.cursor/templates/product/feature-area.template.md`)
 - Scope Slices (those come after validation)
 - Architecture diagrams or service boundaries
 
-## 5. Mode: validate
+## 5. Mode: scaffold
+
+Write initial Feature Area files after the user **approves** a Feature Area Map in-context. Governed by `.cursor/commands/feature-area.md` Mode: scaffold.
+
+**Safety:** `/feature-area scaffold` is the **only** `/feature-area` mode that may create `docs/product/feature-areas/<kebab-name>.md`. All other modes remain proposal/check-only for Feature Area files.
+
+### Pre-conditions
+
+1. An **approved** Feature Area Map must be available in the current conversation (user-explicit approval of the proposed v0 areas). If not: stop; run `/feature-area map` first.
+2. Complete the standard read order (§2) before writing.
+
+### Behavior
+
+1. For each **proposed v0 Feature Area** in the approved map, resolve `docs/product/feature-areas/<kebab-name>.md`.
+2. **Skip without overwrite** if the file exists and is **non-empty** (any non-whitespace content). List skipped paths in the output.
+3. If missing or **empty-only**, instantiate from **`.cursor/templates/product/feature-area.template.md`** (keep template structure and headings).
+4. Set **`Status: exploratory`** (and template `STATUS` / status line per template convention).
+5. Copy **`NEED_HUMAN`** and **`NEED_UPDATE`** from the approved map **verbatim** for that row.
+6. Fill sections from the **approved map** plus **`docs/prd/PRD.md`** (and open questions / product decisions) **only** to ground product intent, boundaries, journeys, blockers, etc. — no invention of execution detail.
+7. **Candidate Scope Slices** table: **names + one-line descriptions** only (and `exploratory` per template status column if used). No extra decomposition beyond the map.
+8. **Do not:** create Scope Slice files; run FA validation; overwrite non-empty Feature Area files; write user stories, specs, tasks, architecture, services, APIs, or data models.
+
+### Output
+
+Use the result format in `.cursor/commands/feature-area.md` (Created / Skipped / NEED_HUMAN list / next `/feature-area validate <kebab-name>`).
+
+## 6. Mode: validate
 
 Run FA-01–FA-09 and CC-02–CC-05 from `.cursor/checkers/scope-readiness-checker.md` against a Feature Area file.
 
@@ -3305,7 +3396,7 @@ Do not mark the file `validated` — that is the user's action.
 
 State the first failing check and what must be resolved. Do not propose fixes inline. Route to the user for resolution.
 
-## 6. Mode: slice
+## 7. Mode: slice
 
 Propose candidate Scope Slices for a Feature Area that the user has marked `validated`.
 
@@ -3356,7 +3447,7 @@ Merge or split before presenting to the user.
 - User stories, specs, or tasks
 - Data models, API routes, or technology choices
 
-## 7. Mode: check
+## 8. Mode: check
 
 Run the scope-readiness checker against any Feature Area or Scope Slice file.
 
@@ -3372,17 +3463,17 @@ Run the scope-readiness checker against any Feature Area or Scope Slice file.
 
 Note: `check` mode does not require Feature Area Lead pre-flight. It is a mechanical checker run.
 
-## 8. Collaboration
+## 9. Collaboration
 
 | Need | Delegate to | When |
 |------|-------------|------|
-| Context reconstruction before map/validate/slice | Feature Area Lead | On initial invocation of map, validate, or slice — produce a Context Brief first |
+| Context reconstruction before map, validate, slice, or cold-start scaffold | Feature Area Lead | On initial invocation — produce a Context Brief first; for `scaffold` after same-thread map approval, reuse that brief |
 | Stress-test a proposed FA map | Scope Critic | After map proposal, before presenting to user |
 | Stress-test proposed Scope Slices | Scope Critic | After slice proposal, before presenting to user |
 
 Do not replicate the agents' work — invoke them and incorporate their output.
 
-## 9. Handoff to User Story authoring
+## 10. Handoff to User Story authoring
 
 Feature Area Builder scope ends at Scope Slice proposals.
 
@@ -3398,15 +3489,16 @@ This skill does not drive user story authoring.
 Refer to the user story workflow for next steps.
 ```
 
-## 10. Anti-patterns
+## 11. Anti-patterns
 
 | Anti-pattern | Verdict |
 |---|---|
-| Creating Feature Area or Scope Slice files directly | Forbidden — propose only; user creates |
+| Creating Feature Area files outside `scaffold` or overwriting non-empty FA files | Forbidden |
+| Creating Scope Slice files inside this workflow | Forbidden — proposals only unless a separate authoring step creates them |
 | Naming architecture, services, or runtime decisions | Forbidden |
 | Writing user stories, specs, or tasks | Forbidden |
 | Proposing Scope Slices before FA is validated | Forbidden |
-| Skipping Feature Area Lead pre-flight on initial map/validate/slice | Wrong |
+| Skipping Feature Area Lead pre-flight on initial map, validate, slice, or cold-start scaffold | Wrong |
 | Skipping Scope Critic review on map or slice proposals | Wrong |
 | Using "Feature Group" terminology in any output | Wrong — use "Feature Area" |
 | Marking artifacts as `validated` or `ready-for-user-stories` in response text | Forbidden — the user updates the file |
@@ -3414,15 +3506,15 @@ Refer to the user story workflow for next steps.
 | Silently working around a NEED_UPDATE flag | Forbidden — surface it |
 | Creating Scope Slices directly from a PRD Feature Group | Forbidden — Feature Area decomposition must happen first |
 
-## 11. Guardrails
+## 12. Guardrails
 
-- **Proposal-first.** Never create files. Every output is a proposal for human review.
+- **Proposal-first except `scaffold`.** `/feature-area scaffold` is the only Feature Area mode that may create Feature Area markdown files (`docs/product/feature-areas/`). Every other mode: proposals/checks only.
 - **One mode at a time.** Do not run map + slice in one response.
 - **Explicit blockers.** Any FAIL in the checker blocks advancement — do not paper over it with prose.
 - **Terminology precision.** Feature Area, Scope Slice, User Story, Spec, Task — no synonyms, no shortcuts.
 - **v0 discipline.** Every proposal must be cross-checked against the hard v0 exclusion list before presenting to the user.
 
-=== .cursor/skills/prd/prd-builder/SKILL.md ===
+=== ./.cursor/skills/prd/prd-builder/SKILL.md ===
 ---
 name: prd-builder
 description: Drives PRD discovery, feature group convergence, ICE scoring, and cross-group ranking. Produces validated feature group blocks and gated delta proposals. Only applies PRD file changes in /prd update mode after explicit human approval. Not for technical architecture, implementation, or sprint planning.
@@ -4165,3 +4257,2141 @@ Feature Group into Feature Areas before creating any Scope Slices.
 
 Do not perform the decomposition. Route clearly and stop.
 
+=== ./diff.md ===
+diff --git a/.cursor/checkers/scope-readiness-checker.md b/.cursor/checkers/scope-readiness-checker.md
+index 0eaa281..fcf3b84 100644
+--- a/.cursor/checkers/scope-readiness-checker.md
++++ b/.cursor/checkers/scope-readiness-checker.md
+@@ -248,11 +248,14 @@ For Zedos v0 owner milestones:
+ 
+ ---
+ 
+-### SS-11 · Status matches readiness
++### SS-11 · Status is `ready-for-user-stories`
+ 
+-> If status is `ready-for-user-stories`, all Part 2 checks must pass and no NEED_HUMAN flag is set.
++> Valid Scope Slice statuses are: `exploratory`, `blocked`, `deferred`, `ready-for-user-stories`. The status `validated` is not valid for Scope Slices.
++>
++> If the slice has passed all Part 2 checks and has no unresolved NEED_HUMAN flag, status must be `ready-for-user-stories`. User stories may not be written until this status is set.
+ 
+ **FAIL signals:**
++- Status is `validated` (not a valid Scope Slice status — `validated` belongs to Feature Areas only; use `ready-for-user-stories` instead)
+ - Status is `ready-for-user-stories` with unresolved NEED_HUMAN
+ - Status is `ready-for-user-stories` but SS-01 through SS-10 have failures
+ 
+diff --git a/.cursor/rules/feature-area-workflow.mdc b/.cursor/rules/feature-area-workflow.mdc
+index 71df111..4858674 100644
+--- a/.cursor/rules/feature-area-workflow.mdc
++++ b/.cursor/rules/feature-area-workflow.mdc
+@@ -81,6 +81,18 @@ A Scope Slice must:
+ 
+ If a Scope Slice cannot be fully described without naming technical layers, it is not ready.
+ 
++### Terminology Compatibility
++
++**"Feature Group" is legacy PRD language** produced by the PRD Builder skill during discovery and convergence.
++
++When transitioning from PRD to execution:
++
++- Convert each broad PRD Feature Group into one or more Feature Areas using this workflow.
++- Do not carry "Feature Group" naming into `docs/product/` artifacts.
++- A single PRD Feature Group may map to multiple Feature Areas — split before decomposing.
++- Do not create Scope Slices directly from a PRD Feature Group without first creating and validating a Feature Area.
++- New documents under `docs/product/` must use Feature Area / Scope Slice terminology exclusively.
++
+ ### Service
+ 
+ A runtime or deployment boundary. Only use "service" when architecture has explicitly drawn runtime separation. Do not call a Feature Area a service.
+@@ -120,6 +132,12 @@ The following are strictly forbidden at each layer:
+ 
+ ## 5. Readiness Gates
+ 
++### Feature Area lifecycle
++
++- A Feature Area in `exploratory` status **may** list candidate Scope Slices in its Candidate Scope Slices section (names + one-line descriptions only).
++- Formal Scope Slice documents (files under `docs/product/scope-slices/`) **may only be created** after the Feature Area is marked `validated`.
++- User stories may only be written after a Scope Slice is marked `ready-for-user-stories`.
++
+ ### Feature Area → Scope Slices
+ 
+ A Feature Area may be decomposed into Scope Slices only when:
+@@ -137,6 +155,8 @@ A Feature Area may be decomposed into Scope Slices only when:
+ 
+ A Scope Slice may produce user stories only when:
+ 
++- [ ] Status is `ready-for-user-stories`
++
+ - [ ] User value is stated without implementation language
+ - [ ] Exact boundary is defined (included + excluded behaviors)
+ - [ ] UX states are enumerated (empty, loading, error, success, edge cases)
+diff --git a/.cursor/skills/prd/prd-builder/SKILL.md b/.cursor/skills/prd/prd-builder/SKILL.md
+index 5a8fe90..3e53ee2 100644
+--- a/.cursor/skills/prd/prd-builder/SKILL.md
++++ b/.cursor/skills/prd/prd-builder/SKILL.md
+@@ -701,3 +701,41 @@ The PRD is considered converged when:
+ At this point: stop discovery, freeze PRD direction, transition to specs/implementation. The PRD Builder skill is no longer the active workflow — further changes require a deliberate `/prd update` with a version bump rationale.
+ 
+ A PRD that never converges is not a PRD — it's a brainstorm.
++
++## 13. Handoff to Feature Area Workflow
++
++PRD Builder owns PRD discovery, convergence, and PRD-level Feature Groups. Its scope ends at the product definition layer.
++
++**Feature Area Workflow** (`.cursor/rules/feature-area-workflow.mdc`) owns execution decomposition: converting PRD Feature Groups into Feature Areas, decomposing Feature Areas into Scope Slices, and advancing Scope Slices toward user stories.
++
++### What PRD Builder must NOT do
++
++PRD Builder must never:
++
++- Create Feature Area files (`docs/product/feature-areas/`)
++- Create Scope Slice files (`docs/product/scope-slices/`)
++- Write user stories, specs, or tasks
++- Decompose a PRD Feature Group into Scope Slices directly (without Feature Area decomposition)
++- Use "Feature Group" naming in `docs/product/` artifacts
++
++### When to hand off
++
++Hand off when any of:
++
++- The PRD has converged (§12) and the next step is execution planning
++- A PRD Feature Group is too broad to yield Scope Slices without Feature Area decomposition first
++- The user asks to start building, planning, or decomposing product scope into work
++
++### How to hand off
++
++State explicitly:
++
++```txt
++PRD Feature Group "<name>" is at product-scope convergence.
++Execution decomposition requires Feature Area Workflow.
++
++Next step: read `.cursor/rules/feature-area-workflow.mdc` and convert this
++Feature Group into Feature Areas before creating any Scope Slices.
++```
++
++Do not perform the decomposition. Route clearly and stop.
+diff --git a/.cursor/templates/product/scope-slice.template.md b/.cursor/templates/product/scope-slice.template.md
+index 3d9185e..7034383 100644
+--- a/.cursor/templates/product/scope-slice.template.md
++++ b/.cursor/templates/product/scope-slice.template.md
+@@ -15,7 +15,7 @@
+ 
+ ## Status
+ 
+-<!-- One of: exploratory | validated | blocked | deferred | ready-for-user-stories -->
++<!-- One of: exploratory | blocked | deferred | ready-for-user-stories -->
+ 
+ `STATUS`
+ 
+
+=== ./docs/product/scope-slices/.gitkeep ===
+
+=== ./docs/product/feature-areas/question-history.md ===
+<!--
+  Feature Area — scaffolded from approved map + docs/prd/PRD.md
+-->
+
+# Feature Area: Question history
+
+## Status
+
+`exploratory`
+
+> **NEED_HUMAN:** false
+> **NEED_UPDATE:** false
+
+---
+
+## PRD Source
+
+- `docs/prd/PRD.md` § Feature Groups (FG-PRD-V0 — Question history); § Core User Journeys (3); § Business Objects (Clarification / question history); § Operating Model / Problem (structured path without losing thread); § Flow Inventory (structured log)
+- Related open questions: Q-017 (answered — six fields per decision log)
+- Related product decisions: none
+
+---
+
+## Product Intent
+
+The founder keeps a **structured, owner-private log** of product decisions: each entry reflects a structured question, available options, the founder’s answer (with optional comment), interpretation, and PRD impact — **not** a raw chat transcript. This history stays out of the anonymous share surface.
+
+---
+
+## In Scope
+
+- Persist the structured question-history model per PRD decision (fields per PRD / Q-017: structured question, **available options**, founder answer, optional comment, AI interpretation, PRD impact).
+- Make the history available to the **signed-in owner** in the private workspace alongside clarification work.
+- Keep history **owner-private** relative to anonymous share viewers (share shows only what PRD sharing allows — coordination with Read-only sharing FA).
+
+## Out of Scope
+
+- Exposing full workspace history or log entries on the **anonymous read-only share** surface (PRD: not exposed on share).
+- Collaboration features (comments from invitees, shared history with editors) — Hard v0 exclusions.
+
+---
+
+## Business Objects Touched
+
+| Object | Relationship |
+|--------|----------------|
+| Clarification / question history | Create and update structured log entries tied to decisions in the private workspace |
+
+---
+
+## User Journeys Touched
+
+- Journey 3 — Clarify and iterate (history visible/available to the owner in the private workspace).
+
+---
+
+## Dependencies
+
+| Dependency | Status | Notes |
+|------------|--------|-------|
+| Guided clarification | pending | Live flow produces decision moments that populate history |
+| Project / PRD context | pending | Entries attach to product line and PRD trajectory |
+
+---
+
+## Risks
+
+- If history feels like redundant bureaucracy, founders skip reviewing it — thread retention value drops.
+
+---
+
+## Open Blockers
+
+| Blocker | Blocks | NEED_HUMAN |
+|---------|--------|------------|
+| — | — | — |
+
+*Coordination risk with **Guided clarification** (AI quality) is tracked there; this area inherits content quality but not provider selection.*
+
+---
+
+## Candidate Scope Slices
+
+| Slice | Description | Status |
+|-------|-------------|--------|
+| Persist structured decision entries | Each decision writes/updates the six-field structured record (not raw chat). | exploratory |
+| Owner views question history | Signed-in owner can browse/search the log in the private workspace contextually. | exploratory |
+
+---
+
+## Readiness Verdict
+
+- [ ] PRD source sections read
+- [ ] Product intent stated without technical language
+- [ ] Business objects enumerated
+- [ ] User journeys identified
+- [ ] In-scope / out-of-scope explicitly separated
+- [ ] No unresolved PRD open questions affecting this area
+- [ ] Deferred behaviors explicitly named
+- [ ] Candidate Scope Slices are individually small enough
+
+**Verdict:** NOT READY
+
+---
+
+## Changelog
+
+| Date | Change | Author |
+|------|--------|--------|
+| 2026-05-09 | Initial scaffold from approved Feature Area map (`/feature-area scaffold`) | — |
+
+=== ./docs/product/feature-areas/credit-system.md ===
+<!--
+  Feature Area — scaffolded from approved map + docs/prd/PRD.md
+-->
+
+# Feature Area: Credit system
+
+## Status
+
+`exploratory`
+
+> **NEED_HUMAN:** true
+> **NEED_UPDATE:** false
+
+---
+
+## PRD Source
+
+- `docs/prd/PRD.md` § Feature Groups (FG-PRD-V0 — Credit system); § Core User Journeys (6); § Payment model (ledger, grace, block-at-zero, auto-reload interaction); § Business Objects; § Configuration Matrix (starter X, burn rates, grace ceiling); § Surface Blockers (starter credit grant X); § Integration Boundaries (Credits); § Risks (credit economics, grace anti-abuse)
+- Related open questions: Q-008 (answered — X stays operator-config / TBD); Q-018 (answered — directional burn tiers)
+- Related product decisions: none
+
+---
+
+## Product Intent
+
+The founder always understands **how many credits they have**, how **AI work consumes** credits **per operation**, and what happens in the **first PRD circuit grace** (20-credit ceiling, pre-check before starting heavy spend) versus **after** that circuit (**block at zero** unless a separate **opt-in auto-reload** purchase succeeds — purchase mechanics live in **Payments**). Zedos holds the authoritative **internal ledger** semantics described in the PRD: **no hidden debt, no silent retry loop, no negative balance except first-circuit grace.**
+
+---
+
+## In Scope
+
+- Show credit **balance** meaningful to the owner for planning AI work.
+- Apply **per-operation** deductions against the internal ledger per PRD semantics.
+- Enforce **first PRD circuit** grace: pre-check blocks starting work if projected overage **> 20 credits**; allow one-time in-flight completion up to **20 credits** overage; then surface recharge path messaging.
+- After first circuit: **paid AI blocked at zero** unless an allowed recharge path (see Payments FA) adds credits.
+- Communicate **overage / coverage-once** copy after grace per PRD.
+
+## Out of Scope
+
+- Subscription plans, unlimited free AI, BYOK (Hard v0 exclusions).
+- Implementing **checkout UI** and **Stripe** flows as the primary definition of this area (owned by **Payments** FA) — this area consumes the **credit outcome** of purchases.
+- Final commercial **pricing tables** fixed in the PRD (list prices remain operator-config).
+
+---
+
+## Business Objects Touched
+
+| Object | Relationship |
+|--------|----------------|
+| AI credit balance | Display and enforce gating consistent with balance rules |
+| Credit ledger | Authoritative record of consumption and first-circuit grace semantics per PRD |
+
+---
+
+## User Journeys Touched
+
+- Journey 6 — Credits: balance visibility, progressive consumption, grace, recharge UX handoff, post-grace block-at-zero, auto-reload success path vs manual fallback (coordination with Payments).
+
+---
+
+## Dependencies
+
+| Dependency | Status | Notes |
+|------------|--------|-------|
+| Payments FA | pending | Purchases and auto-reload **add** prepaid credits |
+| Operator config for starter **X** | blocked | PRD Surface Blocker — numeric grant TBD |
+
+---
+
+## Risks
+
+- **Credit economics / wrong defaults** (PRD): starter grant and regional price points tuned outside PRD — can starve first value or create unsustainable cost.
+- **Grace anti-abuse** (PRD): pre-check must run **before** AI operations start, not after.
+
+---
+
+## Open Blockers
+
+| Blocker | Blocks | NEED_HUMAN |
+|---------|--------|------------|
+| **Starter credit grant (X)** — operator-config / TBD in PRD (Q-008) | First-run value and abuse posture until ops chooses X | true |
+| **Directional burn tier table** (1 / 3 / 5 / 10 / 15) labeled **product assumption, not final pricing** | Committing UX copy and metering expectations for launch | true |
+
+---
+
+## Candidate Scope Slices
+
+| Slice | Description | Status |
+|-------|-------------|--------|
+| Balance visibility | Owner sees credits remaining in context of continuing AI work. | exploratory |
+| Per-operation consumption rules | Credits deduct per AI operation with progressive ledger updates per PRD. | exploratory |
+| First-circuit grace + pre-check | Enforce 20-credit ceiling, block starts when projected overage > 20, complete in-flight within grace once. | exploratory |
+| Post-grace gating | After first circuit, block paid AI at zero unless recharge path succeeds (coordination with Payments / auto-reload). | exploratory |
+
+---
+
+## Readiness Verdict
+
+- [ ] PRD source sections read
+- [ ] Product intent stated without technical language
+- [ ] Business objects enumerated
+- [ ] User journeys identified
+- [ ] In-scope / out-of-scope explicitly separated
+- [ ] No unresolved PRD open questions affecting this area
+- [ ] Deferred behaviors explicitly named
+- [ ] Candidate Scope Slices are individually small enough
+
+**Verdict:** BLOCKED — operator **X** and burn-tier commitment need human/ops resolution (`NEED_HUMAN: true`).
+
+---
+
+## Changelog
+
+| Date | Change | Author |
+|------|--------|--------|
+| 2026-05-09 | Initial scaffold from approved Feature Area map (`/feature-area scaffold`) | — |
+
+=== ./docs/product/feature-areas/dashboard-shell.md ===
+<!--
+  Feature Area — scaffolded from approved map + docs/prd/PRD.md
+-->
+
+# Feature Area: Dashboard shell
+
+## Status
+
+`exploratory`
+
+> **NEED_HUMAN:** false
+> **NEED_UPDATE:** false
+
+---
+
+## PRD Source
+
+- `docs/prd/PRD.md` § Core User Journeys (1); § Global Product Picture; § MVP Completeness Checklist (under construction); § Feature Groups (FG-PRD-V0 — dashboard shell note); § Out of Scope (beyond PRD path shown as under construction)
+- Related open questions: none (active queue empty)
+- Related product decisions: none
+
+---
+
+## Product Intent
+
+After sign-in, the founder sees a **home base** that orients them toward PRD work and honestly communicates what is **not** in v0. This area prevents “north star” confusion by labeling non-PRD product directions as **under construction** instead of implying they ship now.
+
+---
+
+## In Scope
+
+- Post-sign-in landing experience that supports entering PRD workflows.
+- Clear in-product signaling where applicable: capabilities beyond the PRD path are **under construction** (per PRD MVP checklist).
+- Orientation that reinforces **v0 is the PRD slice**; long-term pipeline is visible only as framing, not as shipped scope.
+
+## Out of Scope
+
+- Shipping full post-PRD pipeline capabilities (services/feature split, Cursor packaging, user stories, test-first delivery, etc.) — PRD defers these as non-v0 deliverables.
+- Multi-user dashboards, collaboration entry points, or invite management (Hard v0 exclusions).
+- Anonymous or share-viewer dashboard experiences (share is a separate surface).
+
+---
+
+## Business Objects Touched
+
+| Object | Relationship |
+|--------|----------------|
+| User account | Signed-in context for what the shell shows and who it addresses |
+
+---
+
+## User Journeys Touched
+
+- Journey 1 — Sign up → land in dashboard (non-PRD areas may show **under construction**).
+
+---
+
+## Dependencies
+
+| Dependency | Status | Notes |
+|------------|--------|-------|
+| Account & session | pending | Must establish signed-in owner before shell is meaningful |
+| Approved v0 vs deferred messaging | ready | Global Product Picture + Out of Scope |
+
+---
+
+## Risks
+
+- **North-star confusion** (PRD Risks): if labeling is weak, users believe deferred areas are available — undermines trust and scope clarity.
+
+---
+
+## Open Blockers
+
+| Blocker | Blocks | NEED_HUMAN |
+|---------|--------|------------|
+| — | — | — |
+
+---
+
+## Candidate Scope Slices
+
+| Slice | Description | Status |
+|-------|-------------|--------|
+| Signed-in home orientation | Owner lands on a shell that routes toward projects/PRD and sets expectations for v0 vs under construction. | exploratory |
+| Under-construction placeholders | Non-PRD roadmap surfaces show honest deferred state without implying feature completeness. | exploratory |
+
+---
+
+## Readiness Verdict
+
+- [ ] PRD source sections read
+- [ ] Product intent stated without technical language
+- [ ] Business objects enumerated
+- [ ] User journeys identified
+- [ ] In-scope / out-of-scope explicitly separated
+- [ ] No unresolved PRD open questions affecting this area
+- [ ] Deferred behaviors explicitly named
+- [ ] Candidate Scope Slices are individually small enough
+
+**Verdict:** NOT READY
+
+---
+
+## Changelog
+
+| Date | Change | Author |
+|------|--------|--------|
+| 2026-05-09 | Initial scaffold from approved Feature Area map (`/feature-area scaffold`) | — |
+
+=== ./docs/product/feature-areas/.gitkeep ===
+
+=== ./docs/product/feature-areas/guided-clarification.md ===
+<!--
+  Feature Area — scaffolded from approved map + docs/prd/PRD.md
+-->
+
+# Feature Area: Guided clarification
+
+## Status
+
+`exploratory`
+
+> **NEED_HUMAN:** true
+> **NEED_UPDATE:** false
+
+---
+
+## PRD Source
+
+- `docs/prd/PRD.md` § Feature Groups (FG-PRD-V0 — Guided clarification loop); § Core User Journeys (3); § Flow Inventory; § Integration Boundaries (AI inference — managed, no BYOK); § Surface Blockers (AI inference); § Risks & Assumptions (AI mini-form generation reliability); § Business Objects (cross-ref: clarification pairs with Question History FA)
+- Related open questions: Q-017 (answered — interaction model); surface blockers tracked in PRD § Surface Blockers
+- Related product decisions: none
+
+---
+
+## Product Intent
+
+The founder moves from fuzzy thinking to concrete product decisions through a **chat-driven** experience: chat carries guidance and reasoning, and when a decision needs structure, Zedos presents **contextual constrained inputs** (decision card, checklist, ranked options, modal-style selects with optional “not sure / ask me differently”). This is **not** positioned as a static questionnaire nor as unconstrained chat-only typing as the sole pattern.
+
+---
+
+## In Scope
+
+- Chat-guided clarification that stays the primary reasoning layer for the owner in the private workspace.
+- On-the-fly constrained inputs when a product decision benefits from structured capture (per PRD sub-component list).
+- In-app advance / approve affordances consistent with **Confirmation channel: in-app first** (exact control pattern remains UX detail).
+
+## Out of Scope
+
+- Bring-your-own model or non-managed AI arrangements (Hard v0 exclusions: **no BYOK** in v0).
+- Multi-user co-editing or invite-based clarification (Hard v0 exclusions).
+- Anonymous share viewers participating in clarification (share surface is read-only and separate).
+
+---
+
+## Business Objects Touched
+
+| Object | Relationship |
+|--------|----------------|
+| Project | Clarification is scoped to a project’s PRD journey |
+| PRD version | Outputs of clarification feed versioned PRD evolution (coordination with PRD versioning FA) |
+
+*Structured log lines are owned by the **Question history** Feature Area; this area produces the live clarification experience that feeds those entries.*
+
+---
+
+## User Journeys Touched
+
+- Journey 3 — Clarify and iterate using the chat-driven dynamic decision UI + contextual mini-forms.
+
+---
+
+## Dependencies
+
+| Dependency | Status | Notes |
+|------------|--------|-------|
+| Project workspace | pending | Must open a project context |
+| PRD versioning | pending | Clarification iterates toward PRD updates |
+| AI inference stance | blocked | PRD Surface Blocker: model/provider not fixed beyond managed usage |
+
+---
+
+## Risks
+
+- **AI mini-form reliability** (PRD): if constrained inputs are inconsistent, the whole clarification UX degrades; **no static-questionnaire fallback is defined for v0**.
+
+---
+
+## Open Blockers
+
+| Blocker | Blocks | NEED_HUMAN |
+|---------|--------|------------|
+| **AI inference / provider selection** — PRD Surface Blocker: model/provider not specified beyond managed usage and no BYOK | Boundaries for production reliability, cost, and acceptable failure modes for mini-form generation | true |
+| **Mini-form quality bar** — load-bearing assumption in Risks & Assumptions | Whether v0 ships without a defined fallback if quality is insufficient | true |
+
+---
+
+## Candidate Scope Slices
+
+| Slice | Description | Status |
+|-------|-------------|--------|
+| Chat-led clarification turn | Owner receives guidance in chat and can proceed with in-app advance/approve patterns. | exploratory |
+| Contextual mini-form decision step | When needed, owner completes a constrained input pattern (cards, lists, ranking, structured selects) including “not sure / ask me differently.” | exploratory |
+
+---
+
+## Readiness Verdict
+
+- [ ] PRD source sections read
+- [ ] Product intent stated without technical language
+- [ ] Business objects enumerated
+- [ ] User journeys identified
+- [ ] In-scope / out-of-scope explicitly separated
+- [ ] No unresolved PRD open questions affecting this area
+- [ ] Deferred behaviors explicitly named
+- [ ] Candidate Scope Slices are individually small enough
+
+**Verdict:** BLOCKED — PRD Surface Blockers and reliability assumption require human resolution (`NEED_HUMAN: true`).
+
+---
+
+## Changelog
+
+| Date | Change | Author |
+|------|--------|--------|
+| 2026-05-09 | Initial scaffold from approved Feature Area map (`/feature-area scaffold`) | — |
+
+=== ./docs/product/feature-areas/owner-milestone-feedback.md ===
+<!--
+  Feature Area — scaffolded from approved map + docs/prd/PRD.md
+-->
+
+# Feature Area: Owner milestone feedback
+
+## Status
+
+`exploratory`
+
+> **NEED_HUMAN:** false
+> **NEED_UPDATE:** false
+
+---
+
+## PRD Source
+
+- `docs/prd/PRD.md` § Feature Groups (FG-PRD-V0 — Owner milestone feedback); § Success Metrics (working metrics + prompt rules); § Product Surface (Learning / feedback); § Core User Journeys (7); § Business Objects (Milestone feedback); § Hard v0 exclusions (anonymous share feedback deferred)
+- Related open questions: Q-013 (answered — owner-only prompts; milestones defined)
+- Related product decisions: none
+
+---
+
+## Product Intent
+
+After **specific owner milestones**, Zedos asks for **lightweight, skippable** feedback (**1–5 stars** or **like/dislike**, optional comment) so the team can measure **PRD usefulness** from the person actually doing the work — **never** from anonymous share viewers in v0.
+
+---
+
+## In Scope
+
+- Prompt after: **first PRD version created**; **PRD version updated after clarification**; **PRD shared** (link flow); **PRD reopened / viewed by owner after generation** (per PRD prompt rules).
+- **Audience:** signed-in **owner only**.
+- Capture rating and optional comment; store with **project**, **PRD version**, **milestone**, **timestamp** (per PRD).
+- Prompts remain **automatic but selective** and **skippable** (Success Metrics / Risks).
+
+## Out of Scope
+
+- **Anonymous share-viewer feedback** — deferred post-v0 (PRD Out of Scope / Product Surface).
+- Collaboration feedback loops (invited editors, share-page comments) — Hard v0 exclusions.
+- Using feedback metrics as the **sole** definition of product success without the three working metrics definitions — this FA captures **inputs**, not analytics implementation.
+
+---
+
+## Business Objects Touched
+
+| Object | Relationship |
+|--------|----------------|
+| Milestone feedback | Create/read owner submissions tied to project, version, milestone type, time |
+
+---
+
+## User Journeys Touched
+
+- Journey 7 — Feedback (owner) after milestones.
+
+---
+
+## Dependencies
+
+| Dependency | Status | Notes |
+|------------|--------|-------|
+| PRD versioning | pending | Milestones reference versions |
+| Share flow | pending | “PRD shared” milestone depends on share link existence |
+
+---
+
+## Risks
+
+- **Feedback program execution** (PRD): poorly timed or heavy prompts reduce response rate — Success Metrics become unreliable.
+
+---
+
+## Open Blockers
+
+| Blocker | Blocks | NEED_HUMAN |
+|---------|--------|------------|
+| — | — | — |
+
+---
+
+## Candidate Scope Slices
+
+| Slice | Description | Status |
+|-------|-------------|--------|
+| Milestone detection + prompt surface | Owner sees a lightweight prompt only at defined milestones; can skip. | exploratory |
+| Feedback capture + attribution | Submissions store project, PRD version, milestone, timestamp with stars/like/dislike + optional comment. | exploratory |
+
+---
+
+## Readiness Verdict
+
+- [ ] PRD source sections read
+- [ ] Product intent stated without technical language
+- [ ] Business objects enumerated
+- [ ] User journeys identified
+- [ ] In-scope / out-of-scope explicitly separated
+- [ ] No unresolved PRD open questions affecting this area
+- [ ] Deferred behaviors explicitly named
+- [ ] Candidate Scope Slices are individually small enough
+
+**Verdict:** NOT READY
+
+---
+
+## Changelog
+
+| Date | Change | Author |
+|------|--------|--------|
+| 2026-05-09 | Initial scaffold from approved Feature Area map (`/feature-area scaffold`) | — |
+
+=== ./docs/product/feature-areas/payments.md ===
+<!--
+  Feature Area — scaffolded from approved map + docs/prd/PRD.md
+-->
+
+# Feature Area: Payments
+
+## Status
+
+`exploratory`
+
+> **NEED_HUMAN:** false
+> **NEED_UPDATE:** false
+
+---
+
+## PRD Source
+
+- `docs/prd/PRD.md` § Payment model (Stripe one-time, packs, auto-reload); § Integration Boundaries (Payments); § Configuration Matrix (markets, provider, pack denominations, list prices operator-config); § Feature Groups (FG-PRD-V0 — Credit system bridge to Stripe); § Core User Journeys (6); § Risks (Payments & tax; Auto-reload / SCA)
+- Related open questions: Q-015, Q-016 (answered — Stripe, FR/EU+US, pack sizes, operator-config pricing)
+- Related product decisions: none
+
+---
+
+## Product Intent
+
+The founder can **buy prepaid credit packs** (**100 / 200 / 1000** credits) using **Stripe one-time checkout** in **France/EU + US**, with **clear VAT/tax handling** for digital AI credits as a **product requirement** (details not specified here). They may **opt in** to **auto-reload** that buys **one** of the same packs via a **saved payment method** as a **best-effort convenience**, **never** presented as a subscription; if auto-reload fails or needs authentication (e.g. EU/SCA), the product falls back to **manual recharge UX** while paid AI stays blocked until resolved.
+
+---
+
+## In Scope
+
+- Manual **top-up** path via **Stripe** one-time payment for **100 / 200 / 1000** credit packs (prepaid quantities only, not “N PRDs”).
+- **Launch markets:** FR/EU + US per PRD.
+- **Opt-in auto-reload** that purchases one prepaid pack using a saved payment method when rules trigger; success adds credits; failure routes to manual recharge messaging.
+- Product-level clarity that auto-reload is **prepaid refill**, **not** a subscription, and **not** required to finish the first PRD flow.
+- Legible tax/VAT posture for **digital AI credits** to users in supported markets (per PRD intent).
+
+## Out of Scope
+
+- Subscription billing, BYOK, unlimited free AI (Hard v0 exclusions).
+- Choosing implementation-specific payment edge cases beyond PRD’s SCA/manual-fallback story (this FA states product behavior, not integration specs).
+- Setting fixed EUR/USD list prices in the PRD (operator-config per Q-016).
+
+---
+
+## Business Objects Touched
+
+| Object | Relationship |
+|--------|----------------|
+| Credit pack purchase | Record/acknowledge completed one-time pack purchases that increase prepaid credits |
+| Auto-reload preference / saved instrument | Product-level intent: opt-in convenience tied to saved payment method (coordination with Credit system for when reload fires) |
+
+---
+
+## User Journeys Touched
+
+- Journey 6 — Recharge UX after grace or at zero: **buy pack**, enable **opt-in auto-reload**, or defer with **paid AI blocked**; manual path when auto-reload cannot complete.
+
+---
+
+## Dependencies
+
+| Dependency | Status | Notes |
+|------------|--------|-------|
+| Credit system | pending | Ledger must apply purchased credits correctly |
+| **Stripe** as named provider | ready | Integration Boundaries |
+
+---
+
+## Risks
+
+- **Auto-reload / SCA** (PRD): EU/France off-session charges may require authentication — must feel like a designed **manual recharge fallback**, not a broken loop.
+- **Payments & tax legibility** (PRD): users must understand what they pay and why (VAT/tax story).
+
+---
+
+## Open Blockers
+
+| Blocker | Blocks | NEED_HUMAN |
+|---------|--------|------------|
+| — | — | — |
+
+*Operator-config **list prices** are tuning, not an open PRD question row; track in ops/commercial planning.*
+
+---
+
+## Candidate Scope Slices
+
+| Slice | Description | Status |
+|-------|-------------|--------|
+| Manual credit pack checkout | Owner buys a 100/200/1000 pack via one-time payment and receives credits. | exploratory |
+| Auto-reload opt-in and outcomes | Owner enables auto-reload; success continues generation; failure/SCA routes to manual recharge UX with clear copy. | exploratory |
+| Tax/VAT legibility | Purchase and receipts communicate digital-credits tax stance clearly in supported markets. | exploratory |
+
+---
+
+## Readiness Verdict
+
+- [ ] PRD source sections read
+- [ ] Product intent stated without technical language
+- [ ] Business objects enumerated
+- [ ] User journeys identified
+- [ ] In-scope / out-of-scope explicitly separated
+- [ ] No unresolved PRD open questions affecting this area
+- [ ] Deferred behaviors explicitly named
+- [ ] Candidate Scope Slices are individually small enough
+
+**Verdict:** NOT READY
+
+---
+
+## Changelog
+
+| Date | Change | Author |
+|------|--------|--------|
+| 2026-05-09 | Initial scaffold from approved Feature Area map (`/feature-area scaffold`) | — |
+
+=== ./docs/product/feature-areas/project-workspace.md ===
+<!--
+  Feature Area — scaffolded from approved map + docs/prd/PRD.md
+-->
+
+# Feature Area: Project workspace
+
+## Status
+
+`exploratory`
+
+> **NEED_HUMAN:** false
+> **NEED_UPDATE:** false
+
+---
+
+## PRD Source
+
+- `docs/prd/PRD.md` § Feature Groups (FG-PRD-V0 — Project workspace); § Core User Journeys (2, 5); § Flow Inventory; § Operating Model (one account owns projects); § Business Objects (Project)
+- Related open questions: none (active queue empty)
+- Related product decisions: none
+
+---
+
+## Product Intent
+
+The founder can organize work into **multiple projects** (each a container for a product line or idea), then **create, list, and open** the project they want to work on. This area is distinct from switching **PRD versions within** a project — that is a separate navigation job in the PRD.
+
+---
+
+## In Scope
+
+- Create projects.
+- List projects the owner can access (solo v0: owned by the signed-in account).
+- Open a project to continue PRD / clarification work for that lineage.
+- Switch between projects when working across multiple ideas (Journey 5).
+
+## Out of Scope
+
+- Multi-user project membership, invites, shared ownership, or role-based project access (Hard v0 exclusions).
+- Import/export of projects as a mandatory workflow (Markdown/PDF export are not MVP “done” gates per PRD).
+
+---
+
+## Business Objects Touched
+
+| Object | Relationship |
+|--------|----------------|
+| Project | Create, list, open; container for PRD versions and clarification history |
+| User account | Owns projects in solo v0 |
+
+---
+
+## User Journeys Touched
+
+- Journey 2 — Create or select a project → open the PRD / clarification flow for that project.
+- Journey 5 — Switch projects to work on another PRD lineage.
+
+---
+
+## Dependencies
+
+| Dependency | Status | Notes |
+|------------|--------|-------|
+| Account & session | pending | Owner identity required |
+
+---
+
+## Risks
+
+- Weak project organization UX makes multi-PRD founders lose thread — undermines core promise of “never losing the narrative.”
+
+---
+
+## Open Blockers
+
+| Blocker | Blocks | NEED_HUMAN |
+|---------|--------|------------|
+| — | — | — |
+
+---
+
+## Candidate Scope Slices
+
+| Slice | Description | Status |
+|-------|-------------|--------|
+| Create project | Founder creates a new project container and can proceed to PRD work inside it. | exploratory |
+| List and open project | Founder finds an existing project and opens it to resume work. | exploratory |
+| Switch active project | Founder moves between projects without losing account context. | exploratory |
+
+---
+
+## Readiness Verdict
+
+- [ ] PRD source sections read
+- [ ] Product intent stated without technical language
+- [ ] Business objects enumerated
+- [ ] User journeys identified
+- [ ] In-scope / out-of-scope explicitly separated
+- [ ] No unresolved PRD open questions affecting this area
+- [ ] Deferred behaviors explicitly named
+- [ ] Candidate Scope Slices are individually small enough
+
+**Verdict:** NOT READY
+
+---
+
+## Changelog
+
+| Date | Change | Author |
+|------|--------|--------|
+| 2026-05-09 | Initial scaffold from approved Feature Area map (`/feature-area scaffold`) | — |
+
+=== ./docs/product/feature-areas/account-session.md ===
+<!--
+  Feature Area — scaffolded from approved map + docs/prd/PRD.md
+-->
+
+# Feature Area: Account & session
+
+## Status
+
+`exploratory`
+
+> **NEED_HUMAN:** false
+> **NEED_UPDATE:** false
+
+---
+
+## PRD Source
+
+- `docs/prd/PRD.md` § Product Surface (Buyer entry point; Merchant operating surface); § Operating Model; § Feature Groups (FG-PRD-V0 — Auth shell); § Flow Inventory (Sign up / sign in); § Core User Journeys (1)
+- Related open questions: none (active queue empty)
+- Related product decisions: none
+
+---
+
+## Product Intent
+
+Solo founders can discover Zedos through open signup, create an account, and stay signed in as the **single owner** of their workspace. This area exists so every other v0 capability can assume a clear, accountable identity without team or invite flows.
+
+---
+
+## In Scope
+
+- Public self-serve signup as the default v0 entry (no waitlist or invite gate as the default).
+- Sign-in for returning owners so they reach their signed-in experience.
+- Session semantics consistent with **one account owns projects and PRDs** (solo v0).
+
+## Out of Scope
+
+- Multi-user collaboration: invites, roles, co-editing (PRD Hard v0 exclusions).
+- Waitlist-only or invite-only acquisition as the **default** v0 path (non-default experiments are out unless PRD changes).
+- Separate merchant or admin persona (same signed-in founder is the operating surface in v0).
+
+---
+
+## Business Objects Touched
+
+| Object | Relationship |
+|--------|----------------|
+| User account | Create on signup; authenticate returning owner; scope ownership of workspace |
+
+---
+
+## User Journeys Touched
+
+- Journey 1 — Sign up → land in dashboard (session establishes access to downstream flows).
+
+---
+
+## Dependencies
+
+| Dependency | Status | Notes |
+|------------|--------|-------|
+| PRD identity stance (solo, open signup) | ready | Grounded in Product Surface / Operating Model |
+
+---
+
+## Risks
+
+- If signup friction is high, founders never reach PRD value — balance with fraud/abuse concerns outside this FA’s boundary.
+
+---
+
+## Open Blockers
+
+| Blocker | Blocks | NEED_HUMAN |
+|---------|--------|------------|
+| — | — | — |
+
+*Active PRD question queue is empty; no additional blockers listed for this area.*
+
+---
+
+## Candidate Scope Slices
+
+| Slice | Description | Status |
+|-------|-------------|--------|
+| Public signup to first dashboard | Founder completes signup and lands signed-in with clear next step toward PRD work. | exploratory |
+| Returning owner sign-in | Founder signs back in and resumes without losing account context. | exploratory |
+
+---
+
+## Readiness Verdict
+
+- [ ] PRD source sections read
+- [ ] Product intent stated without technical language
+- [ ] Business objects enumerated
+- [ ] User journeys identified
+- [ ] In-scope / out-of-scope explicitly separated
+- [ ] No unresolved PRD open questions affecting this area
+- [ ] Deferred behaviors explicitly named
+- [ ] Candidate Scope Slices are individually small enough
+
+**Verdict:** NOT READY
+
+---
+
+## Changelog
+
+| Date | Change | Author |
+|------|--------|--------|
+| 2026-05-09 | Initial scaffold from approved Feature Area map (`/feature-area scaffold`) | — |
+
+=== ./docs/product/feature-areas/read-only-sharing.md ===
+<!--
+  Feature Area — scaffolded from approved map + docs/prd/PRD.md
+-->
+
+# Feature Area: Read-only sharing
+
+## Status
+
+`exploratory`
+
+> **NEED_HUMAN:** false
+> **NEED_UPDATE:** false
+
+---
+
+## PRD Source
+
+- `docs/prd/PRD.md` § Feature Groups (FG-PRD-V0 — Share); § Core User Journeys (8); § Flow Inventory; § Hard v0 exclusions (advanced share controls); § Business Objects (Share link); § Integration Boundaries (Identity; Search engines noindex intent); § Risks (public read-only links / leakage)
+- Related open questions: Q-011, Q-012 (answered — anonymous read-only links; no password/expiry in v0)
+- Related product decisions: none
+
+---
+
+## Product Intent
+
+The owner can mint a **read-only public link** so **anonymous viewers** can read **only** the shared PRD presentation — without editing, commenting, duplicating, or seeing **private/workspace history**. The owner can **disable** the link; the page is **not** intended for search indexing (**noindex** product intent).
+
+---
+
+## In Scope
+
+- Generate a share artifact the owner can distribute as a **public read-only** experience.
+- Anonymous read of **shared PRD content** per PRD boundaries (no workspace/history leakage on the share surface).
+- Owner **revokes / disables** the link.
+- **Noindex** behavior as a **product requirement** (policy/robots level described at PRD, not as implementation here).
+
+## Out of Scope
+
+- **Advanced share controls** in v0: **password**, **time-based expiry**, extra “private link” controls beyond **owner disable** + **noindex** (Hard v0 exclusions).
+- Anonymous **feedback prompts** on the share surface (deferred post-v0).
+- Markdown/PDF export as mandatory “PRD complete” (export not in this FA’s MVP gate).
+
+---
+
+## Business Objects Touched
+
+| Object | Relationship |
+|--------|----------------|
+| Share link | Create, expose read-only surface, revoke; ties to which PRD content is shared |
+
+---
+
+## User Journeys Touched
+
+- Journey 8 — Share: mint read-only URL, anonymous read, disable link, noindex intent.
+
+---
+
+## Dependencies
+
+| Dependency | Status | Notes |
+|------------|--------|-------|
+| PRD versioning | pending | Share must reference stable “what is shown” semantics for a version |
+
+---
+
+## Risks
+
+- **Leakage** (PRD): if share surface over-exposes private clarification/history, trust breaks — boundaries must stay strict.
+
+---
+
+## Open Blockers
+
+| Blocker | Blocks | NEED_HUMAN |
+|---------|--------|------------|
+| — | — | — |
+
+---
+
+## Candidate Scope Slices
+
+| Slice | Description | Status |
+|-------|-------------|--------|
+| Mint read-only link | Owner creates a public read-only link for the intended PRD content. | exploratory |
+| Anonymous read surface | Viewer reads shared content only, with no edit/comment/workspace/history exposure per PRD. | exploratory |
+| Revoke link + noindex | Owner disables link; share URL treated as non-indexable by product intent. | exploratory |
+
+---
+
+## Readiness Verdict
+
+- [ ] PRD source sections read
+- [ ] Product intent stated without technical language
+- [ ] Business objects enumerated
+- [ ] User journeys identified
+- [ ] In-scope / out-of-scope explicitly separated
+- [ ] No unresolved PRD open questions affecting this area
+- [ ] Deferred behaviors explicitly named
+- [ ] Candidate Scope Slices are individually small enough
+
+**Verdict:** NOT READY
+
+---
+
+## Changelog
+
+| Date | Change | Author |
+|------|--------|--------|
+| 2026-05-09 | Initial scaffold from approved Feature Area map (`/feature-area scaffold`) | — |
+
+=== ./docs/product/feature-areas/prd-versioning.md ===
+<!--
+  Feature Area — scaffolded from approved map + docs/prd/PRD.md
+-->
+
+# Feature Area: PRD versioning
+
+## Status
+
+`exploratory`
+
+> **NEED_HUMAN:** false
+> **NEED_UPDATE:** false
+
+---
+
+## PRD Source
+
+- `docs/prd/PRD.md` § Feature Groups (FG-PRD-V0 — PRD versioning); § Core User Journeys (4); § Product Surface (Source of truth); § Business Objects (PRD version); § MVP Completeness Checklist; § Q-006 spirit (done ≠ export)
+- Related open questions: none (active queue empty)
+- Related product decisions: none
+
+---
+
+## Product Intent
+
+Within a project, the founder maintains a **versioned PRD** where the **in-app** document state is authoritative. They can move between versions so iteration is traceable and “complete” for a version **does not** depend on exporting a file.
+
+---
+
+## In Scope
+
+- Persist **PRD version** state in-app as the canonical record for that version.
+- Browse / move between **multiple PRD versions** within the same project (distinct navigation job from switching projects).
+- Align product meaning of “done” for a version with PRD: **not** gated on Markdown or PDF export.
+
+## Out of Scope
+
+- Markdown export or PDF export as **mandatory** completion criteria for a version (PRD: export not required for “done”; PDF not v0-critical; MD may be fast follow).
+- Co-editing or version branching with collaborators (Hard v0 exclusions).
+
+---
+
+## Business Objects Touched
+
+| Object | Relationship |
+|--------|----------------|
+| PRD version | Create/persist/browse versioned document state in-app |
+| Project | Versions are scoped per project container |
+
+---
+
+## User Journeys Touched
+
+- Journey 4 — Version the PRD and move between versions within a project.
+
+---
+
+## Dependencies
+
+| Dependency | Status | Notes |
+|------------|--------|-------|
+| Project workspace | pending | Versions attach to a project |
+
+---
+
+## Risks
+
+- If version history is confusing, founders lose trust in the PRD as source of truth — contradicts Product Surface commitment.
+
+---
+
+## Open Blockers
+
+| Blocker | Blocks | NEED_HUMAN |
+|---------|--------|------------|
+| — | — | — |
+
+---
+
+## Candidate Scope Slices
+
+| Slice | Description | Status |
+|-------|-------------|--------|
+| Create or capture PRD version | Founder can establish a version line and persist PRD content for that version in-app. | exploratory |
+| Browse and switch PRD versions | Founder moves between versions inside a project without losing context of which version is active. | exploratory |
+
+---
+
+## Readiness Verdict
+
+- [ ] PRD source sections read
+- [ ] Product intent stated without technical language
+- [ ] Business objects enumerated
+- [ ] User journeys identified
+- [ ] In-scope / out-of-scope explicitly separated
+- [ ] No unresolved PRD open questions affecting this area
+- [ ] Deferred behaviors explicitly named
+- [ ] Candidate Scope Slices are individually small enough
+
+**Verdict:** NOT READY
+
+---
+
+## Changelog
+
+| Date | Change | Author |
+|------|--------|--------|
+| 2026-05-09 | Initial scaffold from approved Feature Area map (`/feature-area scaffold`) | — |
+
+=== ./docs/prd/PRD.md ===
+---
+version: v1
+status: draft
+supersedes: null
+date: 2026-05-09
+---
+
+# Why This Version Exists
+
+Establish a single narrative PRD for **Zedos**: a web product that moves the current Cursor-style PRD workflow online for **solo founders**, with a deliberate **v0** cut (PRD-only slice) and **deferred** product areas shown as under construction. This version aligns product language with discovery (**Q-001–Q-020** and `2026-05-09-zedos-discovery-note.md`) before deeper feature-group work.
+
+# Product Overview
+
+**Zedos** helps founders who use AI to **ship and validate** a market idea when they only have a **vague concept**. In **v0**, the product delivers **guided clarification**, a **versioned in-app PRD**, **question history**, **readable, shareable output** in the browser, **credit-metered AI** with **Stripe** purchase flows, and **owner-only milestone feedback** so learning tracks **PRD quality** after key steps. Other capabilities implied by the long-term vision (services/feature split, technical and Cursor workspace alignment, user stories, test-first delivery) are **out of v0 scope** and are surfaced elsewhere in the dashboard as **under construction**.
+
+# Problem & Users
+
+**Primary users:** founders using AI to iterate on ideas and eventually ship.
+
+**Core problem:** they start fuzzy and need a **structured path** from **idea → clarified product framing → versioned PRD** without losing thread. **v0** focuses purely on that PRD path; downstream execution workflows are intentionally not shipped in v0.
+
+# Product Surface
+
+- Primary market / language: **English** for UI and AI in v0; **French** planned next; content and structure should be **i18n-ready** without requiring multi-language UI in v0.
+- Buyer entry point: **Public self-serve signup** (no waitlist/invite gate as the default for v0).
+- Buyer-facing surface: **Web application** (primary place to clarify, iterate, and version PRDs).
+- Merchant operating surface: **Same signed-in founder** in the web app (solo v0; no separate merchant role).
+- Source of truth: **In-app versioned PRD** (canonical state lives in the product, not in an exported file).
+- Confirmation channel: **In-app first** — obvious controls (buttons, inputs, or equivalent) to advance and approve steps; not email or external channels as the default for v0.
+- **Learning / feedback (v0):** **Signed-in owner only** receives **lightweight, skippable** feedback prompts after **owner milestones** (see **Success Metrics**). **Anonymous share viewers** are **not** prompted for feedback in v0 (**deferred post-v0**).
+- Payment model (**v0**):
+  - **Free to start** with a **configurable starter credit grant (X)** (**numeric X** stays **operator-TBD** per discovery).
+  - Credits are **prepaid quantities** (packs are **100 / 200 / 1000 credits**), **never** sold as “N PRDs.” **Zedos** maintains an **internal credit ledger**; credits deduct **per AI operation**.
+  - **First PRD circuit (one-time grace):** **pre-check gate** — if the projected cost of the next AI operation exceeds the owner's remaining balance by more than **20 credits**, the operation does **not** start; present the recharge path immediately. If the operation was already in flight and the owner's balance runs out mid-response with an overage of **at most 20 credits**, the **current AI response still completes** (no mid-stream cut). Afterward, show clear copy that they **exceeded included starter credits** and that Zedos **covered that completion once** so the first flow was not interrupted; then present a **recharge** path. This grace applies **once, during the first PRD circuit only**. **After** that circuit, **paid AI generation** is **blocked at zero credits** unless **auto-reload** succeeds. **No hidden debt, no silent retry loop, no negative balance except this first-circuit grace.**
+  - **Purchases:** **Stripe** **one-time payments** for manual top-ups (**primary v0 payment path**); **launch payments** support **France/EU + US** (product scope for v0).
+  - **Auto-reload:** **Opt-in only; best-effort convenience layer** — uses a **saved payment method** to buy one of the same three prepaid packs when rules trigger. **If auto-reload succeeds**, credits are added and generation continues. **If auto-reload fails or requires authentication (e.g. EU/SCA)**, Zedos falls back to **manual recharge UX**: show a clear message, ask the owner to confirm or authenticate payment manually; **paid AI generation remains blocked** until recharge succeeds. **Auto-reload is a prepaid refill behavior, not a subscription plan** and **must not** be hidden or implied as a subscription. Auto-reload must **never** be required to complete the first PRD flow.
+  - **Tax / compliance (product intent):** **Clear VAT/tax handling** for **digital AI credits** in supported markets (**not** implementation detail here).
+  - **No subscription in v0.** **No BYOK in v0.** **No unlimited free AI.**
+- Hard v0 exclusions:
+  - **Subscriptions, BYOK, unlimited free AI** (see payment model).
+  - **Multi-user collaboration** (invites, roles, co-editing) in v0.
+  - **Markdown export** as a bar for “PRD complete” (export is useful but **not** required for done); **PDF export** not v0-critical.
+  - **Advanced share controls** in v0: **no** link password, **no** time-based expiry, **no** extra “private link” controls beyond **owner disable** and **noindex** (simple public read-only links only).
+
+## Surface Blockers
+
+- **Starter credit grant (X)** — **numeric value** remains **operator-config / TBD** in the PRD (discovery Q-008).
+- **AI inference** — **model/provider** is **not** specified here beyond **managed** usage and **no BYOK** in v0.
+
+# Global Product Picture
+
+**v0** is a **solo** founder experience: **multiple projects**, each with **multiple PRD versions**, **guided clarification**, persisted **question history**, **credit-metered AI** (**Stripe** top-ups, **internal ledger**, **first-circuit grace** then strict balance rules), **simple public read-only share links** (anonymous viewers, no workspace/history leakage, owner can disable, **not** search-indexed), and **owner-only milestone feedback** so the product can measure **PRD usefulness** without surveying anonymous viewers.
+
+**Beyond v0 (north star, not in scope for this release):** discovery described a longer arc — **product clarification → versioned PRD →** services/feature grouping **→** technical needs **→** architecture / Cursor setup **→** user stories **→** test-first delivery and iteration. That sequence informs direction but **must not** be mistaken for v0 deliverables; non-PRD surfaces appear as **under construction** in the customer dashboard.
+
+# Operating Model
+
+- **One account owns** projects and PRDs (**single-user v0**).
+- **Acquisition:** open signup.
+- **Work:** browser-first; owner advances the PRD through **in-app** actions and consumes **credits** on **AI operations**.
+- **Learning:** **Owner** gives **in-product feedback** after **defined milestones**; prompts are **automatic but selective** and **skippable**.
+- **Sharing:** owner generates **read-only** links for external viewers; viewers **cannot** edit, comment, duplicate, or see **private/workspace history** on the share surface.
+- **Differentiation of navigation:** users move between **projects** and between **PRD versions within a project** (two distinct navigation jobs).
+
+# Core User Journeys
+
+1. **Sign up** → land in dashboard (non-PRD areas may show **under construction**).
+2. **Create or select a project** → open the PRD / clarification flow for that project.
+3. **Clarify and iterate** using the **chat-driven dynamic decision UI**: chat guides and reasons throughout; when a product decision benefits from constrained input, Zedos generates a **contextual mini-form on the fly** (single-choice decision card, multi-choice checklist, ranked options, modal with select fields + optional comment, "not sure / ask me differently"); **question history** (structured log) is visible/available to the owner in the private workspace.
+4. **Version the PRD** and move between **versions** within a project.
+5. **Switch projects** to work on another PRD lineage.
+6. **Credits:** see balance; **per-operation** consumption against the **internal ledger**; **first PRD circuit** — **pre-check gate**: if projected overage exceeds **20 credits**, block before starting and show recharge path; if in-flight response runs over by **at most 20 credits**, allow completion (one-time grace); afterward show overage message + **recharge UX** (**buy pack**, **opt-in auto-reload**, or defer with **paid AI blocked**); if **auto-reload** is enabled and succeeds, credits are added and generation continues; if auto-reload fails or requires authentication, fall back to **manual recharge UX** (clear message, manual confirm/authenticate, generation blocked until resolved); **after** the first circuit, **block at zero** with no further grace.
+7. **Feedback (owner):** after **owner milestones** — **first PRD version created**; **PRD version updated after clarification**; **PRD shared** (link flow); **PRD reopened / viewed by owner after generation** — show a **lightweight** prompt (**1–5 stars** or **like/dislike**, **optional** comment), **skippable**; **no** prompts on the **anonymous share** surface in v0.
+8. **Share:** owner creates a **read-only public link**; anonymous viewer reads **only** the shared PRD content; owner can **disable** the link; page is **not** intended for search indexing.
+9. **Not in v0:** invited editors, comments on share page as collaboration, passworded or expiring links, Markdown/PDF export as mandatory “done” criteria.
+
+# Flow Inventory
+
+| Flow | v0 |
+|------|-----|
+| Sign up / sign in | Yes |
+| Create / list / open **projects** | Yes |
+| **Chat-driven dynamic decision UI** (clarification loop + contextual mini-forms on the fly) + **question history** structured log | Yes |
+| Persist and browse **PRD versions** per project | Yes |
+| **Credit** ledger, **per-operation** consumption, **first-circuit grace**, **block at zero** (post-grace) unless **auto-reload** | Yes (**Stripe** FR/EU+US) |
+| **Stripe** one-time purchase of **100 / 200 / 1000** credit packs | Yes |
+| **Opt-in auto-reload** (buy **one pack** via saved PM; **not** a subscription) | Yes |
+| **Owner milestone feedback** (skippable; **anonymous viewers**: none) | Yes |
+| **Share:** mint read-only URL, anonymous read, revoke link, noindex | Yes |
+| Markdown / PDF export | No as MVP gate (MD may follow as fast / v0.1) |
+| Team / invites / roles | No |
+| Post-PRD pipeline (services split, Cursor artifacts, user stories, CI) | No (dashboard: under construction) |
+
+# Business Objects
+
+- **User account** (solo v0).
+- **Project** (container for a product line / idea).
+- **PRD version** (versioned document state in-app).
+- **Clarification / question history** (owner-private; structured log per decision — structured question, available options, founder answer, optional comment, AI interpretation, PRD impact; not a raw chat transcript; not exposed on anonymous share).
+- **AI credit balance** and **credit ledger** / consumption semantics (**per operation**; Zedos-owned ledger; directional burn tier model: lightweight clarification step = 1 credit, standard decision / clarification step = 3, dynamic mini-form decision step = 5, PRD version generation / major update = 10, PRD challenge / convergence pass = 15; **product assumption for v0, not final pricing**).
+- **Credit pack purchase** (Stripe one-time; **100 / 200 / 1000** credits) and **auto-reload preference** / saved instrument (**product-level** intent; not implementation).
+- **Milestone feedback** (owner-only; tied to **project**, **PRD version**, **milestone type**, **timestamp**).
+- **Share link** (read-only public surface; revocable; noindex intent).
+
+# Configuration Matrix
+
+| Dimension | v0 stance |
+|-----------|-----------|
+| UI + AI language | EN |
+| Future locale | FR (after EN); i18n-ready |
+| Starter credits **X** | **TBD / operator-config** (not fixed in this PRD) |
+| Launch payment markets | **France/EU + US** |
+| Payments provider | **Stripe** |
+| Credit pack denominations | **100 / 200 / 1000 credits** (fixed; **not** “N PRDs”) |
+| Pack list prices | **Operator-config**; may vary by **currency/region** |
+| Credit burn rates | **Directional product assumption** (not implementation-hardcoded): 1 / 3 / 5 / 10 / 15 credits per operation type; pack legibility anchors: 100 = meaningful first PRD, 200 = deeper iteration, 1000 = power / multi-project |
+| First-circuit grace ceiling | **20 credits** (fixed; anti-abuse; pre-check gate enforced before operation start) |
+| Share link | Simple public read-only; disable by owner; noindex |
+
+# Integration Boundaries
+
+- **Payments:** **Stripe** for **one-time** credit pack purchases and **opt-in auto-reload** pack purchases; **FR/EU + US** flows required for v0; **clear tax/VAT treatment** for **digital AI credits** is a **product requirement** (details not implementation-specified here).
+- **Credits:** **Zedos** holds the **authoritative internal ledger**; **deduction is progressive per AI operation**; packs are **prepaid credit quantities** only.
+- **AI inference:** **managed** usage; **model/provider** **not** named in this PRD (**no BYOK** in v0 per scope).
+- **Identity:** public signup and signed-in owner; **anonymous** read-only **share** viewers (no account).
+- **Search engines:** shared URLs treated as **non-indexable** by product intent (policy/robots level — not implementation).
+- **Export:** optional **Markdown** later for alignment outside the app; **PDF** deferred from v0 critical path.
+
+# MVP Completeness Checklist
+
+- [ ] Founder can **sign up** and reach the PRD workflow.
+- [ ] Founder can manage **multiple projects** and **multiple PRD versions** per project.
+- [ ] **Guided clarification** runs with **in-app** advance/approve affordances.
+- [ ] **Question history** is persisted for the owner workspace.
+- [ ] **Versioned PRD state** is authoritative **in-app**; “done” for a version **does not** depend on file export.
+- [ ] **Credit** ledger, **per-operation** consumption, **first-circuit grace**, **post-grace block at zero**, **Stripe** top-up path (**100 / 200 / 1000**), and **opt-in auto-reload** (prepaid pack) exist.
+- [ ] **Signed-in owner** receives **milestone feedback** prompts (**skippable**; **no** prompts for **anonymous share** viewers).
+- [ ] **Read-only share link**: generate, anonymous read, **no** edit/comment/duplicate/share of private history on viewer surface; **disable** link; **noindex** behavior.
+- [ ] Non-PRD product areas show **under construction** where applicable.
+
+# Feature Groups
+
+| Id | Name | Status | Notes |
+|----|------|--------|--------|
+| FG-PRD-V0 | PRD workspace (web): projects, versions, clarification, credits, share | `exploratory` | Sole v0 delivery slice |
+| FG-FUTURE | Services/feature split, tech alignment, Cursor packaging, user stories, delivery loop | `deferred` | Names only; not v0 |
+
+## FG-PRD-V0 Sub-components
+
+| Sub-component | v0 scope anchor |
+|---|---|
+| **Auth shell** | Public signup, signed-in owner session; no invite/team auth |
+| **Project workspace** | Create / list / open projects; multi-project navigation |
+| **PRD versioning** | Persist versioned PRD state in-app; browse version history per project; "done" ≠ export |
+| **Guided clarification loop** | **Chat-driven dynamic decision UI**: chat is the guidance and reasoning layer; when a product decision benefits from constrained input, Zedos generates a **contextual mini-form on the fly** (modal with select fields, single-choice decision card, multi-choice checklist, ranked options, "not sure / ask me differently"); not a free-form chatbot; not a static questionnaire |
+| **Question history** | Structured log (owner-private, not exposed on share); per decision: structured question, available options, founder answer, optional comment, AI interpretation, PRD impact |
+| **Credit system** | Internal ledger; per-operation deduction; directional burn tiers (1 / 3 / 5 / 10 / 15 credits — product assumption, not final pricing); pack legibility anchors: 100 = first PRD, 200 = deeper iteration, 1000 = power use; first-circuit grace: pre-check gate (block if projected overage > 20 credits), allow in-flight completion up to 20-credit ceiling (once only), then recharge UX; post-grace block at zero; Stripe one-time packs (100 / 200 / 1000), primary payment path = manual top-up; opt-in auto-reload (best-effort, SCA fallback to manual recharge UX, not subscription); FR/EU + US |
+| **Owner milestone feedback** | Skippable prompts after 4 milestones; 1–5 stars or like/dislike + optional comment; stored with project / version / milestone / timestamp |
+| **Share** | Mint read-only public URL; anonymous read (no edit/comment/workspace access); owner revoke; noindex |
+
+Dashboard shell (under-construction sections for non-PRD areas) is a v0 prerequisite outside this group's scope boundary.
+
+# Build Sequence
+
+Not defined in this document. Requires separate feature-group convergence and explicit ordering after global PRD is stable.
+
+# Out of Scope
+
+- **Everything beyond the PRD path** for v0 (shown as **under construction** in dashboard where relevant).
+- **Subscriptions, BYOK, unlimited free AI.**
+- **Collaboration** (multi-user, invites, co-editing).
+- **Password / expiry / extra private-link controls** for shares in v0; **advanced sharing** may be explored as a **later paid** layer if traction exists.
+- **PDF export** as v0-critical.
+- **Markdown export** as mandatory for “complete” (may land as fast follow / v0.1).
+- **Anonymous share-viewer feedback** ( **post-v0** ).
+- **Implementation** specs, stack, tickets, and architecture.
+
+# Success Metrics
+
+**Primary v0 lens:** **User feedback quality** after **PRD generation / iteration** (owner-reported usefulness).
+
+**Working metrics (definitions):**
+
+1. **Feedback response rate** — % of **signed-in owners** who submit feedback **after** a **prompted milestone** (if response is near zero, learning is unreliable).
+2. **Positive feedback rate** — % of submitted feedback that is **4–5 stars** or **like** (proxy for “output feels useful”).
+3. **Negative feedback reasons** — recurring **themes** in **1–3 star** / **dislike** **optional** comments (prioritize fixes: unclear PRD, weak questions, wrong structure, too generic, missing context, etc.).
+
+**Prompt rules (v0):**
+
+- **Audience:** **Signed-in owner only**; **no** feedback prompts for **anonymous share** viewers.
+- **Moments:** after **first PRD version created**; **PRD version updated after clarification**; **PRD shared**; **PRD reopened / viewed by owner after generation**.
+- **Capture:** **1–5 stars** **or** **like/dislike**, **optional** comment; store with **project**, **PRD version**, **milestone**, and **timestamp**.
+
+# Risks & Assumptions
+
+- **Feedback program execution:** prompts must stay **lightweight** and **well-timed** so metrics reflect real signal, not annoyance-driven dropout.
+- **Public read-only links:** abuse, scraping, or unintended leakage of **private** workspace content if boundaries blur — product must keep **share surface** limited to agreed read-only PRD content.
+- **Credit economics:** starter **X** and regional **price points** are **config**; wrong defaults could starve first value or create unsustainable cost — tuned outside this PRD.
+- **Payments & tax:** **Stripe** + **FR/EU/US** + **digital VAT/tax** posture must remain **legible to users**; operational correctness is **outside** this PRD’s implementation detail.
+- **North-star confusion:** stakeholders may read long-term pipeline as v0; assumption is **clear labeling** in-product and in this PRD keeps v0 narrow.
+- **AI mini-form generation reliability:** the guided clarification loop depends on a managed AI model reliably generating appropriate constrained mini-forms (decision cards, checklists, ranked options) on the fly. If output quality degrades or is inconsistent, the clarification loop degrades with it. No static-questionnaire fallback is defined for v0. This assumption must be validated via prototype before treating the mechanic as stable for production.
+- **Auto-reload / SCA:** off-session charges in EU/France may trigger SCA (Strong Customer Authentication); handled by design — auto-reload is best-effort, and failure falls back to manual recharge UX (not treated as an error, treated as a designed fallback path).
+- **First-circuit grace anti-abuse:** the 20-credit ceiling and pre-check gate are deliberate product constraints to prevent grace from becoming an exploitable free tier; the gate must be enforced before any AI operation starts, not after.
+
+=== ./docs/prd/archive/.gitkeep ===
+
+=== ./docs/prd/history.md ===
+# PRD Version History
+
+Lightweight log of version bumps and explicitly approved major patches.
+
+| Version | Date | Why | Archive |
+|---------|------|-----|---------|
+| v1 | 2026-05-09 | Initial scaffold | — |
+
+Rules:
+- Add rows only after explicit approval.
+- Version bumps require archive creation.
+- Patches do not require archive/history updates unless explicitly approved.
+
+=== ./docs/prd/state.md ===
+<!--
+  PRD State Tracker — agents read this before loading PRD.md.
+  This file is project-scoped and generated from `.cursor/templates/prd/state.template.md`.
+-->
+
+| Field | Value |
+|-------|-------|
+| `VERSION` | `v1` |
+| `DIRECTION` | `Zedos v0: web-first PRD workspace for solo founders — guided clarification, versioned in-app PRD, question history, Stripe credit packs (100/200/1000) with first-circuit grace + opt-in auto-reload, owner-only milestone feedback, simple public read-only shares; non-PRD surfaces under construction.` |
+| `LAST_MAJOR_CHANGE` | `Credit mechanics enriched (Q-018/019/020): directional burn tier model (1/3/5/10/15 credits per operation type); 20-credit first-circuit grace ceiling with pre-check gate; auto-reload reframed as best-effort opt-in with explicit SCA fallback to manual recharge UX; three new Risks & Assumptions entries (AI mini-form reliability, SCA/auto-reload, grace anti-abuse); two new Configuration Matrix rows (credit burn rates, grace ceiling).` |
+
+**Active PRD:** always `docs/prd/PRD.md`.
+
+=== ./docs/prd/notes/2026-05-09-zedos-discovery-note.md ===
+# Zedos Discovery Note — 2026-05-09
+
+Source: PRD discovery session (`/prd discover`)
+
+Status: active
+
+---
+
+## 2026-05-09 — Discovery session opened
+
+### Raw user input
+> /prd discover
+
+### Interpreted product insight
+Discovery was started without additional narrative; `state.md` direction is still TBD and the PRD remains an initial scaffold.
+
+### PRD implication
+No persisted PRD facts change yet—the next inputs should establish problem, users, or a pilot so scaffold sections can be replaced via convergence and `/prd update`.
+
+### New / updated questions
+- Q-001 — replaced scaffold “TBD” with first orienting product question (see `open-questions.md`).
+
+---
+
+## 2026-05-09 — Founders using AI to ship/validate; v0 = PRD only
+
+### Raw user input
+> founder that use AI to ship/validate their market idea. They usually have a vague idea, and zedos.app wants to acompagny them.
+>
+> Vague idea
+> → Product clarification
+> → Versioned PRD
+> → Split into services / feature groups
+> → Technical needs analysis aligned with those groups
+> → Create initial architecture/setup to explore the v1 technical solution
+> → Update the Cursor setup with new agents/rules/skills for the chosen solution
+> → Split into user stories
+>
+> For each user story:
+>   → Functional spec
+>   → If approved: write integration tests for the user-story flow
+>   → If approved: split the spec into subtasks/tasks
+>   → Write tests for each subtask
+>   → Validate/merge test work into the active feature branch
+>   → Only then implement the green phase
+>   → Review / re-implement until approved
+>   → Merge / deploy
+>   → Define the next step
+>
+> Then loop back to:
+> → Iterate on the next user story
+>
+> ---
+> So far, all the other features/flows are going to be a "under construction" in the customer dashboard. We'll only focus on PRD for v0
+
+### Interpreted product insight
+Primary users are founders who use AI to validate and ship ideas; they start from a vague concept and want guided progression from clarification through a versioned PRD, then (later) services/feature groups, technical and architecture alignment, Cursor workspace setup, user stories, and a test-first delivery loop. For v0, scope is intentionally narrow: only the PRD slice of that journey; the rest of the product appears as “under construction” in the customer dashboard.
+
+### PRD implication
+`Problem & Users` and `Global Product Picture` can describe an accompaniment workflow from vague idea to versioned PRD as the v0 promise, with a staged long-term roadmap implied but explicitly out of scope for v0. `Feature Groups`, MVP checklist, and surface sections should treat non-PRD capabilities as deferred and reflect a dashboard that signals “under construction” outside the PRD path.
+
+### New / updated questions
+- Q-001 answered (moved to Answered in `open-questions.md`).
+- Q-002 opened — v0 product surface (where the PRD workflow runs vs dashboard shell).
+
+---
+
+## 2026-05-09 — Web app; multi-project and versioned PRDs
+
+### Raw user input
+> We need to "move" our current cursor flow into a web-app online.
+> Userr will manage it thrgouht a well-designed ux/ui.
+> He should be able to easily navigate between several PRDs for different project, but also several PRDs (versions) of a specific project.
+
+### Interpreted product insight
+V0 centers on bringing the existing Cursor-based PRD workflow into a **web application** with strong UX. Information architecture must support **switching between multiple projects** (each with its own PRD lineage) and **switching among multiple PRD versions within one project**, without conflating the two navigation modes.
+
+### PRD implication
+`Product Surface`, `Buyer-facing surface`, and `Core User Journeys` can state **browser/web** as the primary experience for v0 PRD work; **Business Objects** should name **Project** and **PRD version** as first-class entities; navigation patterns belong in journeys and the configuration/global picture. **Confirmation channel** for step/version approval remains unspecified until captured (Q-003).
+
+### New / updated questions
+- Q-002 answered (primary surface = web app; multi-project + per-project version navigation). **Partial:** default “approve” / advance gesture not yet defined.
+- Q-003 opened — confirmation / approval pattern in the web app.
+
+---
+
+## 2026-05-09 — Confirmation: in-app first
+
+### Raw user input
+> In-app as first (button/input/whatever easy to use in-app)
+
+### Interpreted product insight
+Advancing and approving the PRD/clarification flow is **in-product first**, using simple, obvious controls (buttons, inputs, or equivalent) rather than email or external tools as the default path for v0.
+
+### PRD implication
+`Confirmation channel` can default to **in-app actions**; out-of-app confirmation (email, etc.) is not required for v0 unless you add it later. **Core User Journeys** should show explicit approve/continue controls at each gated step.
+
+### New / updated questions
+- Q-003 answered; Q-004 opened — primary language/locale for v0.
+
+---
+
+## 2026-05-09 — Language: EN first, FR planned
+
+### Raw user input
+> EN only as first. Then FR will arrive so plan it accordingly.
+
+### Interpreted product insight
+The product should launch v0 **English-only** (UI + AI), with **French** as a near-term follow-on; design and content decisions should **assume localization later** without shipping FR in the first release.
+
+### PRD implication
+**Primary market / language** can be set to English-first with a stated FR phase; global/config sections should call out **i18n readiness** (copy structure, locale strategy) as a deliberate plan, not a v0 scope expansion. No need to implement FR strings in v0 if EN-only is explicit.
+
+### New / updated questions
+- Q-004 answered; Q-005 opened — how users first enter the product (buyer entry) for v0.
+
+---
+
+## 2026-05-09 — Buyer entry: public signup
+
+### Raw user input
+> public signup
+
+### Interpreted product insight
+New users reach Zedos through **public self-serve signup** (no invite-only or waitlist gate as the v0 default).
+
+### PRD implication
+**Buyer entry point** can be documented as open acquisition; onboarding and auth journeys assume self-serve registration. Compliance/abuse posture may still be layered later but is not the default gate in v0.
+
+### New / updated questions
+- Q-005 answered; Q-006 opened — canonical PRD / export vs in-app only (source of truth for v0).
+
+---
+
+## 2026-05-09 — Source of truth in-app; export optional
+
+### Raw user input
+> For v0, the in-app versioned PRD is the source of truth.
+>
+> Export is useful but not required for a PRD version to count as “done”. The first version should focus on guided clarification, versioned PRD state, question history, and shareable/readable in-app output.
+>
+> Markdown export can be a fast follow or lightweight v0.1, because PRDs are commonly used as alignment documents for teams and stakeholders, and many PRD tools/templates assume the document must be easy to share or reuse outside the app. PDF export is not v0-critical.
+
+### Interpreted product insight
+**Canonical state** lives in the product: the **in-app versioned PRD** is authoritative; “done” does not depend on export. v0 should **prioritize** guided clarification, persisted versioned PRD, question history, and an **in-app artifact** that is readable and shareable (view/link) without requiring file export. **Markdown export** is valuable for real-world alignment workflows and can land as a **fast follow** or thin **v0.1**; **PDF** is explicitly **out of v0 critical path**.
+
+### PRD implication
+**Source of truth** = in-app; **MVP Completeness** gates “PRD complete” on in-app readiness, not downloads. **Integration/export** belongs in roadmap as phased (MD optional soon, PDF later). Journeys should include **sharing/reading** the PRD **inside the product** as the alignment surface for v0.
+
+### New / updated questions
+- Q-006 answered; Q-007 opened — v0 monetization / pricing intent.
+
+---
+
+## 2026-05-09 — v0 monetization: free to start, prepaid AI credits
+
+### Raw user input
+> v0 Monetization Model
+>
+> Zedos is free to start, but AI usage is credit-based.
+>
+> - New users receive X free signup credits.
+> - Those credits let them create and iterate on their first PRD.
+> - When credits are exhausted, generation is blocked until they buy more credits.
+> - No subscription in v0.
+> - No BYOK in v0.
+> - No “unlimited free” AI usage.
+> - Credits are prepaid and consumed per AI operation.
+>
+> Default positioning:
+> “Start free with included credits. Buy more only when you need them.”
+
+### Interpreted product insight
+**GTM:** free onboarding with a **bundled starter credit (X)** sufficient to bootstrap a first PRD iteration. **AI is metered:** each AI operation **consumes prepaid credits**; at **zero balance**, **generation/interaction that spends credits is blocked** until **top-ups**. **Out of scope for v0:** subscriptions, **BYOK**, and **unlimited free** AI. **Positioning** emphasizes included credits then pay-as-you-go.
+
+### PRD implication
+**Payment model** = freemium entry + **prepaid credits** for AI; **hard exclusions** list subs/BYOK/unlimited-free. **MVP** must include **credit balance**, **consumption per operation**, **purchase/top-up path**, and **hard stop** when depleted. **X** remains a tunable parameter unless you fix a number in the PRD. **Success/revenue** metrics can anchor on credit attach rate and repeat purchases—not MRR from subs in v0.
+
+### New / updated questions
+- Q-007 answered; Q-008 opened — whether **X (free signup credits)** is fixed in the PRD vs TBD/tunable.
+
+---
+
+## 2026-05-09 — Signup credits (X): configuration, not a PRD-fixed number
+
+### Raw user input
+> stay TBD (that's just going to be configuration so no matters)
+
+### Interpreted product insight
+The **starter credit grant (X)** should remain **TBD in the PRD as a fixed value**—it will be handled as **runtime/configuration**, not as a named product commitment in documentation.
+
+### PRD implication
+**Configuration Matrix** can treat **free signup credits** as an **operator-tunable parameter**; the PRD states the **model** (included credits + top-ups) without locking **X**. Pilot economics and UX still assume a **non-zero starter balance**, without a canonical number in `PRD.md`.
+
+### New / updated questions
+- Q-008 answered; Q-009 opened — v0 **single-user vs multi-user/collaboration** on a project.
+
+---
+
+## 2026-05-09 — v0 single-user (no collaborators)
+
+### Raw user input
+> single-user for v0
+
+### Interpreted product insight
+Projects and PRDs are **owned and used by one account in v0**—no inviting teammates, shared workspaces, or role-based collaboration in scope for the first release.
+
+### PRD implication
+**Operating model** and **journeys** stay **solo-founder**; sharing remains **read/share via in-app links/views** (per prior intent), not co-editing. Collaboration can be a **later phase** without scoping v0 MVP. **Merchant operating surface** aligns with the **same person** as buyer for v0.
+
+### New / updated questions
+- Q-009 answered; Q-010 opened — **success metrics / v0 outcomes**.
+
+---
+
+## 2026-05-09 — Success metrics: not defined yet
+
+### Raw user input
+> i don't yet know
+
+### Interpreted product insight
+**v0 success metrics are not chosen yet**—this remains an explicit gap for prioritization, ICE confidence, and any pilot commitment language.
+
+### PRD implication
+**Success Metrics** stays **TBD in the PRD** until you decide; discovery records that **uncertainty is acknowledged** (not silently assumed). **ICE Confidence** for scope/prioritization should stay **capped** until measurable outcomes exist. Optional: pick metrics **before** calling a v0 pilot “successful.”
+
+### New / updated questions
+- Q-010 answered (metrics TBD); Q-011 opened — **viewer access for shared in-app PRD links** (auth vs public read-only).
+
+---
+
+## 2026-05-09 — Share links: unauthenticated read-only (v0)
+
+### Raw user input
+> Answer:
+> Unauthenticated read-only links are in scope for v0.
+>
+> A PRD owner can generate a share link that lets external viewers read the PRD without signing in. Viewers cannot edit, comment, duplicate, or access workspace/private history.
+>
+> Default:
+> - Owner/editor: signed in
+> - Viewer: unauthenticated read-only link
+> - Link can be disabled by the owner
+> - Public link is not indexed by search engines
+
+### Interpreted product insight
+v0 **includes** **public, read-only share URLs**: owners (signed-in) create links; **anonymous viewers** may **read the PRD only**—no edit, comment, fork, or access to **workspace/private history**. **Revocation:** owner can **disable** the link. **SEO:** shared pages must not be **search-indexed** (treat as **noindex** product requirement).
+
+### PRD implication
+**Core User Journeys** need **generate link → unauthenticated read → revoke**; **privacy** separates **shared PRD content** from **account/workspace history** and AI/clarification trails if those are private. **Integration/export** remains distinct (Q-006). **MVP** includes link governance (disable); viewer surface is **read-only**.
+
+### New / updated questions
+- Q-011 answered; Q-012 opened — optional **link controls** beyond disable (expiry, password) for v0 vs later.
+
+---
+
+## 2026-05-09 — Sharing controls: simple for v0; advanced maybe paid later
+
+### Raw user input
+> v0 sharing is intentionally simple: public read-only links only. No password, no expiry, no private-link controls. Advanced sharing can become a paid feature later if traction exists.
+
+### Interpreted product insight
+v0 scope is **minimal sharing**: **public read-only URLs** with the already-decided **owner disable** + **noindex** behavior only—**no** passwords, **no** expiring links, **no** extra “private link” controls. **Richer sharing controls** are explicitly **deferred** and may become a **future paid** line if the product gets traction.
+
+### PRD implication
+**MVP** and **journeys** avoid scope creep on link policy; **Out of scope / roadmap** can list password/expiry/private-link controls as **post-v0** or **monetized later**. **Payment model** already credit-based—**advanced sharing as add-on revenue** is a hypothesis, not v0 scope.
+
+### New / updated questions
+- Q-012 answered. *(No further items in the tactical queue from this thread.)*
+
+---
+
+## 2026-05-09 — v0 success metrics: lightweight in-product feedback
+
+### Raw user input
+> Feedback is the first v0 success metric.
+>
+> After key PRD moments, Zedos should automatically ask for lightweight feedback:
+> - 1–5 star rating or like/dislike
+> - optional comment box
+>
+> Primary success metric:
+> User feedback quality after PRD generation / iteration.
+>
+> Working metrics:
+> 1. Feedback response rate
+> Definition: % of users who answer the feedback prompt after a key PRD step.
+> Why it matters: if nobody answers, we cannot learn reliably.
+>
+> 2. Positive feedback rate
+> Definition: % of submitted feedback rated 4–5 stars or “like”.
+> Why it matters: measures whether the output feels useful enough to the user.
+>
+> 3. Negative feedback reasons
+> Definition: recurring themes from 1–3 star / dislike comments.
+> Why it matters: tells us what to fix first: unclear PRD, weak questions, wrong structure, too generic, missing context, etc.
+>
+> Product behavior:
+> - Ask automatically after meaningful moments, not constantly:
+>   - first PRD version generated
+>   - PRD updated after clarification
+>   - share link created / PRD viewed
+> - Feedback must be lightweight and skippable.
+> - Comment is optional.
+> - Store feedback per project, PRD version, and workflow step.
+
+### Interpreted product insight
+v0 success measurement centers on **in-product feedback** after **key PRD milestones**: **primary** lens is **feedback quality** tied to generation/iteration; **operational** measures include **response rate**, **positive rate** (4–5 / like), and **thematic analysis** of negative signals. Prompts are **automatic but selective** (first version, post-clarification update, share/ view moments), **skippable**, stars **or** binary like, **optional comment**, attributed in storage to **project + PRD version + workflow step**.
+
+### PRD implication
+**Success Metrics**, **journeys**, and **MVP** should explicitly include **feedback collection** UX and **measurement definitions**; **Flow Inventory** gains feedback-after-milestone flows; **Business Objects** likely include **feedback events**. Minor ambiguity: “PRD viewed” may mean **owner** vs **anonymous share viewer**—may need a follow-up if product boundaries differ.
+
+### New / updated questions
+- Q-013 answered (replaces prior “metrics unknown” gap from Q-010 for current truth). Q-010 annotated **SUPERSEDED** for metrics narrative. Next: Q-014.
+
+---
+
+## 2026-05-09 — First-run credit grace + recharge path
+
+### Raw user input
+> First-run credit grace model
+>
+> At signup, users receive X starter credits.
+>
+> During the first PRD circuit only, if the user slightly exceeds the starter credit balance, Zedos allows the current AI response to complete instead of cutting the flow mid-answer.
+>
+> After completion, the app shows a clear message:
+>
+> “You exceeded your included starter credits by X credits. We covered this one for you so your first PRD flow was not interrupted.”
+>
+> Then Zedos shows a recharge modal:
+> - buy more credits now
+> - enable auto-reload
+> - continue without credits, but paid AI generation is blocked until recharge
+>
+> This grace is one-time and limited to the first PRD circuit.
+> After that, credits are deducted continuously and generation is blocked when balance is insufficient, unless auto-reload is enabled.
+
+### Interpreted product insight
+v0 includes a **one-time “first PRD circuit” credit grace**: **starter balance X** at signup; if the user **marginally overspends** during that **first circuit**, the **in-flight AI completion** still **finishes**, then the app explains the **overage covered once** and opens a **recharge modal** with **buy now**, **auto-reload**, or **defer** (AI blocked until top-up). **After** that circuit, behavior is **strict**—**no mid-response grace**; **block** when balance can’t cover the operation **unless auto-reload** handles it.
+
+### PRD implication
+**Payment / credits** sections need **grace rules**, **first-circuit definition**, **negative or promotional balance semantics** (implicit debt covered once), **auto-reload** as a v0 product surface, and **recharge modal** copy/flows; **Q-014** commercial packaging (pack sizes, price bands, geo) still **not specified**—opened **Q-016**. Next open: **Q-015**.
+
+### New / updated questions
+- Q-014 answered (grace + recharge UX; packs/pricing/geo → **Q-016**, later split: **Q-015** for compliance/provider).
+
+---
+
+## 2026-05-09 — Stripe + v0 payment/compliance constraints
+
+### Raw user input
+> Stripe is selected for v0.
+>
+> Payment/compliance constraints for v0:
+> - Launch regions: France/EU + US.
+> - Payment provider: Stripe.
+> - Must support prepaid credit packs.
+> - Must support one-time credit top-ups.
+> - Must support explicit card saving for future auto-reload.
+> - Auto-reload must be opt-in only, not a hidden subscription.
+> - Auto-reload is a prepaid refill rule, not a subscription plan.
+> - Must support France/EU + US payment flows.
+> - Must support clear tax/VAT handling for digital AI credits.
+> - Must allow Zedos to maintain its own internal credit ledger.
+> - Must deduct credits progressively, per AI operation.
+> - Credit packs are X credits, not “1 PRD / N PRDs”.
+> - First signup circuit includes X starter credits.
+> - If the first PRD circuit slightly exceeds X, Zedos lets the current response finish and offers the overage once.
+> - After the first-circuit grace, paid AI generation is blocked at zero credits unless auto-reload succeeds.
+> - No BYOK in v0.
+> - No subscription in v0.
+> - No unlimited free AI.
+
+### Interpreted product insight
+v0 **locks payments to Stripe** with **launch coverage FR/EU + US**, **prepaid credit packs** and **one-time top-ups**, **VAT/tax clarity** for **digital AI credits**, and **Zedos-owned ledger** with **per-operation deduction**. **Saved payment method** enables **opt-in auto-reload** framed as **prepaid refill rules**, **not** a subscription. Product restates **first-circuit grace** and post-grace **hard stop at zero** unless **auto-reload succeeds**; **packs denominated in credits (X)**, not PRD-count bundles; **BYOK / subscription / unlimited free** remain **out of v0**.
+
+### PRD implication
+**Integration Boundaries** and **Configuration Matrix** can name **Stripe** and **FR/EU + US**; **payment model** gains **tax/VAT**, **ledger ownership**, **auto-reload semantics**, and **card-on-file** for refill; **Q-016** shrinks to **SKU count + rough pricing** (geo/provider decided here).
+
+### New / updated questions
+- Q-015 answered. **Q-016** narrowed (no longer asks geo).
+
+---
+
+## 2026-05-09 — Credit pack SKUs (100 / 200 / 1000) + pricing stance
+
+### Raw user input
+> Credit packs:
+> - 100 credits
+> - 200 credits
+> - 1000 credits
+>
+> Credit packs are sold as prepaid credit quantities, not as “number of PRDs.”
+> Credits are consumed progressively per AI operation.
+> Prices remain operator-configurable and can differ by currency/region.
+> v0 uses Stripe one-time payments for manual top-ups.
+> Auto-reload, when enabled, purchases one of these prepaid packs automatically using a saved payment method.
+> Auto-reload is opt-in and does not create a subscription.
+
+### Interpreted product insight
+v0 sells **three fixed pack sizes**—**100**, **200**, and **1000 credits**—as **pure prepaid quantities** (never “N PRDs”); **consumption stays per AI operation**. **List prices** are **operator-config** and may **vary by currency/region**. **Manual top-up** = **Stripe one-time** checkout; **opt-in auto-reload** charges **one of the same three packs** via **saved payment method**, **without** creating a **subscription**.
+
+### PRD implication
+**Configuration Matrix** can list **enumerated pack sizes** while keeping **prices tunable**; **flows** distinguish **one-time purchase** vs **auto-reload pack selection**; aligns with **Q-015** (Stripe, FR/EU+US). **Persisted `PRD.md` remains stale** until `/prd converge` → `/prd update`.
+
+### New / updated questions
+- Q-016 answered. Active queue empty → **PRD blocker scan**: remaining `PRD.md` gaps are **stale text** vs **Q-013–Q-016** / intentional TBD (**AI vendor** “not specified here”); recommend **`/prd converge`**.
+
+---
+
+## 2026-05-09 14:46 — Guided clarification UX model defined (Q-017)
+
+### Raw user input
+> Hybrid.
+>
+> The guided clarification loop should use structured questions inside a conversational wrapper.
+>
+> The founder experiences the flow as a guided AI conversation, but each step has a clear question, a focused answer field, and explicit actions such as:
+> - answer
+> - skip / not sure
+> - approve
+> - refine
+> - generate PRD version
+>
+> This is not a free-form chatbot where the user can drift endlessly, and not a rigid questionnaire that feels like paperwork.
+>
+> Question history stores the structured question, founder answer, AI interpretation, and resulting PRD impact.
+
+### Interpreted product insight
+The clarification loop is a **structured-conversational hybrid**: the AI drives a guided sequence of focused questions; the founder sees one question at a time with a dedicated answer field and explicit step-level actions (answer, skip/not sure, approve, refine, generate PRD version). The conversational wrapper creates a guided feel without free-form drift. Question history is a structured log — not a raw chat transcript — storing: structured question, founder answer, AI interpretation, and PRD impact per step.
+
+### PRD implication
+- **Guided clarification loop** sub-component of FG-PRD-V0 is now explicitly defined: structured questions + conversational wrapper + per-step explicit actions.
+- **Question history** business object gains 4 required fields: structured question, founder answer, AI interpretation, PRD impact.
+- The "approve" and "generate PRD version" actions confirm that the loop has explicit **advancement gates** — not passive auto-progression.
+- "Skip / not sure" confirms the loop must handle **incomplete answers** gracefully (question not required to advance).
+- This is a significant product design anchor; must be reflected in FG-PRD-V0 definition before `/prd update`.
+
+### New / updated questions
+- Q-017 opened and answered. Active queue remains empty post-capture.
+
+---
+
+## 2026-05-09 14:49 — Q-017 refined: chat-driven dynamic decision UI
+
+### Raw user input
+> Approved, with one wording adjustment.
+>
+> The clarification loop should be defined as: Chat-driven dynamic decision UI.
+>
+> The chat remains the guidance and reasoning layer, but when a product decision is better captured through constrained input, Zedos generates a contextual mini-form on the fly.
+>
+> Examples: modal with 2 select fields + optional comment, single-choice decision card, multi-choice checklist, ranked options, "not sure / ask me differently" action.
+>
+> This is not a free-form chatbot and not a static questionnaire.
+>
+> Each dynamic UI block must map to a PRD decision: structured question, available options, founder answer, optional comment, AI interpretation, PRD impact.
+
+### Interpreted product insight
+The clarification loop is a **chat-driven dynamic decision UI**: chat is the persistent guidance and reasoning layer; when a decision benefits from constrained input, Zedos **generates a contextual mini-form on the fly** (modal, decision card, checklist, ranked options). The founder is never in a free-form chat drift, never filling a static form — they're in a guided conversation where the interface adapts to the decision type. Question history is a **structured log** with 6 fields per decision: structured question, available options, founder answer, optional comment, AI interpretation, PRD impact.
+
+### PRD implication
+- **Guided clarification loop** → rename/reframe as **chat-driven dynamic decision UI** throughout FG-PRD-V0 definition.
+- **Question history** business object gains a 6th field: **available options** (the constrained choices offered by the mini-form).
+- **"Not sure / ask me differently"** is a named action — must be supported in the loop design.
+- This is approved for persistence via `/prd update` in the same turn.
+
+### New / updated questions
+- Q-017 answer refined. Governing product text: `docs/prd/PRD.md` after approved `/prd update`.
+
+---
+
+## 2026-05-09 15:02 — Credit burn model (directional, v0)
+
+### Raw user input
+> Credit burn model for v0:
+>
+> Use a simple directional model first:
+>
+> - Lightweight clarification step: 1 credit
+> - Standard decision / clarification step: 3 credits
+> - Dynamic mini-form decision step: 5 credits
+> - PRD version generation or major PRD update: 10 credits
+> - PRD challenge / convergence pass: 15 credits
+>
+> This is a product assumption for v0, not final pricing.
+>
+> The goal is only to make 100 / 200 / 1000 credit packs understandable:
+> - 100 credits = enough to meaningfully create and iterate a first PRD
+> - 200 credits = enough for deeper iteration
+> - 1000 credits = power-user / repeated project usage
+>
+> Prices and starter X stay operator-configurable.
+
+### Interpreted product insight
+The credit system now has a **directional burn model**: five operation tiers (1 / 3 / 5 / 10 / 15 credits) calibrated so that **100 credits maps to a complete meaningful first PRD**, **200 to deeper iteration**, and **1000 to power/multi-project usage**. This is explicitly a **product assumption for v0, not final pricing** — the goal is to make pack sizes legible to founders, not to commit to implementation costs. Prices and starter grant X remain operator-configurable.
+
+### PRD implication
+- **Credit system sub-component** of FG-PRD-V0 can now reference a directional burn table to justify the 100/200/1000 pack denominations as meaningful founder-value anchors.
+- **Business Objects:** credit ledger / consumption semantics gains a tier model (5 operation types with credit weights).
+- **Configuration Matrix:** burn rates are a product assumption (labeled as such), not hardcoded; prices and X remain TBD/operator-config.
+- **Credit economics gap** flagged in the `/prd challenge` is now partially answered — addresses Q-018 (raised by challenge).
+- Answers the challenge report question: "directional credit consumption range per AI operation."
+
+### New / updated questions
+- Q-018 answered: directional credit burn model defined (see above).
+
+---
+
+## 2026-05-09 15:04 — First-circuit grace cap (fixed ceiling, v0)
+
+### Raw user input
+> First-circuit grace cap:
+>
+> Use a fixed credit ceiling, not a percentage.
+>
+> For v0:
+> - First PRD circuit grace can cover at most 20 extra credits.
+> - It applies only once, only during the first PRD circuit.
+> - It only lets the current in-flight AI response finish.
+> - After that response, the user sees the overage message + recharge modal.
+> - If the projected overage is above 20 credits, the app should not start the paid AI operation unless the user has enough credits or auto-reload succeeds.
+> - After the first circuit, no grace applies: paid AI generation is blocked at zero credits unless auto-reload succeeds.
+>
+> Reason: 20 credits is enough to avoid a bad first-use interruption, but small enough to avoid turning grace into an exploitable free tier.
+
+### Interpreted product insight
+The first-circuit grace is now precisely bounded: **20-credit fixed ceiling**, single-use, single-circuit, applied only to let an in-flight response finish — not to start new operations. There's a pre-check gate: if the projected cost of the next AI operation exceeds the remaining balance + 20 credits, the operation does not start at all. The grace only absorbs an overage that occurs mid-response for an operation that was already projected to fit (or nearly fit). After the grace fires, the recharge modal appears immediately. Post-first-circuit: zero tolerance — block at zero.
+
+### PRD implication
+- **Credit system** flow gains a precise grace rule: `if balance ≥ 0 AND projected_cost ≤ remaining + 20 AND first_circuit_active → allow completion`. If `projected_cost > remaining + 20`, block before starting.
+- **"Slightly exceeds"** language in PRD.md should be replaced with the explicit 20-credit ceiling.
+- The pre-check gate (do not start if overage would exceed 20 credits) is a new product behavior not yet in PRD.md.
+- Reason is product-level: anti-abuse, not implementation detail — worth noting in Risks & Assumptions.
+- Answers Q-019 (raised by challenge).
+
+### New / updated questions
+- Q-019 answered: first-circuit grace defined as 20-credit fixed ceiling with pre-check gate.
+
+---
+
+## 2026-05-09 15:08 — Auto-reload v0 product rule (best-effort, SCA-aware)
+
+### Raw user input
+> Auto-reload remains in v0, but only as an opt-in convenience layer.
+>
+> Product rule:
+> - Manual top-up is the primary v0 payment path.
+> - Auto-reload is in v0, but it must never be required to complete the first PRD flow.
+> - Auto-reload is opt-in only.
+> - Auto-reload buys one prepaid credit pack via saved payment method.
+> - Auto-reload is not a subscription.
+> - If auto-reload succeeds, credits are added and generation can continue.
+> - If auto-reload fails or requires authentication, Zedos must fall back to manual recharge UX.
+> - The user should see a clear message and be asked to confirm/authenticate payment manually.
+> - Paid AI generation remains blocked until the recharge succeeds.
+> - No hidden debt, no silent retry loop, no negative balance except first-circuit grace.
+>
+> Reason: Auto-reload is valuable for conversion and continuity, but EU/SCA can interrupt off-session payments. So v0 should include it as best-effort convenience, not as a guaranteed background refill.
+
+### Interpreted product insight
+Auto-reload in v0 is **best-effort convenience, not guaranteed background refill**. The product explicitly acknowledges EU/SCA as a runtime reality: when off-session charge fails or requires authentication, the fallback is **manual recharge UX** — clear message, manual confirm/authenticate, generation stays blocked until resolved. This resolves the FALSE CONVERGENCE RISK flagged in the challenge. Manual top-up remains the **primary** path; auto-reload is the secondary, opt-in, convenience layer. Hard invariants: no hidden debt, no silent retry loop, no negative balance except the one defined first-circuit grace.
+
+### PRD implication
+- **Auto-reload** description in PRD.md must change from implied silent background refill → **best-effort convenience with explicit SCA fallback**.
+- New product behavior: if auto-reload fails or requires authentication → show clear message → present manual recharge UX → block generation until resolved.
+- The EU/SCA constraint previously flagged as a FALSE CONVERGENCE RISK is now explicitly acknowledged and handled at product level.
+- **Risks & Assumptions** should note: auto-reload is best-effort; SCA may require manual intervention; the product UX handles this gracefully rather than treating it as an error.
+- Hard invariants ("no hidden debt, no silent retry, no negative balance except grace") are product-level constraints, worth persisting.
+- Answers Q-020 (raised by challenge: should auto-reload be deferred given EU SCA?).
+
+### New / updated questions
+- Q-020 answered: auto-reload stays v0 as best-effort opt-in with defined SCA fallback to manual recharge UX.
+
+---
+
+Rules:
+- Append only.
+- Do not edit past entries unless correcting a clear interpretation error.
+- Notes are input material, not PRD persistence.
+- Content from notes reaches PRD.md only through `/prd converge` → approved delta → `/prd update`.
+
+=== ./docs/prd/questions/open-questions.md ===
+# PRD Open Questions
+
+## Active queue
+
+| ID | Status | Priority | Question | Source note | Blocks |
+|---|---|---:|---|---|---|
+
+## Answered
+
+| ID | Answered at | Question | Answer | PRD impact |
+|---|---|---|---|---|
+| Q-001 | 2026-05-09 | What core problem are you solving, and who is the first user or segment you want to serve? | **Users:** founders who use AI to ship and validate a market idea, often starting from a vague concept. **Problem:** need structured accompaniment from vague idea → product clarification → versioned PRD; long-term vision continues into services/feature groups, technical analysis, architecture/Cursor setup, user stories, and test-first delivery, but **v0 intentionally ships only the PRD slice**; other areas show as “under construction” in the customer dashboard. | Anchors Problem & Users and clarifies v0 scope cut (PRD path in scope; rest deferred in the product narrative). Persist via `/prd converge` → `/prd update`. |
+| Q-002 | 2026-05-09 | For v0 (PRD-only), where does the founder primarily work on clarification and the versioned PRD—browser/dashboard only, Cursor/IDE-integrated flow, or a defined hybrid—and what is the single default “approval” action in that experience (e.g. explicit approve button, structured chat command)? | **Primary work surface:** web app—migrate the current Cursor PRD flow into an online product with intentional UX/UI. **Navigation:** users must easily switch between **multiple PRDs across different projects** and between **multiple PRD versions within one project**. **Hybrid with Cursor:** not positioned as the v0 primary path here (may remain optional later). **Approval action:** not specified in this input; tracked under Q-003. | Buyer-facing surface = web; implies business objects for Project vs PRD version; informs Core User Journeys (project switcher + version/history navigation). Persist via `/prd converge` → `/prd update`. |
+| Q-003 | 2026-05-09 | How does a user move the PRD workflow forward in the web app—what is the default “approve” or “accept” interaction for a clarification step or PRD version (e.g. primary button + optional comment, review modal, async review link), and is any confirmation required outside the app (email, etc.)? | **In-app first:** use obvious in-product controls—buttons, inputs, or similarly easy interactions—to advance or approve; v0 does not rely on out-of-app confirmation as the default path. Exact control pattern (button vs inline input vs modal) can remain a UX detail. | Sets `Confirmation channel` to in-app-first; journeys should include explicit continue/approve affordances; external email/link confirmation not a v0 default. Persist via `/prd converge` → `/prd update`. |
+| Q-004 | 2026-05-09 | For v0, what **language/locale** should the PRD experience (UI + AI) optimize for first—single language only, or multiple from day one? | **English only** for the first release (UI + AI). **French** is expected next—plan product and UX so **localization can land** (i18n-ready content/strategy) without blocking v0 on multi-language UI. | Locks **Primary market / language** to EN-first; documents a phased roadmap to FR; informs Configuration Matrix / MVP (i18n readiness vs FR scope). Persist via `/prd converge` → `/prd update`. |
+| Q-005 | 2026-05-09 | For v0, how does a **new founder** first get into Zedos (buyer entry)—e.g. public signup, waitlist, invite-only beta, or another gate? | **Public signup** — open, self-serve registration as the v0 default (not waitlist- or invite-gated). | Sets **Buyer entry point** to public acquisition; onboarding/auth journeys assume standard signup. Persist via `/prd converge` → `/prd update`. |
+| Q-006 | 2026-05-09 | For v0, is the **in-app versioned PRD the single source of truth**, or must **export/download** (e.g. Markdown/PDF) be a must-have when a PRD version is considered “complete”? | **In-app versioned PRD is the source of truth.** Export is **not** required for a version to count as “done.” **v0 focus:** guided clarification, **versioned PRD state**, **question history**, and **shareable/readable output inside the app** (view/link semantics). **Markdown export:** planned as **fast follow** or lightweight **v0.1**—common need for stakeholder alignment outside the tool. **PDF export:** **not v0-critical** (defer). | Pins **Source of truth** to the product database/UI; separates MVP “complete” from file export; phases export MD vs PDF; informs MVP checklist and sharing journeys. Persist via `/prd converge` → `/prd update`. |
+| Q-007 | 2026-05-09 | For v0 (PRD-only), what is the **monetization intent**—free while iterating, freemium, paid subscription, usage/credits, or explicit “decide later” with a **default assumption** you want the PRD to use for scope tradeoffs? | **Free to start** with **signup credits (X)** to create/iterate a first PRD. **AI usage is prepaid credits** consumed **per AI operation**. **When credits = 0**, **generation is blocked** until **purchase more credits**. **No subscription in v0.** **No BYOK in v0.** **No unlimited free AI.** **Positioning:** “Start free with included credits. Buy more only when you need them.” | Defines **Payment model** (prepaid credits + starter grant); monetization exclusions (subs/BYOK/unlimited-free); implies billing/top-up + balance UX; informs Success Metrics (credit purchase vs sub). Persist via `/prd converge` → `/prd update`. **Narrowed by Q-014:** during the **one-time first PRD circuit**, a **small overage** may **complete the in-flight AI response** before enforcement/recharge; afterward, **strict balance rules** apply **unless auto-reload**. **SUPERSEDED (credit mechanics) by Q-018/Q-019/Q-020 (2026-05-09):** burn tier model, 20-credit grace ceiling + pre-check gate, and auto-reload SCA fallback now govern; governing text: `docs/prd/PRD.md`. |
+| Q-008 | 2026-05-09 | Should the **free signup credit grant (X)** be a **fixed number or range in the PRD** for v0 planning, or stay **explicitly TBD / tunable** until you model cost per AI operation? | **Stay TBD** — treat **X as configuration/ops tuning**, not a fixed number committed in the PRD; “doesn’t matter” for product narrative beyond “non-zero starter grant exists.” | **Configuration Matrix** carries X as tunable; avoids false precision in `PRD.md`; still compatible with credit-based model in Q-007. Persist via `/prd converge` → `/prd update`. |
+| Q-009 | 2026-05-09 | In v0, is a project/PRD **strictly single-user**, or should **inviting collaborators** (view/edit roles) be in scope for alignment workflows? | **Single-user for v0** — no multi-user collaboration/invites/roles in scope for the first release. | **Operating Model** = solo founder; simplifies auth/permissions MVP; sharing stays **in-app readable/link** semantics from Q-006 rather than co-editing. Persist via `/prd converge` → `/prd update`. |
+| Q-010 | 2026-05-09 | What **2–3 concrete metrics or outcomes** will define **v0 success** (e.g. signup → first PRD version, weekly return, credit purchase rate), beyond “the workflow exists”? | **Not known yet** — founder has **not selected success metrics**; this remains an **explicit open product decision** (not a hidden default). | **Success Metrics** in `PRD.md` must stay **TBD** or explicitly “unchosen”; **ICE/prioritize** should treat **Confidence as limited** until metrics are defined; no pretending v0 success is measurable without a chosen bar. Persist via `/prd converge` → `/prd update`. **SUPERSEDED by Q-013 (2026-05-09):** v0 metrics now defined (feedback-led); keep this row for history only. |
+| Q-011 | 2026-05-09 | For **shareable / readable in-app PRD output** in v0, should **viewers need an account (sign-in)**, or is **unauthenticated read** (e.g. read-only link without login) required or explicitly out of scope? | **In scope for v0:** **unauthenticated read-only share links.** **Owner** (signed-in) generates a link; **viewers** read **without signing in**. Viewers **cannot** edit, comment, duplicate, or access **workspace/private history.** **Defaults:** owner/editor **signed in**; viewer **via link**; owner can **disable** link; **public share URL not search-indexed** (noindex as product requirement). | Drives **Core User Journeys** (mint/read/revoke), **privacy** boundaries for shared vs private surfaces, and **MVP** sharing scope; clarifies anon viewer permissions. Persist via `/prd converge` → `/prd update`. |
+| Q-012 | 2026-05-09 | Beyond **owner disable** and **noindex**, should v0 include **time-limited links** and/or **password-protected links**, or is **disable-only** sufficient for the first release? | **v0 stays intentionally simple:** **public read-only links only** — **no** password, **no** expiry, **no** additional private-link controls beyond what’s already decided (owner disable + noindex). **Advanced sharing** may become a **paid feature later** if traction warrants; **not v0**. | Locks **MVP sharing** to the minimal control set; defers password/expiry/extra controls; records optional future **monetization** angle for advanced sharing (hypothesis). Persist via `/prd converge` → `/prd update`. |
+| Q-013 | 2026-05-09 | Following Q-010 (metrics still unset in PRD), what **2–3 concrete v0 success metrics** will you adopt—each with a **plain-language definition** and why it matters for Zedos (working hypothesis if labeled as such)? | **Primary:** **user feedback quality** after PRD **generation / iteration**. **Capture UX:** after **key moments only** (first PRD version generated; PRD updated after clarification; share link created / PRD viewed)—**automatic** prompt, **lightweight** and **skippable**; **1–5 stars** or **like/dislike**; **optional** comment. **Store** with **project**, **PRD version**, **workflow step**. **Working metrics:** (1) **Feedback response rate** — % who respond to the prompt after a key step (learn whether signals are usable). (2) **Positive feedback rate** — % of submissions that are **4–5** or **like** (usefulness signal). (3) **Negative feedback reasons** — **themes** from **1–3** / **dislike** comments (prioritize fixes: clarity, questions, structure, generic output, missing context, etc.). | **Success Metrics** + **Surface Blockers** can move from “unchosen” to **feedback-led definitions**; add **journeys/flows** for milestone prompts; **business objects** likely include **feedback** tied to version/step; **anonymous “PRD viewed”** vs **owner** may need boundary clarity later. Persist via `/prd converge` → `/prd update`. **Refined after `/prd converge` (user checkpoint, 2026-05-09):** v0 prompts **signed-in owner only**; **no** feedback prompts for **anonymous share** viewers (**deferred post-v0**). Milestones: **first PRD version created**; **PRD version updated after clarification**; **PRD shared**; **PRD reopened / viewed by owner after generation**. Attribution: **project**, **PRD version**, **milestone**, **timestamp**. **Governing product text:** `docs/prd/PRD.md` after approved `/prd update`. |
+| Q-014 | 2026-05-09 | For v0 **credit top-ups**, what is the intended **commercial shape**: e.g. one simple pack vs a small menu of packs, approximate **price bands** (even rough), and any **geo/currency** constraints you care about on day one? | **First-run grace (one-time, first PRD circuit):** signup gets **X starter credits**. If user **slightly exceeds** balance during that circuit, **current AI response completes** (no mid-stream cut). Afterward, show explanatory copy: exceeded included starter credits by **Y**; **covered once** so first PRD flow wasn’t interrupted. Then **recharge modal**: **buy credits now**, **enable auto-reload**, or **continue without buying** ( **paid AI blocked** until recharge). **After** first circuit: **normal debiting**; **block generation** when balance insufficient **unless auto-reload** covers it. *(Pack sizes, list prices, geo/currency constraints not specified in this answer — see Q-016.)* | **Credits journey** gains **grace policy**, **first-circuit scope**, **post-grace strictness**, **auto-reload** as user-facing option, and **recharge UX**; may interact with **Q-008** (X still tunable) and billing edge cases (implicit one-time courtesy overage). **Stripe + FR/EU + US launch** specified in **Q-015**. Persist via `/prd converge` → `/prd update`. **SUPERSEDED (grace cap + auto-reload) by Q-019/Q-020 (2026-05-09):** 20-credit fixed ceiling with pre-check gate; auto-reload best-effort with SCA fallback; governing text: `docs/prd/PRD.md`. |
+| Q-015 | 2026-05-09 | For v0, should the PRD state any **non-negotiable payment or compliance** constraints (regions, methods, tax posture) that would **exclude** certain providers—or stay deliberately provider-agnostic until engineering? | **Provider:** **Stripe** for v0. **Launch regions:** **France/EU + US**; must support **payment flows** in those markets. **Product requirements:** **prepaid credit packs**; **one-time top-ups**; **packs = X credits** (not “1 PRD / N PRDs”); **internal credit ledger** owned by Zedos; **deduct per AI operation**; **saved card** for future **auto-reload**; **auto-reload opt-in only**, **not** hidden subscription—**prepaid refill rule** only. **Tax:** **clear VAT/tax handling** for **digital AI credits**. **Reiterates credits policy:** first circuit **X** starter + **one-time slight overage** completes current response then offer coverage once; **after grace**, **paid AI blocked at zero** unless **auto-reload succeeds**. **No BYOK**, **no subscription**, **no unlimited free AI** in v0. | **Integration Boundaries** can lock **Stripe** + **FR/EU/US** + **tax posture**; **Configuration Matrix** aligns **packs-in-credits**; reinforces **Q-007/Q-014** (auto-reload ≠ subscription). Persist via `/prd converge` → `/prd update`. |
+| Q-016 | 2026-05-09 | For v0 **credit packs** sold via **Stripe**, should Zedos ship **one pack SKU**, a **small menu** (e.g. 2–4 tiers), or **operator-config only**—and what **rough price bands** (directional **EUR/USD**) feel right for launch? | **Pack sizes (fixed):** **100**, **200**, and **1000 credits**—always sold as **prepaid credit quantity**, never as “number of PRDs.” **Consumption:** **progressive per AI operation** (restated). **Pricing:** **operator-configurable**; may **differ by currency/region**. **Manual top-up:** **Stripe one-time payments**. **Auto-reload (opt-in):** purchases **one of these same three packs** using a **saved payment method**; **does not** create a **subscription**. *(No fixed EUR/USD price bands in product narrative—ops tuning.)* | **Configuration Matrix** can enumerate **100 / 200 / 1000** while keeping **prices regional/config**; **journeys** cover **checkout** vs **auto-reload pack selection**. Persist via `/prd converge` → `/prd update`. |
+
+| Q-017 | 2026-05-09 | What is the UX interaction model for the guided clarification loop — chat-style, structured questionnaire, or hybrid? | **Chat-driven dynamic decision UI.** Chat is the guidance and reasoning layer; when a product decision benefits from constrained input, Zedos **generates a contextual mini-form on the fly** (modal with select fields, single-choice decision card, multi-choice checklist, ranked options, "not sure / ask me differently" action). Not a free-form chatbot; not a static questionnaire. **Question history** is a structured log per decision: structured question, **available options**, founder answer, optional comment, AI interpretation, PRD impact (6 fields). | Clarification loop of FG-PRD-V0 defined as chat-driven dynamic decision UI. Question history business object gains 6 required fields (including available options + optional comment). Governing product text: `docs/prd/PRD.md` after approved `/prd update`. |
+| Q-020 | 2026-05-09 | Should auto-reload be deferred to v0.1 given EU SCA complexity, or is it essential for v0 monetization conversion? (Raised by `/prd challenge`.) | **Stays in v0 as best-effort opt-in convenience layer.** Manual top-up is primary path. Auto-reload: opt-in, buys one prepaid pack via saved PM, not a subscription. If auto-reload succeeds → credits added, generation continues. If auto-reload fails or requires authentication → fall back to manual recharge UX (clear message, manual confirm/authenticate). Generation remains blocked until recharge succeeds. Hard invariants: no hidden debt, no silent retry loop, no negative balance except first-circuit grace. Rationale: EU/SCA may interrupt off-session payments; v0 handles this gracefully rather than avoiding the feature. | Auto-reload description in PRD.md must change to "best-effort convenience with SCA fallback." New product behavior: auto-reload failure → manual recharge UX fallback. EU/SCA FALSE CONVERGENCE RISK from challenge is resolved at product level. Risks & Assumptions gains SCA note. Hard invariants are product-level constraints to persist. Persist via `/prd converge` → `/prd update`. |
+| Q-019 | 2026-05-09 | What defines "slightly exceeds" in the first-circuit grace policy — percentage, fixed ceiling, or operator-configurable? (Raised by `/prd challenge`.) | **Fixed credit ceiling: at most 20 extra credits.** Applies once, first PRD circuit only, to let the current in-flight response finish. Pre-check gate: if projected overage > 20 credits, do not start the operation — block it. After grace fires: recharge modal. Post-first-circuit: no grace; paid AI blocked at zero unless auto-reload succeeds. Rationale: 20 credits avoids a bad first-use interruption without becoming an exploitable free tier. | "Slightly exceeds" language in PRD.md should be replaced with explicit 20-credit ceiling + pre-check gate. Credit system flow gains a precise grace rule and a new pre-check behavior. Anti-abuse rationale worth noting in Risks & Assumptions. Persist via `/prd converge` → `/prd update`. |
+| Q-018 | 2026-05-09 | What is the directional credit consumption range per AI operation — needed to evaluate whether 100/200/1000 packs map to recognizable founder value? (Raised by `/prd challenge`.) | **Directional burn model (product assumption, not final pricing):** Lightweight clarification step = 1 credit; Standard decision / clarification step = 3 credits; Dynamic mini-form decision step = 5 credits; PRD version generation or major PRD update = 10 credits; PRD challenge / convergence pass = 15 credits. Pack legibility anchors: 100 credits = meaningful first PRD; 200 = deeper iteration; 1000 = power / multi-project. Prices and starter X remain operator-configurable. | **Credit system** sub-component of FG-PRD-V0 gains a directional burn table. Configuration Matrix notes burn rates as product assumptions (labeled as such, not hardcoded). Justifies 100/200/1000 denominations as founder-legible units of value. Partially resolves credit economics gap from challenge. Persist via `/prd converge` → `/prd update`. |
+
+Rules:
+- Active queue contains only unresolved questions.
+- Answered questions move to Answered.
+- Ask one open question at a time.
+- Lowest priority number first, then lowest ID.
+- Do not keep duplicate open + answered rows for the same question.
+
+=== ./docs/product-decisions/README.md ===
+# Product Decisions
+
+Small, durable decision records complement versioned PRDs.
+
+- Naming: `PD-001.md`, `PD-002.md`, …
+- Store product decisions that should survive beyond chat.
+- Reference decisions from PRD sections instead of losing rationale in notes only.
+- Product decisions are project-scoped generated docs.
+- The reusable template lives in `.cursor/templates/prd/product-decision.template.md`.
+
+=== ./.gitignore ===
+docs
