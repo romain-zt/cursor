@@ -81,6 +81,18 @@ A Scope Slice must:
 
 If a Scope Slice cannot be fully described without naming technical layers, it is not ready.
 
+### Terminology Compatibility
+
+**"Feature Group" is legacy PRD language** produced by the PRD Builder skill during discovery and convergence.
+
+When transitioning from PRD to execution:
+
+- Convert each broad PRD Feature Group into one or more Feature Areas using this workflow.
+- Do not carry "Feature Group" naming into `docs/product/` artifacts.
+- A single PRD Feature Group may map to multiple Feature Areas — split before decomposing.
+- Do not create Scope Slices directly from a PRD Feature Group without first creating and validating a Feature Area.
+- New documents under `docs/product/` must use Feature Area / Scope Slice terminology exclusively.
+
 ### Service
 
 A runtime or deployment boundary. Only use "service" when architecture has explicitly drawn runtime separation. Do not call a Feature Area a service.
@@ -120,6 +132,12 @@ The following are strictly forbidden at each layer:
 
 ## 5. Readiness Gates
 
+### Feature Area lifecycle
+
+- A Feature Area in `exploratory` status **may** list candidate Scope Slices in its Candidate Scope Slices section (names + one-line descriptions only).
+- Formal Scope Slice documents (files under `docs/product/scope-slices/`) **may only be created** after the Feature Area is marked `validated`.
+- User stories may only be written after a Scope Slice is marked `ready-for-user-stories`.
+
 ### Feature Area → Scope Slices
 
 A Feature Area may be decomposed into Scope Slices only when:
@@ -136,6 +154,8 @@ A Feature Area may be decomposed into Scope Slices only when:
 ### Scope Slice → User Stories
 
 A Scope Slice may produce user stories only when:
+
+- [ ] Status is `ready-for-user-stories`
 
 - [ ] User value is stated without implementation language
 - [ ] Exact boundary is defined (included + excluded behaviors)

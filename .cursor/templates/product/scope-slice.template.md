@@ -15,7 +15,7 @@
 
 ## Status
 
-<!-- One of: exploratory | validated | blocked | deferred | ready-for-user-stories -->
+<!-- One of: exploratory | blocked | deferred | ready-for-user-stories -->
 
 `STATUS`
 

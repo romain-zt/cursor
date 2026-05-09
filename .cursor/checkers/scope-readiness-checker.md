@@ -248,11 +248,14 @@ For Zedos v0 owner milestones:
 
 ---
 
-### SS-11 · Status matches readiness
+### SS-11 · Status is `ready-for-user-stories`
 
-> If status is `ready-for-user-stories`, all Part 2 checks must pass and no NEED_HUMAN flag is set.
+> Valid Scope Slice statuses are: `exploratory`, `blocked`, `deferred`, `ready-for-user-stories`. The status `validated` is not valid for Scope Slices.
+>
+> If the slice has passed all Part 2 checks and has no unresolved NEED_HUMAN flag, status must be `ready-for-user-stories`. User stories may not be written until this status is set.
 
 **FAIL signals:**
+- Status is `validated` (not a valid Scope Slice status — `validated` belongs to Feature Areas only; use `ready-for-user-stories` instead)
 - Status is `ready-for-user-stories` with unresolved NEED_HUMAN
 - Status is `ready-for-user-stories` but SS-01 through SS-10 have failures
 
