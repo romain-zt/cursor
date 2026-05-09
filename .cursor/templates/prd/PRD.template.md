@@ -34,6 +34,38 @@ date: {{DATE}}
 
 - {{SURFACE_BLOCKER_OR_NONE}}
 
+# Global Product Picture
+
+{{GLOBAL_PRODUCT_PICTURE_OR_TBD}}
+
+# Operating Model
+
+{{OPERATING_MODEL_OR_TBD}}
+
+# Core User Journeys
+
+{{CORE_USER_JOURNEYS_OR_TBD}}
+
+# Flow Inventory
+
+{{FLOW_INVENTORY_OR_TBD}}
+
+# Business Objects
+
+{{BUSINESS_OBJECTS_OR_TBD}}
+
+# Configuration Matrix
+
+{{CONFIGURATION_MATRIX_OR_TBD}}
+
+# Integration Boundaries
+
+{{INTEGRATION_BOUNDARIES_OR_TBD}}
+
+# MVP Completeness Checklist
+
+{{MVP_COMPLETENESS_CHECKLIST_OR_TBD}}
+
 # Feature Groups
 
 {{FEATURE_GROUPS}}

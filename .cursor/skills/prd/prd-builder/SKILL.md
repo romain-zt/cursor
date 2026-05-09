@@ -20,6 +20,59 @@ Produce a PRD that is:
 
 Anti-goal: a long, exhaustive, "complete" PRD. A bloated PRD is a failure.
 
+## 1.5 PRD Completeness Model
+
+`docs/prd/PRD.md` must be readable, but it must not be under-specified.
+
+A good PRD in this workflow has two layers:
+
+1. **Executive readability** — a human can understand the product direction in minutes.
+2. **Product completeness** — the main PRD contains the global product picture, core journeys, major flows, business objects, configuration surfaces, and unresolved blockers.
+
+The PRD must not collapse into implementation specs, tickets, architecture, database schemas, framework decisions, or sprint planning.
+
+But it must be detailed enough that a future `/prd converge`, `/prd challenge`, `/prd prioritize`, or implementation-spec handoff can reconstruct the product without rereading every raw discovery note.
+
+### Required global PRD sections
+
+When enough discovery material exists, `docs/prd/PRD.md` should include:
+
+- Product Thesis — one sentence explaining the product bet.
+- Global Product Picture — how the product works end-to-end.
+- Operating Model — who operates what, where, and when.
+- Core User Journeys — buyer, merchant, practitioner, and admin journeys where relevant.
+- Flow Inventory — all important product-level flows with actor, trigger, steps, outcome, and blockers.
+- Business Objects — product-level objects such as booking, service, practitioner, slot, pack, gift card, store credit, loyalty points, order sync, notification.
+- Configuration Matrix — what merchants can configure.
+- Integration Boundaries — what external systems participate and what role they play.
+- MVP Completeness Checklist — what must be resolved before implementation-ready status.
+
+### Flow Inventory format
+
+Use this format for each flow:
+
+```md
+### <Flow name>
+Status: candidate | exploratory | validated-with-open-surface | validated
+Actor: <buyer | merchant | practitioner | system>
+Trigger: <when this flow starts>
+Summary: <2-4 lines>
+
+Flow steps:
+1. <user-visible or business-level step>
+2. <step>
+3. <step>
+
+Outcome:
+- <observable result>
+
+Open blockers:
+- <blocker or none>
+
+Out of scope:
+- <explicit exclusion>
+```
+
 ## 2. Activation
 
 Activate when:
@@ -61,11 +114,12 @@ Convergence is synthesis, not persistence.
 When `/prd converge` is invoked:
 
 1. Read discovery notes and answered questions.
-2. Produce a convergence proposal.
-3. Draft **at most one** primary feature group candidate.
-4. List other possible feature groups as **candidates only** (names, no full drafts).
-5. Ask **one** validation question.
-6. Stop.
+2. Determine the converge target (see `.cursor/commands/prd.md` Mode: converge):
+   - **A — Global PRD Enrichment Proposal**: if required global PRD sections are absent or TBD while notes contain relevant material.
+   - **B — Feature-Group Convergence Proposal**: if the global picture is coherent and a feature group is ready to define.
+   - Produce one or the other — never both in the same response.
+3. For target A: propose the global sections to enrich, cite content sources, list open blockers, ask one validation question. Stop.
+4. For target B: draft **at most one** primary feature group candidate, list other possible groups as **candidates only** (names, no full drafts), ask one validation question. Stop.
 
 Do not:
 - validate groups automatically
@@ -191,6 +245,8 @@ Produce one block per gate run. Persisted as part of the active PRD (under "Prod
 - **No silent inference.** If the user says "I don't know", write `UNKNOWN — decision needed before implementation`. Do not pick the most plausible answer "for now".
 
 ## 3. Convergence Loop
+
+**Scope.** This loop applies to **Feature-Group Convergence (target B)** only. When `/prd converge` selects target A (Global PRD Enrichment Proposal), produce the enrichment proposal per `.cursor/commands/prd.md` Mode: converge — do not enter this loop.
 
 **Activation condition.** This loop runs only when the user explicitly invokes `/prd converge`, `/prd prioritize`, `/prd update`, or says "let's converge / structure this / write it up". It does not activate during open discovery or `note` mode. See §2.5.
 

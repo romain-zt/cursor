@@ -109,6 +109,21 @@ Do not propose PRD updates.
 
 Synthesis mode only. No file writes.
 
+`/prd converge` produces **exactly one** of two outputs per invocation — not both:
+
+### A. Global PRD Enrichment Proposal
+
+Used when `docs/prd/PRD.md` is missing one or more global product completeness sections (Global Product Picture, Operating Model, Core User Journeys, Flow Inventory, Business Objects, Configuration Matrix, Integration Boundaries, MVP Completeness Checklist), **and** discovery notes contain enough material to propose content for at least one of them.
+
+### B. Feature-Group Convergence Proposal
+
+Used after the global product picture is coherent enough to define one feature group at a time.
+
+**Target selection rule:**
+- If any required global section is absent or contains only TBD/scaffold content while discovery notes contain relevant material → prefer **A (Global PRD Enrichment Proposal)**.
+- If the global picture is coherent and the user names or implies a feature group to define → use **B (Feature-Group Convergence Proposal)**.
+- Never produce both in the same response.
+
 `/prd converge` **may not**:
 - write files
 - update `PRD.md`, `state.md`, `history.md`, or `archive/`
@@ -117,16 +132,46 @@ Synthesis mode only. No file writes.
 - produce a full multi-group PRD in one pass
 - produce a build sequence unless **at least 3 feature groups were explicitly validated in separate prior turns**
 
-`/prd converge` **may only**:
+`/prd converge` **may**:
 1. Read `docs/prd/PRD.md`, `docs/prd/state.md`, `docs/prd/notes/`, and `docs/prd/questions/open-questions.md`.
 2. Synthesize the latest discovery into a proposal.
-3. Draft **at most one** primary feature group candidate.
-4. List other possible feature groups as **candidates only** (names, no full drafts).
-5. Identify open blockers and assumptions.
-6. Ask **exactly one** validation question.
-7. Stop.
+3. Produce either:
+   - one **Global PRD Enrichment Proposal** (target A), OR
+   - one **Primary Feature Group Candidate** with other candidate groups listed by name only (target B)
+4. Identify open blockers and assumptions.
+5. Ask **exactly one** validation question.
+6. Stop.
 
-**Required output format:**
+**Required output format — Global PRD Enrichment Proposal (target A):**
+
+```txt
+Global PRD Enrichment Proposal
+
+1. Synthesized global picture
+<short synthesis>
+
+2. Proposed PRD sections to enrich
+- <section>
+- <section>
+
+3. Content sources
+- <notes/questions/decisions used>
+
+4. Open blockers / unresolved details
+- <blocker>
+
+5. Safety
+- no implementation specs
+- no architecture
+- no tickets
+- no build sequence unless allowed by existing rules
+- no status promoted to validated or committed
+
+6. One validation question
+<one question only>
+```
+
+**Required output format — Feature-Group Convergence Proposal (target B):**
 
 ```txt
 Convergence Proposal
