@@ -24,10 +24,10 @@ Ensures **`docs/`** governance tables exist (`WORK_QUEUE.md`, `BLOCKERS.md`, `EX
 
 ### `scan`
 
-Rebuilds **`docs/WORK_QUEUE.md`** from **`docs/prd/**`**, **`docs/product/feature-areas/**`, **`docs/product/scope-slices/**`**.
+Rebuilds **`docs/WORK_QUEUE.md`** from **`docs/prd/**`**, **`docs/product/feature-areas/**`**, **`docs/product/scope-slices/**`**, **`docs/product/user-stories/**`**, **`docs/product/specs/**`**, **`docs/product/tasks/**`**.
 
 - Reconcile **`Blocked By`** with **`docs/BLOCKERS.md`**.
-- Optionally append **`EXECUTION_LOG`**: **`scan`** + row counts (**Feature Area** / **Scope Slice**).
+- Optionally append **`EXECUTION_LOG`**: **`scan`** + row counts (**Feature Area** / **Scope Slice** / **User Story** / **Spec** / **Task**).
 
 ### `next`
 
@@ -39,9 +39,13 @@ After an implicit **`scan`** (perform **`scan`** if sources changed since lock t
 
 ### `run-one`
 
-1. Acquire or validate **`EXECUTION_LOCK`**: assign **`active_item_id`** = **`next`** result; **`allowed_files`** must be subset of **`docs/`** + **`docs/prd`** + **`docs/product`** + **`docs/product-decisions`** + **`.cursor/`** governance only — **never** defaults to **`src/**`**.
+1. Acquire or validate **`EXECUTION_LOCK`**: assign **`active_item_id`** = **`next`** result; **`allowed_files`** must be subset of **`docs/`** + **`docs/prd`** + **`docs/product`** (including **`docs/product/user-stories/`**, **`docs/product/specs/`**, **`docs/product/tasks/`**) + **`docs/product-decisions`** + **`.cursor/`** governance only — **never** defaults to **`src/**`**.
 2. Execute **exactly one** bounded governance step:
-   - **`/feature-area validate`**, **`check`**, **`refine-slice`**, **`promote`**, **`promote-slice`**, **`slice`** (proposal-only), or **documentation-only** updates to **`WORK_QUEUE` / `BLOCKERS` / `POINTS_OF_ATTENTION`** driven by scan — **no** User Story / Spec / Task file creation (**v0 stop** per rule §11).
+   - **`/feature-area`** modes: `validate`, `check`, `refine-slice`, `promote`, `promote-slice`, `slice` (proposal-only), `scaffold`, `scaffold-slices` (after approved proposal in conversation).
+   - **`/user-story`** modes: `propose`, `scaffold`, `refine`, `check`, `promote` — gated by parent Scope Slice at `ready-for-user-stories`.
+   - **`/spec`** modes: `propose`, `scaffold`, `refine`, `check`, `promote` — gated by parent User Story at `ready-for-spec`.
+   - **`/task`** modes: `propose`, `scaffold`, `refine`, `check`, `promote` — gated by parent Spec at `ready-for-implementation` AND approved proposal with `Subdivision needed: yes`.
+   - **documentation-only** updates to **`WORK_QUEUE` / `BLOCKERS` / `POINTS_OF_ATTENTION`** driven by scan.
 3. If step requires **checker `CLEAR`** and it is not **CLEAR**, log **BLOCKED** and **do not** patch promotion fields.
 4. Append **`EXECUTION_LOG`**: mode **`run-one`**, item, action, outcome.
 5. Release lock if step complete; if multi-step action (e.g. checker then promote), keep lock **only** if skill says so **and** **`stale`** stays **false**.
@@ -57,7 +61,10 @@ Repeat **`next` → `run-one`** until a **stop condition** in **`execution-loop`
 
 ## Hard rules
 
-- **No** product implementation code, **no** dependency installs, **no** runtime architecture.
-- **No** creating **`User Story`**, **`Spec`**, **`Task`**, **`Test`** queue rows that imply execution specs **until** governance explicitly allows that phase (not yet).
+- **No** product implementation code under `src/**`, **no** dependency installs, **no** runtime architecture from this command. Spec is a description, not code.
+- **User Story / Spec / Task file creation is allowed**, but **only** behind the same propose → approve → scaffold → refine → check → promote gates defined by `/user-story`, `/spec`, and `/task` per **PD-001** (`docs/product-decisions/PD-001-post-slice-workflow.md`). Autonomous creation outside an approved proposal stays forbidden.
 - **No** bypassing **`NEED_HUMAN`** or checker **`BLOCKED`** via autonomous choice.
 - **Feature Area** and **Scope Slice** file mutations follow **only** allowed **`/feature-area`** modes from **`.cursor/commands/feature-area.md`**.
+- **User Story** file mutations follow **only** allowed **`/user-story`** modes from **`.cursor/commands/user-story.md`**.
+- **Spec** file mutations follow **only** allowed **`/spec`** modes from **`.cursor/commands/spec.md`**.
+- **Task** file mutations follow **only** allowed **`/task`** modes from **`.cursor/commands/task.md`** AND only when the corresponding `/task propose` returned `Subdivision needed: yes`.

@@ -1,12 +1,14 @@
 # Scope Readiness Checker
 
-Governed by: `.cursor/rules/feature-area-workflow.mdc`
+Governed by: `.cursor/rules/feature-area-workflow.mdc` (FA / Slice) and `.cursor/rules/user-story-workflow.mdc` (User Story / Spec / Task).
+Decision: `docs/product-decisions/PD-001-post-slice-workflow.md`.
 
 Run this checker before advancing any artifact to the next level in the hierarchy:
-- Feature Area → Scope Slices
-- Scope Slice → User Stories
-- User Stories → Specs
-- Specs → Tasks
+- Feature Area → Scope Slice (Part 1 + Part 7)
+- Scope Slice → User Story (Part 2 + Part 7)
+- User Story → Spec (Part 4 + Part 7)
+- Spec → Task or Implementation (Part 5 + Part 7)
+- Task → Merge (Part 6 + Part 7)
 
 ---
 
@@ -278,9 +280,349 @@ Do not treat this list as permission to add implementation detail beyond what th
 
 ---
 
-## Part 3 — Cross-Cutting Checks
+## Part 4 — User Story Checks
 
-Run at any level.
+Run when evaluating whether a User Story is ready for Spec authoring.
+
+**After `/user-story scaffold`:** new User Story files are expected to be `exploratory` and not Spec-ready. Part 4 will often return **BLOCKED** until product-level gaps are closed via `/user-story refine`. Advancement to `ready-for-spec` uses `/user-story promote` only after US-01–US-N and CC-01–CC-05 are **CLEAR**.
+
+Governed by: `docs/product-decisions/PD-001-post-slice-workflow.md`.
+
+### US-01 · Standard story form
+
+> The Story section uses the exact form "As an X, I do Y, so that Z." in one sentence.
+
+**FAIL signals:**
+- Missing role ("I do Y, so that Z" without "As an X").
+- Missing outcome clause ("so that Z").
+- Multiple sentences bundled.
+- Implementation language in the role or action ("As the React component...", "As the API caller...").
+
+### US-02 · Acceptance Criteria count and form
+
+> The User Story carries 2–5 inline Acceptance Criteria, each in Given/When/Then form.
+
+**FAIL signals:**
+- Fewer than 2 ACs (single AC = the story is too small or under-specified).
+- More than 5 ACs (story is too large — split into sibling stories).
+- An AC missing Given or Then.
+- ACs written as test cases ("assert that..." / "expect()...") instead of behavioral statements.
+
+### US-03 · ACs are observable behaviors
+
+> Every Acceptance Criterion describes an observable user-visible behavior, not implementation.
+
+**FAIL signals:**
+- AC mentions routes, endpoints, HTTP verbs, status codes.
+- AC mentions component or screen class names.
+- AC mentions database tables, columns, or schemas.
+- AC uses vague verbs ("handles correctly", "works as expected") instead of observable verbs.
+
+### US-04 · UX states covered are a non-empty subset of the parent slice
+
+> UX States Covered references state names exactly as they appear in the parent Scope Slice's UX States, and the subset is non-empty.
+
+**FAIL signals:**
+- UX States Covered is empty.
+- A state name does not match the parent slice (typo, paraphrase, invented state).
+- The subset implies coverage of states that don't exist in the parent slice.
+
+### US-05 · Out of scope explicit
+
+> Out of Scope section is non-empty and references sibling user stories or future work where relevant.
+
+**FAIL signals:**
+- Section blank.
+- Out of Scope contradicts the Story or ACs.
+
+### US-06 · Data Touched inherits from parent slice
+
+> Data Touched table is non-empty and stays product-level (no DB tables, no API fields).
+
+**FAIL signals:**
+- Section blank when the story affects any persisted object.
+- Implementation-level naming ("users table", "session_id column").
+
+### US-07 · Credit / payment, sharing / privacy, feedback impacts inherited
+
+> All three impact sections are present and either state "None" with a reason or describe the impact, inheriting from the parent Scope Slice framing.
+
+**FAIL signals:**
+- Any of the three sections is blank.
+- A "None" statement contradicts the parent slice's stated impact for this acceptance dimension.
+
+### US-08 · Dependencies explicit
+
+> All dependencies named with status (ready / pending / blocked / unknown). No `unknown` for a critical dependency.
+
+**FAIL signals:**
+- Dependency status `unknown` for a sibling story or Spec that this story explicitly depends on.
+- Critical dependency missing from the table.
+
+### US-09 · Blockers resolved or flagged
+
+> All blockers either have a resolution note or carry `NEED_HUMAN=true`.
+
+**FAIL signals:**
+- Open question from `docs/prd/questions/open-questions.md` affects this story but is not listed.
+- Blocker row exists with no resolution and no NEED_HUMAN flag.
+
+### US-10 · Acceptance-Level Outcome is behavioral
+
+> The Acceptance-Level Outcome is one sentence summarizing observable end state.
+
+**FAIL signals:**
+- Outcome describes a test ("unit test passes").
+- Outcome describes a code-level fact ("function returns X").
+- Outcome describes the implementation strategy instead of the end state.
+
+### US-11 · No implementation language anywhere
+
+> The document contains no routes, endpoints, database tables, component names, framework choices, or runtime decisions. **PRD-allowed product-level terms** (see Allowed product-level terms (PRD)) are permitted when they describe product behavior.
+
+**FAIL signals:**
+- "The POST /api/signup endpoint accepts..."
+- "The SignupForm React component..."
+- "Store in PostgreSQL..."
+
+### US-12 · Status is valid
+
+> Valid User Story statuses are: `exploratory`, `blocked`, `deferred`, `ready-for-spec`.
+>
+> If the story has passed US-01–US-11 and CC-01–CC-05 with no unresolved NEED_HUMAN flag, status must be `ready-for-spec` (set via `/user-story promote` or equivalent manual edits). Spec authoring may not begin until this status is set.
+
+**FAIL signals:**
+- Status is `validated` or `ready-for-user-stories` (those belong to Feature Areas / Scope Slices).
+- Status is `ready-for-spec` with unresolved NEED_HUMAN.
+- Status is `ready-for-spec` but US-01–US-11 or CC-01–CC-05 have failures.
+
+---
+
+## Part 5 — Spec Checks
+
+Run when evaluating whether an Implementation Spec is ready for implementation.
+
+**This is the level where architecture lands.** Checks are strict.
+
+Governed by: `docs/product-decisions/PD-001-post-slice-workflow.md`.
+
+### SP-01 · Summary traces to parent User Story
+
+> Summary section is non-empty and traces back to the parent User Story's Acceptance-Level Outcome in one or two sentences.
+
+**FAIL signals:**
+- Summary missing.
+- Summary describes a different user outcome than the parent US.
+- Summary restates the parent US without adding implementation focus.
+
+### SP-02 · Acceptance Criteria Trace complete
+
+> Every Acceptance Criterion of the parent User Story is traced in the AC Trace table — either satisfied by this Spec or explicitly deferred to a sibling Spec.
+
+**FAIL signals:**
+- A parent AC is missing from the table.
+- A "satisfied by this Spec" entry has no description of how.
+- A "deferred to sibling Spec" entry has no sibling reference.
+
+### SP-03 · Data Model named with constraints
+
+> Data Model section names new or extended objects with field-level constraints and migration plan (or "None" with reason).
+
+**FAIL signals:**
+- Section blank when the Spec touches persisted state.
+- Fields named without constraints (uniqueness, format, required, etc.).
+- Migrations not described when schema changes are implied.
+
+### SP-04 · Contract enumerated
+
+> Contract section enumerates Inputs, Outputs, and Errors. Errors table has at least one row per parent AC that implies an error class.
+
+**FAIL signals:**
+- Inputs / Outputs missing.
+- Errors table empty when error ACs exist.
+- Errors row missing user-visible message or recovery semantics.
+
+### SP-05 · UI surface named or marked None with reason
+
+> UI Surface section either names screens / states or states "None — backend-only spec." with reason.
+
+**FAIL signals:**
+- Section blank.
+- "None" stated without reason.
+- Implementation-level component class names where product-level state names would suffice.
+
+### SP-06 · Tests section non-empty across applicable layers
+
+> Tests section has non-empty entries in Unit, Integration, Acceptance, and Non-functional sub-sections (Non-functional may state "None — not applicable" with reason; this counts as filled). At least one Acceptance test traces back to a parent AC.
+
+**FAIL signals:**
+- Tests section missing.
+- One or more sub-sections empty without "None — not applicable" reason.
+- Acceptance sub-section does not reference any parent AC.
+
+### SP-07 · Observability signals named
+
+> Observability table has at least one signal for every user-visible state change in this Spec. Each signal has a type (log / metric / trace / event) and a purpose tied to a production question.
+
+**FAIL signals:**
+- Observability table empty on a Spec that exposes user-visible behavior.
+- Signal without type.
+- Signal without purpose.
+
+### SP-08 · Implementation notes name stack and runtime constraints
+
+> Implementation notes section is non-empty and names the stack, framework, runtime constraints, concurrency model, and error handling pattern where they affect behavior. PRD-aligned constraints (e.g. Stripe for payments) are not implementation notes — they are PRD constraints; do not re-explain them here.
+
+**FAIL signals:**
+- Section blank.
+- Stack named without justification when alternatives exist.
+- Concurrency model unaddressed for a Spec that touches async state.
+
+### SP-09 · Dependencies explicit
+
+> All dependencies named with status. No `unknown` for a critical dependency.
+
+**FAIL signals:**
+- Critical dependency missing.
+- `unknown` status for a sibling Spec or infra component.
+
+### SP-10 · Blockers resolved or flagged
+
+> All blockers either have a resolution note or carry `NEED_HUMAN=true`.
+
+**FAIL signals:**
+- Open question from `docs/prd/questions/open-questions.md` affects this Spec but is not listed.
+- Blocker row exists with no resolution and no NEED_HUMAN flag.
+
+### SP-11 · Out of scope explicit
+
+> Out of Scope section is non-empty, referencing sibling Specs or future work.
+
+**FAIL signals:**
+- Section blank.
+
+### SP-12 · No leakage past parent User Story boundary
+
+> The Spec does not implement behavior listed in the parent User Story's Out of Scope; does not include UX states outside parent US UX States Covered; does not satisfy ACs not present in the parent US.
+
+**FAIL signals:**
+- Spec describes behavior in parent US Out of Scope.
+- Spec satisfies an AC not present in the parent US.
+- Spec adds UX states not in the parent US.
+
+### SP-13 · Tasks subdivision justified (if present)
+
+> If the Tasks table is non-empty, subdivision must be justified per PD-001 ("distinct technical surfaces that cannot land in one coherent commit"). If empty, that is the default and requires no justification.
+
+**FAIL signals:**
+- Tasks table populated without subdivision justification in Implementation notes.
+- Task entries that could merge into one without ceremony loss.
+
+### SP-14 · Status is valid
+
+> Valid Spec statuses are: `exploratory`, `blocked`, `deferred`, `ready-for-implementation`.
+>
+> If the Spec has passed SP-01–SP-13 and CC-01–CC-05 with no unresolved NEED_HUMAN flag, status must be `ready-for-implementation` (set via `/spec promote` or equivalent manual edits). Implementation may not begin until this status is set.
+
+**FAIL signals:**
+- Status is `validated`, `ready-for-spec`, or any non-Spec status.
+- Status is `ready-for-implementation` with unresolved NEED_HUMAN.
+- Status is `ready-for-implementation` but SP-01–SP-13 or CC-01–CC-05 have failures.
+
+---
+
+## Part 6 — Task Checks
+
+Run when evaluating whether a Task is ready for merge.
+
+Tasks are **optional**; not every Spec has them. Checks apply only to Task files that exist.
+
+Governed by: `docs/product-decisions/PD-001-post-slice-workflow.md`.
+
+### TK-01 · Goal traces to parent Spec
+
+> Goal section is one sentence and traces to a specific section of the parent Spec.
+
+**FAIL signals:**
+- Goal missing.
+- Goal does not reference any parent Spec section.
+- Goal restates the parent Spec Summary without narrowing.
+
+### TK-02 · Scope sized for one commit / short PR
+
+> Scope section is non-empty and bounded for one coherent commit or short PR.
+
+**FAIL signals:**
+- Scope spans multiple unrelated surfaces.
+- Scope blank.
+- Scope is so small the task would be merged trivially into a sibling.
+
+### TK-03 · Out of scope explicit
+
+> Out of Scope section is non-empty, referencing sibling tasks or future work.
+
+**FAIL signals:**
+- Section blank.
+
+### TK-04 · Changes enumerated with specificity
+
+> Changes table has at least one row per area touched. Each row names the area, the change, and any notes.
+
+**FAIL signals:**
+- Changes table empty.
+- Rows with vague entries ("update code in module X").
+- Changes that don't appear in any area of the parent Spec.
+
+### TK-05 · Tests traced to parent Spec test plan
+
+> Tests list has at least one entry, and each entry traces to a parent Spec test plan entry where possible.
+
+**FAIL signals:**
+- Tests list empty.
+- Tests entry has no parent trace (acceptable only if Spec test plan does not yet name this specific test — but should be rare).
+
+### TK-06 · Verification steps reproducible
+
+> Verification Steps section has at least one ordered step. Each step is specific enough for a reviewer to run it.
+
+**FAIL signals:**
+- Verification Steps blank.
+- Steps reference no specific command or check.
+- Steps that depend on undocumented environment setup.
+
+### TK-07 · Dependencies explicit
+
+> All dependencies named with status.
+
+**FAIL signals:**
+- Critical dependency missing.
+- `unknown` status for a sibling task or service.
+
+### TK-08 · Blockers resolved or flagged
+
+> All blockers either have a resolution note or carry `NEED_HUMAN=true`.
+
+**FAIL signals:**
+- Blocker row exists with no resolution and no NEED_HUMAN flag.
+
+### TK-09 · Status is valid
+
+> Valid Task statuses are: `exploratory`, `blocked`, `deferred`, `ready-for-merge`.
+>
+> If the Task has passed TK-01–TK-08 and CC-01–CC-05 with no unresolved NEED_HUMAN flag, status must be `ready-for-merge` (set via `/task promote` or equivalent manual edits).
+
+**FAIL signals:**
+- Status is any non-Task status.
+- Status is `ready-for-merge` with unresolved NEED_HUMAN.
+- Status is `ready-for-merge` but TK-01–TK-08 or CC-01–CC-05 have failures.
+
+---
+
+## Part 7 — Cross-Cutting Checks
+
+Run at any level. Apply to Feature Area, Scope Slice, User Story, Spec, and Task artifacts.
+
+(This section was historically numbered "Part 3" before Parts 4–6 were added; renumbered to Part 7 for chain order on 2026-05-25. Check identifiers `CC-01` through `CC-05` are unchanged.)
 
 ### CC-01 · No task slicing from PRD
 
