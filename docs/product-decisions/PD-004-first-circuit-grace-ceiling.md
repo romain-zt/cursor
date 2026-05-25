@@ -28,8 +28,12 @@ The first-circuit grace policy is **fixed at 20 extra credits**:
 - **Cons.** 20 is a fixed magic number; if real burn rates change, 20 may feel either tight or generous (mitigated: `credit-system` design can re-evaluate, requiring a new PD if changed). Pre-check requires reliable cost projection per operation, adding implementation surface in `credit-system`.
 - **Reversibility.** Reversible by superseding PD. Existing usage history would not need a migration; the rule applies forward-only.
 
+## User approval
+
+Ratified by user on **2026-05-25** as part of the retroactive PD validation pass (Q3 of the H-3 review batch). 20-credit ceiling and pre-check gate approved as-is.
+
 ## Links
 
 - PRD: `docs/prd/PRD.md`
 - Question source: `docs/prd/questions/open-questions.md` (Q-019)
-- Related PDs: PD-003 (burn tiers), PD-005 (auto-reload SCA fallback).
+- Related PDs: PD-003 (burn tiers), PD-005 (auto-reload SCA fallback), PD-010 (credit ledger schema).

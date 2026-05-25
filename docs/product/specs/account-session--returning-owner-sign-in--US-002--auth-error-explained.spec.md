@@ -70,6 +70,38 @@ The `INVALID_CREDENTIALS` message is identical for the "no such user" and "bad p
 
 ---
 
+## Async / Event / Webhook / Cron / Stream
+
+### 1. Long-running operation
+
+- Yes — **handled by constant-time response budget pattern**. Anti-enumeration AC-2 requires sign-in error response time to be invariant to whether `User.email` exists. Implementation: wrap the credential check in `Promise.race(work, sleep(targetMs))` with `targetMs ≈ 700ms` matching the Argon2id worst case. Spec-local pattern; not a background job, a deliberate latency floor in-request.
+
+### 2. External callback (webhook)
+
+- No — sync REST is correct here. No third-party invoked.
+
+### 3. Temporal trigger (cron)
+
+- Out of scope — covered by another layer (infra cron). PD-007 §4 `cleanup.sessions.expired` owns `Session` row expiry. (Brute-force throttling is a separate middleware concern, also out of scope here.)
+
+### 4. Event produced or consumed
+
+- No — sync REST is correct here. Errors emit observability signals (`auth.signin.failed`, `auth.signin.unknown_email_collision`) — local telemetry, not event-bus contracts.
+
+### 5. Real-time push to client (SSE / WebSocket)
+
+- No — sync REST is correct here. Inline error message returned with the form re-render.
+
+### 6. Background job / queue
+
+- No — sync REST is correct here. Constant-time budget is in-request, not deferred.
+
+### Summary
+
+**Async classification:** Sync with async helpers — primary path sync but uses a constant-time response budget via `Promise.race(work, sleep(targetMs))` to defeat timing-based account enumeration.
+
+---
+
 ## Tests
 
 ### Unit / behavior tests
@@ -157,6 +189,7 @@ The `subcase` tag is recorded server-side only; the user-visible response is the
 - [x] Data model fields named with constraints
 - [x] Contract inputs/outputs/errors enumerated
 - [x] UI surface named or marked None with reason
+- [x] Async / Event / Webhook / Cron / Stream — all 6 sub-questions answered with one of the four allowed responses, and Async classification line filled
 - [x] Tests section non-empty across unit, integration, and acceptance layers
 - [x] Observability signals named with purpose
 - [x] Implementation notes name stack and runtime constraints
@@ -185,3 +218,4 @@ The `subcase` tag is recorded server-side only; the user-visible response is the
 | 2026-05-25 | Scaffolded from approved `/spec propose` (Phase 3 pilot) via `/spec scaffold` | — |
 | 2026-05-25 | Refined via `/spec refine` (Phase 3 pilot) | — |
 | 2026-05-25 | Promoted to ready-for-implementation after CLEAR readiness check (`/spec promote`) | — |
+| 2026-05-25 | Added mandatory `## Async / Event / Webhook / Cron / Stream` section per SP-15. Classification: Sync with async helpers (constant-time budget). | — |

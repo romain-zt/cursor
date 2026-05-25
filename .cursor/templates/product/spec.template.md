@@ -101,6 +101,80 @@
 
 ---
 
+## Async / Event / Webhook / Cron / Stream
+
+<!-- MANDATORY section. The checker (SP-15) fails if this is missing or blank.
+
+     Default-REST-sync is a CHOICE, not a default. State it explicitly.
+
+     For EVERY entry below, answer one of:
+       - "Yes — handled by <pattern>" with reference to the pattern in PD-007 (when published).
+       - "No — sync REST is correct here because <reason>" (must give a reason).
+       - "Out of scope — deferred to sibling/future Spec <id>" (must name the Spec).
+       - "Out of scope — covered by another layer (middleware, infra)" (must name the layer).
+
+     Bullets below are checkboxes, not optional. Every line must carry one of the four answers. -->
+
+### 1. Long-running operation
+
+<!-- Does any operation in this Spec take >2s of wall time (typical or p99)?
+     LLM calls, large queries, external API roundtrips, file processing.
+     If yes: must use stream (SSE / ReadableStream) or job-background. Sync POST is forbidden. -->
+
+- 
+
+### 2. External callback (webhook)
+
+<!-- Does an external system (Stripe, mailer, third-party) call BACK into us
+     asynchronously, on its own timeline? If yes: must define webhook handler
+     with signature verification + idempotency + replay support. -->
+
+- 
+
+### 3. Temporal trigger (cron)
+
+<!-- Is there work that runs on a schedule (cleanup, digest, polling fallback)?
+     If yes: name the cron, frequency, idempotency, and the worker that runs it. -->
+
+- 
+
+### 4. Event produced or consumed
+
+<!-- Does this Spec emit or consume an event that another Spec / FA / worker depends on?
+     If yes: name the event type, producer, consumer, and delivery contract
+     (at-least-once, idempotent, ordered, etc.). -->
+
+- 
+
+### 5. Real-time push to client (SSE / WebSocket)
+
+<!-- Does the client need to receive an update without polling?
+     If yes: name the channel (SSE endpoint or WS topic) and the message shape.
+     If no: state explicitly "polling-on-render acceptable in v0" with rationale. -->
+
+- 
+
+### 6. Background job / queue
+
+<!-- Is there work that should run outside the request/response cycle?
+     Email send, webhook retry, batch processing.
+     If yes: name the queue, the job type, retry policy, and idempotency key. -->
+
+- 
+
+### Summary
+
+<!-- One sentence: classify this Spec as one of:
+       - "Pure sync — no async patterns required, REST/server-action sufficient."
+       - "Sync with async helpers — primary path sync but uses <helper> (e.g. constant-time budget, race-vs-sleep)."
+       - "Mixed sync + async — primary path sync, but emits <event> / consumes <event> / triggers <job>."
+       - "Async-first — primary path is <stream | webhook | job>; sync only for the kick-off."
+     This classification feeds the verdict line below. -->
+
+**Async classification:** <!-- One of the four options above -->
+
+---
+
 ## Tests
 
 <!-- MANDATORY section. The checker fails if this is missing or empty.
@@ -183,6 +257,7 @@
 - [ ] Data model fields named with constraints
 - [ ] Contract inputs/outputs/errors enumerated
 - [ ] UI surface named or marked None with reason
+- [ ] Async / Event / Webhook / Cron / Stream — all 6 sub-questions answered with one of the four allowed responses (Yes / No-with-reason / Out-of-scope-to-sibling / Out-of-scope-to-layer), and Async classification line filled
 - [ ] Tests section non-empty across unit, integration, and acceptance layers
 - [ ] Observability signals named with purpose
 - [ ] Implementation notes name stack and runtime constraints

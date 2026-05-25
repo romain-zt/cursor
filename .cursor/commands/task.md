@@ -41,7 +41,12 @@ Before any mode executes, the Task Builder skill reads in this order:
 6. The parent User Story linked from the Spec
 7. All existing Task files for the same Spec under `docs/product/tasks/`
 
-**Gate:** the parent Spec must be at status **`ready-for-implementation`** before any `/task` mode (except `check`) operates.
+**Gate (double check, per PD-001 + PD-006):**
+
+1. The parent Spec must be at status **`ready-for-implementation`**.
+2. The chain-grandparent Feature Area (via User Story → Scope Slice → Feature Area) must be at status **`delivery-ready`**. If the FA has regressed since the parent Spec was promoted, stop and instruct the user to re-run `/feature-area clear-for-vertical <fa-name>`.
+
+Both gates apply to `propose`, `scaffold`, `refine`, and `promote`. `check` may operate on any Task file regardless of the FA's status.
 
 No dedicated Lead or Critic agent — Tasks inherit context entirely from their parent Spec.
 

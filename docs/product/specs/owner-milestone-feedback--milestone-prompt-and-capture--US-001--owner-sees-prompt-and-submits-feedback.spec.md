@@ -8,7 +8,7 @@
 
 `ready-for-implementation`
 
-> **NEED_HUMAN:** false
+> **NEED_HUMAN:** false — PD-007 approved 2026-05-25. `OwnerMilestoneEvent` is re-cast as an event-bus row per PD-007 §5; consumer uses `LISTEN/NOTIFY` with Event-table polling fallback.
 
 ---
 
@@ -75,6 +75,36 @@ model FeedbackEntry {
 - `app/(authed)/_components/MilestonePromptHost.tsx` (client).
 - `app/(authed)/_actions/milestonePrompt.ts` (server actions).
 
+## Async / Event / Webhook / Cron / Stream
+
+### 1. Long-running operation
+
+- No — sync REST is correct here for the prompt fetch and the submit/dismiss actions. Each call is one or two indexed queries on `(ownerId, milestoneId)`; p99 under 80ms.
+
+### 2. External callback (webhook)
+
+- No — sync REST is correct here. No third-party invoked.
+
+### 3. Temporal trigger (cron)
+
+- Out of scope — covered by another layer (infra cron). PD-007 §4 `cleanup.milestone-events.consumed` (weekly) deletes `OwnerMilestoneEvent` rows where `consumedAt IS NOT NULL` older than 90 days.
+
+### 4. Event produced or consumed
+
+- **Yes — handled by PD-007 §5 event bus.** This Spec **consumes** events of type `<domain>.<entity>.<milestone-trigger>` (e.g. `prd.version.first-captured` from `prd-versioning--create-or-capture-version`, future `project.first-created`, etc.). The current Spec models the consumer state via `OwnerMilestoneEvent` rows — under PD-007 §5 these become event-bus rows backed by the canonical `Event` table; the consumer uses `LISTEN` for liveness and falls back to polling the `Event` table on the existing render path. Delivery contract: at-least-once, idempotent on `(ownerId, milestoneId)` via the `OwnerMilestoneState` upsert. The Spec **does not produce** any cross-Spec event.
+
+### 5. Real-time push to client (SSE / WebSocket)
+
+- No — sync REST is correct here in v0. **Polling-on-render acceptable in v0** with explicit rationale: prompt latency is non-critical (acceptable to surface on the next page navigation, not within the millisecond the milestone fires). Future SSE-based push (so a milestone fired in another tab appears immediately) is reversible per PD-007 §5 reversibility matrix.
+
+### 6. Background job / queue
+
+- No — sync REST is correct here. No deferred work; the consumer logic runs inline on render.
+
+### Summary
+
+**Async classification:** Mixed sync + async — primary path sync (server actions for prompt / submit / dismiss), but consumes milestone events through the PD-007 §5 event bus (`Event` table + `LISTEN/NOTIFY` + polling fallback). The previous "polling-on-render" pattern is re-cast as the consumer's poll fallback, not a homegrown pattern.
+
 ## Tests (mandatory)
 
 ### Unit
@@ -118,7 +148,9 @@ model FeedbackEntry {
 
 | Blocker | Blocks | NEED_HUMAN |
 |---------|--------|------------|
-| — | — | — |
+| — | — | false |
+
+PD-007 was approved 2026-05-25. `OwnerMilestoneEvent` is now a canonical event-bus row (PD-007 §5).
 
 ## Out of Scope
 
@@ -135,8 +167,9 @@ model FeedbackEntry {
 - [x] Mandatory tests named
 - [x] Observability named
 - [x] Implementation anchored on PD-002
+- [x] Async / Event / Webhook / Cron / Stream — all 6 sub-questions answered + classification line filled (SP-15)
 - [x] Dependencies known
-- [x] Blockers resolved
+- [x] Blockers resolved (PD-007 approved 2026-05-25; `LISTEN/NOTIFY` + polling fallback committed)
 - [x] Out-of-scope explicit
 
 **Verdict:** READY FOR IMPLEMENTATION
@@ -146,3 +179,5 @@ model FeedbackEntry {
 | Date | Change | Author |
 |------|--------|--------|
 | 2026-05-25 | Scaffolded, refined, promoted | — |
+| 2026-05-25 | Added mandatory `## Async / Event / Webhook / Cron / Stream` section per SP-15. Classification: Mixed sync + async (consumes milestone events via PD-007 §5 event bus). Previously-implicit `OwnerMilestoneEvent` polling pattern formalized as the v0 poll fallback. NEED_HUMAN=true pending PD-007 ratification. | — |
+| 2026-05-25 | PD-007 approved. NEED_HUMAN lifted (true → false). `LISTEN/NOTIFY` + Event-table polling committed. | — |

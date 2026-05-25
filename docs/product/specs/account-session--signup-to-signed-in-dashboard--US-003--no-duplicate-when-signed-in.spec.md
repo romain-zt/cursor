@@ -67,6 +67,38 @@ No new UI elements introduced.
 
 ---
 
+## Async / Event / Webhook / Cron / Stream
+
+### 1. Long-running operation
+
+- No — sync REST is correct here. Single indexed read on `Session.sessionToken` (O(1)) followed by a redirect. p99 well under 50ms.
+
+### 2. External callback (webhook)
+
+- No — sync REST is correct here. No third-party involved.
+
+### 3. Temporal trigger (cron)
+
+- Out of scope — covered by another layer (infra cron). PD-007 §4 `cleanup.sessions.expired` owns `Session` row expiry.
+
+### 4. Event produced or consumed
+
+- No — sync REST is correct here. Detection of an already-signed-in request is a routing concern, not a domain event.
+
+### 5. Real-time push to client (SSE / WebSocket)
+
+- No — sync REST is correct here. 303 redirect; browser navigates.
+
+### 6. Background job / queue
+
+- No — sync REST is correct here. No deferred work on this path.
+
+### Summary
+
+**Async classification:** Pure sync — no async patterns required, REST/server-action sufficient.
+
+---
+
 ## Tests
 
 ### Unit / behavior tests
@@ -146,6 +178,7 @@ No PII attached.
 - [x] Data model fields named with constraints
 - [x] Contract inputs/outputs/errors enumerated
 - [x] UI surface named or marked None with reason
+- [x] Async / Event / Webhook / Cron / Stream — all 6 sub-questions answered with one of the four allowed responses, and Async classification line filled
 - [x] Tests section non-empty across unit, integration, and acceptance layers
 - [x] Observability signals named with purpose
 - [x] Implementation notes name stack and runtime constraints
@@ -174,3 +207,4 @@ No PII attached.
 | 2026-05-25 | Scaffolded from approved `/spec propose` (Phase 3 pilot) via `/spec scaffold` | — |
 | 2026-05-25 | Refined via `/spec refine` (Phase 3 pilot) | — |
 | 2026-05-25 | Promoted to ready-for-implementation after CLEAR readiness check (`/spec promote`) | — |
+| 2026-05-25 | Added mandatory `## Async / Event / Webhook / Cron / Stream` section per SP-15. Classification: Pure sync. | — |

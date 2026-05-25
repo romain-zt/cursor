@@ -23,7 +23,7 @@ This decision freezes the post-slice methodology so the downstream workflow can 
 
 1. **User Story** — always required. One file per Scope Slice acceptance dimension. Behavioral, product-readable. Format: "As an X, I do Y, so that Z." with 2–5 inline Acceptance Criteria in Given/When/Then form. Granularity: 3–6 User Stories per Slice as a rule of thumb. Path: `docs/product/user-stories/<fa-kebab>--<slice-kebab>--US-<NNN>--<short-kebab>.md`.
 2. **Implementation Spec** — always required. One file per User Story. First artifact where stack, schema, framework, routes, and runtime appear. Engineer-readable. Mandatory **Tests** section before **Implementation notes**. Path: `docs/product/specs/<fa-kebab>--<slice-kebab>--US-<NNN>--<short-kebab>.spec.md`.
-3. **Task** — **optional**. Created only when a Spec needs subdivision across multiple coherent commits / short PRs. Implementer-readable. Path: `docs/product/tasks/<fa-kebab>--<slice-kebab>--US-<NNN>--T-<NNN>--<short-kebab>.task.md`.
+3. **Task** — **optional**. Created only when a Spec needs subdivision across multiple coherent commits / short PRs. Implementer-readable. Path: `docs/product/tasks/<fa-kebab>--<slice-kebab>--US-<NNN>--T-<NNN>--<short-kebab>.task.md`. **When to use vs skip Tasks: see §10 below (amendment 2026-05-25).**
 
 Acceptance Criteria are **inline in the User Story**, not a separate file. Tests are part of the Spec, not a separate file.
 
@@ -95,6 +95,34 @@ New file `.cursor/rules/user-story-workflow.mdc` covering all three artifact lev
 - `run-one` allowed bounded steps include `/user-story refine|check|promote|scaffold`, `/spec refine|check|promote|scaffold`, `/task refine|check|promote|scaffold`.
 - `src/**` remains excluded from `allowed_files` until a future explicit governance step.
 
+### 10. Task usage doctrine (amendment 2026-05-25)
+
+Approved 2026-05-25 in response to Q9 of the H-3 / H-4 review batch. Observed reality after the v1 macro: **0 Tasks were ever created** for the 16 Specs produced. The doctrine below clarifies when a Task is the right tool vs when the Spec is sufficient.
+
+**Use a Task when AT LEAST ONE of the following holds:**
+
+- **T-USE-1. Multi-commit decomposition.** The Spec naturally splits into 3+ commits whose ordering matters and where each commit could conceivably ship alone (e.g. `1. introduce schema`, `2. wire server action`, `3. add error UX`). Without Tasks, the implementer reconstructs this ordering from memory.
+- **T-USE-2. Multi-developer concurrency.** Two implementers (human or agent) work on the same Spec at the same time and need an explicit split to avoid stepping on each other.
+- **T-USE-3. Long-running implementation.** Code work estimated > 2 days where mid-progress status visibility matters (other Specs gate-blocked on this one).
+- **T-USE-4. Mixed-language / mixed-runtime work.** The Spec produces e.g. both a Prisma migration AND a Vercel Cron AND a React component — Tasks help track each technology surface independently.
+
+**Skip Tasks (Spec is sufficient) when ALL of the following hold:**
+
+- **T-SKIP-1.** The Spec produces ≤ 2 commits of total work.
+- **T-SKIP-2.** A single implementer (human or agent) carries the Spec end-to-end.
+- **T-SKIP-3.** Estimated work fits in one focused session (< 4 hours).
+- **T-SKIP-4.** No other Spec is gate-blocked on partial progress of this one.
+
+**Observed default for Zedos v0**: most Specs satisfy all four T-SKIP conditions. Tasks should be the **exception**, not the rule. If more than ~30% of Specs trigger Tasks, the Spec sizing is probably wrong (the Specs are too large — re-check against PD-009 §1 D4).
+
+**Forbidden Task patterns:**
+
+- **One Task per Spec**: pointless ceremony. If the Spec is small enough for 1 Task, no Task is needed.
+- **Tasks as TODO list**: Tasks are first-class artifacts with `ready-for-merge` status, not bullet points. If you need a TODO list, use the Implementation Notes section of the Spec.
+- **Backfill Tasks after code lands**: PD-008 gates code on the Spec, not on Tasks. Creating Tasks after code is shipped is documentation theatre.
+
+**Removal option (not exercised v0):** if 6 months in, Task usage is still ~0%, a future PD can drop the Task artifact level entirely (chain reduces to 5 levels). PD-001 reserves this option but does NOT exercise it in v0 — keeping the option is cheap (current cost = a `task.template.md` and a `task-builder` skill, both already in place).
+
 ## Consequences / tradeoffs
 
 ### Benefits
@@ -116,9 +144,18 @@ New file `.cursor/rules/user-story-workflow.mdc` covering all three artifact lev
 
 This decision is reversible. If the methodology proves too heavy in Phase 3, individual elements can be collapsed (e.g. merge Spec and User Story into a single artifact) by a follow-up PD that supersedes PD-001.
 
+## Amendments
+
+| Date | What | Trigger |
+|---|---|---|
+| 2026-05-25 | §10 added — Task usage doctrine (T-USE / T-SKIP rules, forbidden patterns) | Q9 of the H-3 / H-4 review batch. After v1 macro, 0 Tasks were created across 16 Specs; need for explicit doctrine. |
+
+Other PDs amending this one downstream: PD-008 (gate Spec → code), PD-009 (Slice sizing heuristic). See those PDs for their respective amendments.
+
 ## Links
 
 - PRD: `docs/prd/PRD.md`
 - Related notes: `docs/prd/notes/2026-05-25-post-slice-methodology-discovery.md`
 - Driving plan: `Zedos verticale + post-slice` (Phase 2.2)
 - Parent ceremony reference: `.cursor/commands/feature-area.md`, `.cursor/checkers/scope-readiness-checker.md`
+- Downstream amendments: PD-008 (Spec → code gate), PD-009 (Slice sizing heuristic).

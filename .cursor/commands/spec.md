@@ -42,7 +42,12 @@ Before any mode executes, the Spec Builder skill reads in this order:
 7. The grandparent Feature Area linked from the Scope Slice
 8. All existing Spec files for the same User Story under `docs/product/specs/`
 
-**Gate:** the parent User Story must be at status **`ready-for-spec`** before any `/spec` mode (except `check`) operates. If status is not `ready-for-spec`, stop and instruct the user to complete `/user-story refine` + `/user-story promote` first.
+**Gate (double check, per PD-001 + PD-006):**
+
+1. The parent User Story must be at status **`ready-for-spec`**. If not, stop and instruct the user to complete `/user-story refine` + `/user-story promote` first.
+2. The chain-grandparent Feature Area (via Scope Slice) must be at status **`delivery-ready`**. If status has regressed since the parent User Story was promoted, stop and instruct the user to re-run `/feature-area clear-for-vertical <fa-name>` after resolving the regression.
+
+Both gates apply to `propose`, `scaffold`, `refine`, and `promote`. `check` may operate on any Spec file regardless of the FA's status (read-only diagnostic).
 
 **Spec Lead pre-flight (`propose`, `scaffold`, `refine`, `check`, `promote`):** On the initial invocation, the Spec Lead agent (`.cursor/agents/spec/spec-lead.md`) produces a Spec Context Brief. The builder acts only after the brief is available. Reuse the Brief for `scaffold` immediately after approving a proposal in the same conversation.
 

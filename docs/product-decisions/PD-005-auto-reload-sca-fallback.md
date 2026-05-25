@@ -35,8 +35,12 @@ Auto-reload is **opt-in, best-effort** with explicit SCA-aware fallback:
 - **Cons.** Auto-reload is not "fully silent" — some founders may still get interrupted by SCA challenges, which can feel like a regression from the marketing of "convenience." Implementation surface includes both off-session and on-session flows in `payments`. Auto-reload trigger threshold is parameterizable, adding configuration burden.
 - **Reversibility.** Reversible: a future PD could remove auto-reload entirely (manual top-up still works). Migration of opted-in users would simply disable their auto-reload preference; no data destruction.
 
+## User approval
+
+Ratified by user on **2026-05-25** as part of the retroactive PD validation pass (Q4 of the H-3 review batch). Best-effort + SCA fallback + 7 hard invariants approved as-is.
+
 ## Links
 
 - PRD: `docs/prd/PRD.md`
 - Question source: `docs/prd/questions/open-questions.md` (Q-020)
-- Related PDs: PD-003 (burn tiers), PD-004 (grace ceiling).
+- Related PDs: PD-003 (burn tiers), PD-004 (grace ceiling), PD-007 (webhook discipline for Stripe), PD-010 (credit ledger schema).

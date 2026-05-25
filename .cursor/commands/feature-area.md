@@ -18,9 +18,10 @@
 | `scaffold-slices <feature-area-name>` | After an approved Scope Slice proposal from `slice`, create or fill Scope Slice files from template — Scope Slice markdown only |
 | `refine-slice <artifact-path>` | Fill or update **product-level** sections of **one** existing Scope Slice file — no user stories, specs, tasks, or architecture |
 | `promote-slice <artifact-path>` | After SS-01–SS-10 and CC-01–CC-05 are CLEAR, apply the narrow transition to `ready-for-user-stories` on **one** Scope Slice file |
+| `clear-for-vertical <feature-area-name>` | After DR-01–DR-05 and CC-01–CC-05 are CLEAR, apply the narrow `validated` → `delivery-ready` file transition (Status, Readiness Verdict, changelog) — existing Feature Area file only. Governed by PD-006. |
 | `check <artifact-path>` | Run the scope-readiness checker against any Feature Area or Scope Slice file |
 
-**Safety — Feature Area files:** `/feature-area scaffold` is the only mode that may **create** Feature Area markdown under `docs/product/feature-areas/`. `/feature-area promote` is the only mode that may **apply the automated validated transition** (status, readiness checklist, verdict line, changelog row) on an existing file. All other modes remain proposal/check-only for those files.
+**Safety — Feature Area files:** `/feature-area scaffold` is the only mode that may **create** Feature Area markdown under `docs/product/feature-areas/`. `/feature-area promote` is the only mode that may **apply the automated validated transition** (status, readiness checklist, verdict line, changelog row) on an existing file. `/feature-area clear-for-vertical` is the only mode that may **apply the automated delivery-ready transition** (status, readiness verdict line, changelog row) on an existing file. All other modes remain proposal/check-only for those files.
 
 **Safety — Scope Slice files:** `/feature-area scaffold-slices` is the only mode that may **create** or **initially fill** Scope Slice markdown under `docs/product/scope-slices/` from an approved slice proposal. `/feature-area refine-slice` may **edit product-level sections only** of an existing file under `docs/product/scope-slices/`. `/feature-area promote-slice` is the only mode that may **apply the automated ready-for-user-stories transition** (narrow edits only — see Mode: promote-slice). `check`, `map`, `validate`, `promote` (Feature Area), `slice`, and `scaffold-slices` do not perform slice refinement or slice promotion.
 
@@ -47,7 +48,7 @@ Do not skip step 3. Open blockers constrain all downstream work.
 
 If `docs/prd/PRD.md` is missing or empty, stop and suggest `/prd init` before proceeding.
 
-**Feature Area Lead pre-flight (`map`, `validate`, `promote`, `slice`, `scaffold-slices`, initial `scaffold` only):** On the initial invocation of any of these modes, the Feature Area Lead agent (`.cursor/agents/feature-area/feature-area-lead.md`) produces a Feature Area Context Brief. The builder acts only after the brief is available. Skip for `check`, `refine-slice`, and `promote-slice`. Do not re-run when the user is responding to an existing proposal. When running `scaffold` immediately after approving a Feature Area Map produced in the same conversation, reuse the Context Brief produced for `map` — do not re-run the Lead. When running `scaffold-slices` immediately after approving a Scope Slice proposal produced in **this same conversation**, reuse the Context Brief produced for `slice` — do not re-run the Lead.
+**Feature Area Lead pre-flight (`map`, `validate`, `promote`, `clear-for-vertical`, `slice`, `scaffold-slices`, initial `scaffold` only):** On the initial invocation of any of these modes, the Feature Area Lead agent (`.cursor/agents/feature-area/feature-area-lead.md`) produces a Feature Area Context Brief. The builder acts only after the brief is available. Skip for `check`, `refine-slice`, and `promote-slice`. Do not re-run when the user is responding to an existing proposal. When running `scaffold` immediately after approving a Feature Area Map produced in the same conversation, reuse the Context Brief produced for `map` — do not re-run the Lead. When running `scaffold-slices` immediately after approving a Scope Slice proposal produced in **this same conversation**, reuse the Context Brief produced for `slice` — do not re-run the Lead.
 
 ---
 
@@ -270,6 +271,104 @@ Next recommended command:
 
 ---
 
+## Mode: clear-for-vertical `<feature-area-name>`
+
+Runs the Delivery Readiness checks (`DR-01`–`DR-05` from Part 8 + `CC-01`–`CC-05` from Part 7 of `.cursor/checkers/scope-readiness-checker.md`), then **only if** the advancement verdict is **CLEAR**, applies a **narrow** update to the Feature Area file that transitions it from `validated` to `delivery-ready`. **Does not** create files; **does not** change PRD, Scope Slices, or Feature Area scope content.
+
+Governed by: `docs/product-decisions/PD-006-per-fa-delivery-readiness-gate.md`.
+
+### Input
+
+- `<feature-area-name>` → `docs/product/feature-areas/<feature-area-name>.md` (kebab filename as used for `validate` / `promote` / `slice`).
+
+### Pre-conditions (all required before any write)
+
+1. The Feature Area file exists and is non-empty.
+2. Current `Status` is `validated` (if `exploratory`, stop and instruct the user to run `/feature-area validate <name>` then `/feature-area promote <name>` first; if already `delivery-ready`, **no-op** — do not rewrite; report only; if `blocked` or `deferred`, stop — promotion is not allowed).
+3. `NEED_HUMAN: false` and `NEED_UPDATE: false` in the file.
+4. **Direct dependencies (DR-02):** every Feature Area listed in this FA's `Dependencies` section has an existing file in `docs/product/feature-areas/`. The dependency may be at any status (including `exploratory`), but its file must exist.
+5. **Direct-dependency `NEED_HUMAN` (DR-04):** every dependency FA file carries `NEED_HUMAN: false`. If any direct-dependency FA carries `NEED_HUMAN: true`, stop and list the offending dependencies — do not write.
+6. **Governing PDs (DR-03):** every Product Decision cited in the FA body (or that the agent identifies as governing this FA's contract or behavior per the discovery note for PD-006) is at `status: approved` in `docs/product-decisions/`. PDs at `provisional` or `proposed` block this mode.
+7. **Child slices (DR-05):** at least one Scope Slice file under `docs/product/scope-slices/<feature-area-name>--*.md` has `Status: ready-for-user-stories`. If no slice is ready, stop and list the slices and their statuses.
+8. Run `DR-01`–`DR-05` and `CC-01`–`CC-05` from `.cursor/checkers/scope-readiness-checker.md`. If any check does not pass, **stop and do not write**.
+
+### Behavior
+
+1. Read mandatory pre-flight sources (same order as other modes), plus every Feature Area file referenced as a direct dependency and every Product Decision cited or implied as governing.
+2. Read the target Feature Area file and `docs/prd/questions/open-questions.md`.
+3. Verify pre-conditions (status, flags, dependencies, governing PDs, child slices).
+4. Run `DR-01`–`DR-05` and `CC-01`–`CC-05`; require **CLEAR**.
+5. **Only if CLEAR:**
+   - Set `## Status` value to `delivery-ready` (replace `validated` only on the status line / backtick line per file convention — do not alter other sections).
+   - In `## Readiness Verdict`, append a new sub-section `Delivery Readiness` (or update it if present from a previous attempt) containing the five DR checkboxes all checked `[x]` plus a single line `**Verdict:** READY FOR VERTICAL DELIVERY` immediately below.
+   - Append one row to `## Changelog`:
+
+     `| YYYY-MM-DD | Promoted to delivery-ready after CLEAR DR-01–DR-05 (`/feature-area clear-for-vertical`) | — |`
+
+     Use the current calendar date for `YYYY-MM-DD`.
+
+6. Do not modify: PRD Source, Product Intent, In/Out of Scope, Business Objects, Journeys, Dependencies, Risks, Open Blockers, Candidate Scope Slices, the existing **Readiness Verdict** body (the original `READY FOR SCOPE SLICES` block from `/feature-area promote` is preserved), or any other section not listed above.
+
+### Output format
+
+```txt
+## /feature-area clear-for-vertical — result
+
+Promoted:
+- docs/product/feature-areas/<feature-area-name>.md
+
+Validation:
+- DR-01–DR-05: CLEAR
+- CC-01–CC-05: CLEAR
+
+Direct dependencies inspected (DR-02 / DR-04):
+- <fa-kebab> — status: <…>, NEED_HUMAN: false
+
+Governing PDs inspected (DR-03):
+- PD-XXX — status: approved
+
+Child slice satisfying DR-05:
+- docs/product/scope-slices/<fa-kebab>--<slice-kebab>.md — status: ready-for-user-stories
+
+Not changed:
+- PRD files
+- Scope Slice files
+- User stories / specs / tasks
+- Feature Area scope content
+
+Next recommended commands:
+- `/user-story propose <slice-path>` per ready-for-user-stories slice of this FA
+- Continue macro elaboration on other FAs in parallel
+```
+
+If **no-op** (already `delivery-ready`):
+
+```txt
+## /feature-area clear-for-vertical — result
+
+No-op: docs/product/feature-areas/<feature-area-name>.md is already status `delivery-ready`. File not modified.
+
+Next recommended command:
+/user-story propose <slice-path>
+```
+
+If **BLOCKED** (one or more of DR-01..DR-05 / CC fail), output the standard summary table from the checker, list the blocking criterion, and do not write. Typical fixes:
+
+- DR-02 fail: scaffold the missing dependency FA via `/feature-area scaffold` from an approved Feature Area Map.
+- DR-03 fail: re-author the offending PD from `provisional`/`proposed` to `approved` (requires explicit user approval; this command does not promote PDs).
+- DR-04 fail: resolve the upstream `NEED_HUMAN` on the offending dependency before re-running.
+- DR-05 fail: refine and `/feature-area promote-slice` at least one child Scope Slice to `ready-for-user-stories`.
+
+**Hard rules for clear-for-vertical mode:**
+
+- **Only** the three edits above when CLEAR; no other file or section changes.
+- No Scope Slice file creation; no user stories, specs, tasks, or architecture.
+- This mode does **not** promote dependent Feature Areas, child Scope Slices, or Product Decisions — it only checks them. Promotions of those artifacts use their own commands.
+- If `DR-04` fails on a direct dependency, do not propose a fix to the dependency FA from inside this command — stop and surface the dependency for separate handling.
+- If validation is **BLOCKED**, output the same style of summary table as validate (or a concise failure summary) and do not write.
+
+---
+
 ## Mode: slice `<feature-area-name>`
 
 Proposes candidate Scope Slices for a Feature Area that has been marked `validated`. **No file writes.**
@@ -279,13 +378,13 @@ Proposes candidate Scope Slices for a Feature Area that has been marked `validat
 Before proposing slices:
 
 1. Read `docs/product/feature-areas/<feature-area-name>.md`.
-2. Confirm `Status: validated`. If status is not `validated`, stop and return:
+2. Confirm `Status` is `validated` or `delivery-ready`. If status is not one of those, stop and return:
 
 ```txt
 Cannot propose Scope Slices.
 
 Feature Area "<name>" has status "<current status>".
-Scope Slice decomposition requires status = validated.
+Scope Slice decomposition requires status = validated or delivery-ready.
 
 Run `/feature-area validate <name>` to check what is blocking advancement, then `/feature-area promote <name>` after CLEAR if status is still `exploratory`.
 ```
@@ -348,7 +447,7 @@ No approved Scope Slice proposal found in this conversation for Feature Area "<f
 Run `/feature-area slice <feature-area-name>` first, review the proposal, approve it explicitly, then run `/feature-area scaffold-slices <feature-area-name>` again.
 ```
 
-3. Read `docs/product/feature-areas/<feature-area-name>.md` (filename must match the argument). Confirm **`Status: validated`**. If not, stop with the same gate message as Mode: slice (status not validated).
+3. Read `docs/product/feature-areas/<feature-area-name>.md` (filename must match the argument). Confirm **`Status` is `validated` or `delivery-ready`**. If not, stop with the same gate message as Mode: slice (status not validated/delivery-ready).
 4. Confirm **`NEED_HUMAN: false`** on the parent Feature Area. If `true`, stop and list open blockers — do not create files.
 
 ### Behavior
@@ -451,7 +550,7 @@ Runs Scope Slice readiness checks, then **only if** SS-01–SS-10 and CC-01–CC
 ### Pre-conditions (all required before any write)
 
 1. Target file exists under `docs/product/scope-slices/` and is non-empty.
-2. Parent Feature Area linked from the slice exists and has `Status: validated`.
+2. Parent Feature Area linked from the slice exists and has `Status: validated` or `Status: delivery-ready`.
 3. Current **Status** is `exploratory` (if `blocked` or `deferred`, stop — promotion is not allowed until status is `exploratory`; if already `ready-for-user-stories`, **no-op** — do not rewrite; report only).
 4. `NEED_HUMAN: false` and `NEED_UPDATE: false` in the slice file.
 5. **Blockers:** no unresolved blocker rows that violate SS-09 (cross-check `docs/prd/questions/open-questions.md`).
@@ -519,10 +618,14 @@ Runs the full scope-readiness checker against any Feature Area or Scope Slice fi
 ### Behavior
 
 1. Read the file at `<artifact-path>`.
-2. Detect artifact type:
-   - Path under `docs/product/feature-areas/` → run Part 1 (FA-01–FA-09) + CC-02–CC-05
-   - Path under `docs/product/scope-slices/` → run Part 2 (SS-01–SS-11) + CC-01–CC-05
-   - Path under both or ambiguous → ask the user to confirm which part to run
+2. Detect artifact type and current status:
+   - Path under `docs/product/feature-areas/`:
+     - Status `exploratory` → run Part 1 (FA-01–FA-09) + CC-02–CC-05 (gates `validated`).
+     - Status `validated` → run Part 8 (DR-01–DR-05) + CC-01–CC-05 (gates `delivery-ready`).
+     - Status `delivery-ready` → run Part 8 idempotently for drift detection; report no advancement possible at this command (further chain uses `/user-story` etc.).
+     - Status `blocked` / `deferred` → report status; no checker section is applicable for advancement.
+   - Path under `docs/product/scope-slices/` → run Part 2 (SS-01–SS-11) + CC-01–CC-05.
+   - Path under both or ambiguous → ask the user to confirm which part to run.
 3. Run all applicable checks from `.cursor/checkers/scope-readiness-checker.md`.
 4. Output the summary table with advancement verdict.
 
@@ -542,7 +645,9 @@ Runs the full scope-readiness checker against any Feature Area or Scope Slice fi
 **NEED_UPDATE:** true | false
 
 Next recommended command:
-- Feature Area: /feature-area validate <name> | /feature-area promote <name> (after CLEAR) | /feature-area slice <name>
+- Feature Area (exploratory): /feature-area validate <name> | /feature-area promote <name> (after CLEAR) | /feature-area slice <name>
+- Feature Area (validated): /feature-area clear-for-vertical <name> (after Part 8 CLEAR) | /feature-area slice <name>
+- Feature Area (delivery-ready): /user-story propose <slice-path> on a ready slice
 - Scope Slice: /feature-area refine-slice <path> (when product sections need work) | /feature-area promote-slice <path> (after SS-01–SS-10 and CC-01–CC-05 CLEAR) | resolve blockers and re-run check
 ```
 
@@ -560,6 +665,7 @@ Next recommended command:
 | `scaffold` | Context Brief (reuse from `map` when same-thread; else initial pre-flight) | Writes Feature Area markdown from approved map | Not invoked |
 | `validate` | Context Brief (pre-flight) | Runs checker | Not invoked |
 | `promote` | Context Brief (pre-flight) | Runs checker; narrow file update if CLEAR | Not invoked |
+| `clear-for-vertical` | Context Brief (pre-flight) | Runs DR-01–DR-05 + CC-01–CC-05; narrow delivery-ready transition if CLEAR | Not invoked |
 | `slice` | Context Brief (pre-flight) | Drives proposal | Reviews proposal |
 | `scaffold-slices` | Context Brief (reuse from `slice` when same-thread; else initial pre-flight) | Writes Scope Slice markdown from approved proposal | Not invoked |
 | `refine-slice` | Not invoked | Edits product-level Scope Slice sections on one file | Not invoked |
@@ -573,10 +679,10 @@ Read `.cursor/agents/feature-area/README.md` for the full operating principle.
 ## Hard rules (all modes)
 
 - No task slicing, user stories, specs, or architecture at any point (**`scaffold` included** — it fills template sections from PRD sources only).
-- **`/feature-area scaffold` is the only mode that may create** `docs/product/feature-areas/*.md`. **`/feature-area promote`** is the only mode that may apply the automated **validated transition** (status, readiness checklist, verdict, changelog row) on an existing Feature Area file. Do not write or rewrite Feature Area files from map, validate, slice, `scaffold-slices`, check, or promote beyond what promote explicitly allows.
+- **`/feature-area scaffold` is the only mode that may create** `docs/product/feature-areas/*.md`. **`/feature-area promote`** is the only mode that may apply the automated **validated transition** (status, readiness checklist, verdict, changelog row) on an existing Feature Area file. **`/feature-area clear-for-vertical`** is the only mode that may apply the automated **delivery-ready transition** (status, delivery-readiness verdict, changelog row) on an existing Feature Area file. Do not write or rewrite Feature Area files from map, validate, slice, `scaffold-slices`, or check beyond what these two promotion modes explicitly allow.
 - **`/feature-area scaffold-slices`** may **create** or **initially fill** `docs/product/scope-slices/<feature-area-kebab>--<slice-kebab>.md` only from a user-approved `/feature-area slice` proposal with parent Feature Area gates satisfied. **`/feature-area refine-slice`** may **edit product-level sections** of one existing Scope Slice file (no file creation). **`/feature-area promote-slice`** is the only mode that may apply the automated **ready-for-user-stories** transition on a Scope Slice file (no file creation). No other mode may **create** Scope Slice files.
-- Do not skip levels in the hierarchy: PRD → Feature Area → Scope Slice.
-- Do not mark a Feature Area `validated` via map, validate, slice, or check — use **`/feature-area promote`** after CLEAR or edit manually. Do not mark Scope Slices `ready-for-user-stories` via map, validate, slice, `scaffold-slices`, check, or **refine-slice** — use **`/feature-area promote-slice`** after CLEAR or edit manually per the template.
+- Do not skip levels in the hierarchy: PRD → Feature Area → Scope Slice. The User Story / Spec / Task / code chain on a Feature Area additionally requires that Feature Area to be at `delivery-ready` (per PD-006), enforced by `/user-story` and `/spec` pre-flight.
+- Do not mark a Feature Area `validated` via map, validate, slice, or check — use **`/feature-area promote`** after CLEAR or edit manually. Do not mark a Feature Area `delivery-ready` via any mode other than **`/feature-area clear-for-vertical`** (after CLEAR) or manual edit. Do not mark Scope Slices `ready-for-user-stories` via map, validate, slice, `scaffold-slices`, check, or **refine-slice** — use **`/feature-area promote-slice`** after CLEAR or edit manually per the template.
 - Do not carry "Feature Group" terminology into proposals or narrative — use "Feature Area" exclusively **except** **PRD Source** (or equivalent citation) where the PRD section title is literally *Feature Groups* (§ reference only).
 - Any `NEED_HUMAN=true` flag blocks advancement until the user explicitly resolves it.
 - Any `NEED_UPDATE=true` flag must surface a description of what is missing before proceeding.

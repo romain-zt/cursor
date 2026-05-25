@@ -49,6 +49,36 @@ No new tables. Reads from `ShareLink` + `PRDVersion`.
 - Component: `app/share/[token]/_components/PublicVersionView.tsx`.
 - Generic error page: `app/share/[token]/_components/GenericShareError.tsx` (used for both unknown-token and revoked-token paths).
 
+## Async / Event / Webhook / Cron / Stream
+
+### 1. Long-running operation
+
+- No — sync REST is correct here. Single indexed read on `ShareLink.token` + one read on `PRDVersion`; p99 under 100ms.
+
+### 2. External callback (webhook)
+
+- No — sync REST is correct here. No third-party invoked.
+
+### 3. Temporal trigger (cron)
+
+- Out of scope — covered by another layer (infra cron). PD-007 §4 `cleanup.share-links.revoked` owns revoked-link cleanup.
+
+### 4. Event produced or consumed
+
+- No — sync REST is correct here. v0 does not track visit counts on shared links (explicit out-of-scope decision; revisit if owner-facing analytics becomes a requirement). No domain event emitted.
+
+### 5. Real-time push to client (SSE / WebSocket)
+
+- No — sync REST is correct here. Static read; no further server-pushed state.
+
+### 6. Background job / queue
+
+- No — sync REST is correct here. No deferred work. Anti-enumeration rate-limiting is a middleware concern, out of scope here.
+
+### Summary
+
+**Async classification:** Pure sync — no async patterns required, REST/server-action sufficient.
+
 ## Tests (mandatory)
 
 ### Unit
@@ -109,6 +139,7 @@ No new tables. Reads from `ShareLink` + `PRDVersion`.
 - [x] Mandatory tests named
 - [x] Observability named
 - [x] Implementation anchored on PD-002
+- [x] Async / Event / Webhook / Cron / Stream — all 6 sub-questions answered + classification line filled (SP-15)
 - [x] Dependencies known
 - [x] Blockers resolved
 - [x] Out-of-scope explicit
@@ -120,3 +151,4 @@ No new tables. Reads from `ShareLink` + `PRDVersion`.
 | Date | Change | Author |
 |------|--------|--------|
 | 2026-05-25 | Scaffolded, refined, promoted | — |
+| 2026-05-25 | Added mandatory `## Async / Event / Webhook / Cron / Stream` section per SP-15. Classification: Pure sync. | — |

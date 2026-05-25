@@ -51,6 +51,36 @@ No new tables. Reuses `Project` from `create-project` Spec.
 - `app/projects/_components/ProjectListItem.tsx`.
 - `app/projects/_components/EmptyProjects.tsx`.
 
+## Async / Event / Webhook / Cron / Stream
+
+### 1. Long-running operation
+
+- No — sync REST is correct here. Two indexed Prisma queries (list `Project` by `ownerId`, get `Project` by id); p99 under 100ms.
+
+### 2. External callback (webhook)
+
+- No — sync REST is correct here. No third-party invoked.
+
+### 3. Temporal trigger (cron)
+
+- No — sync REST is correct here. No scheduled work owned by this Spec.
+
+### 4. Event produced or consumed
+
+- No — sync REST is correct here. List and read are pure reads, no domain event.
+
+### 5. Real-time push to client (SSE / WebSocket)
+
+- No — sync REST is correct here. Polling-on-render acceptable in v0: list refreshes on navigation. Live updates (new project from another tab) deferred.
+
+### 6. Background job / queue
+
+- No — sync REST is correct here. No deferred work.
+
+### Summary
+
+**Async classification:** Pure sync — no async patterns required, REST/server-action sufficient.
+
 ## Tests (mandatory)
 
 ### Unit
@@ -109,6 +139,7 @@ No new tables. Reuses `Project` from `create-project` Spec.
 - [x] Mandatory tests named
 - [x] Observability named
 - [x] Implementation choices anchored on PD-002
+- [x] Async / Event / Webhook / Cron / Stream — all 6 sub-questions answered + classification line filled (SP-15)
 - [x] Dependencies known
 - [x] Blockers resolved
 - [x] Out-of-scope explicit
@@ -120,3 +151,4 @@ No new tables. Reuses `Project` from `create-project` Spec.
 | Date | Change | Author |
 |------|--------|--------|
 | 2026-05-25 | Scaffolded, refined, promoted | — |
+| 2026-05-25 | Added mandatory `## Async / Event / Webhook / Cron / Stream` section per SP-15. Classification: Pure sync. | — |

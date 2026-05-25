@@ -74,6 +74,38 @@ The `INVALID_CREDENTIALS` branch is anti-enumeration by design — it does not d
 
 ---
 
+## Async / Event / Webhook / Cron / Stream
+
+### 1. Long-running operation
+
+- No — sync REST is correct here. Argon2id verification (PD-002 params) is constant-time bounded under ~500ms typical / ~1.2s p99; one indexed read on `User.email` + one insert on `Session`. Total p99 stays under 2s with no external HTTP.
+
+### 2. External callback (webhook)
+
+- No — sync REST is correct here. No third-party invoked.
+
+### 3. Temporal trigger (cron)
+
+- Out of scope — covered by another layer (infra cron). PD-007 §4 `cleanup.sessions.expired` owns `Session` row expiry.
+
+### 4. Event produced or consumed
+
+- No — sync REST is correct here. v0 sign-in does not emit a cross-Spec event. Observability signals (`auth.signin.*`) are local telemetry, not event-bus contracts.
+
+### 5. Real-time push to client (SSE / WebSocket)
+
+- No — sync REST is correct here. 303 redirect to `/dashboard`; no further server-pushed state.
+
+### 6. Background job / queue
+
+- No — sync REST is correct here. No deferred post-signin work in v0 (no welcome-back email, no async profile sync).
+
+### Summary
+
+**Async classification:** Pure sync — no async patterns required, REST/server-action sufficient.
+
+---
+
 ## Tests
 
 ### Unit / behavior tests
@@ -163,6 +195,7 @@ No PII attached.
 - [x] Data model fields named with constraints
 - [x] Contract inputs/outputs/errors enumerated
 - [x] UI surface named or marked None with reason
+- [x] Async / Event / Webhook / Cron / Stream — all 6 sub-questions answered with one of the four allowed responses, and Async classification line filled
 - [x] Tests section non-empty across unit, integration, and acceptance layers
 - [x] Observability signals named with purpose
 - [x] Implementation notes name stack and runtime constraints
@@ -191,3 +224,4 @@ No PII attached.
 | 2026-05-25 | Scaffolded from approved `/spec propose` (Phase 3 pilot) via `/spec scaffold` | — |
 | 2026-05-25 | Refined via `/spec refine` (Phase 3 pilot) | — |
 | 2026-05-25 | Promoted to ready-for-implementation after CLEAR readiness check (`/spec promote`) | — |
+| 2026-05-25 | Added mandatory `## Async / Event / Webhook / Cron / Stream` section per SP-15. Classification: Pure sync. | — |

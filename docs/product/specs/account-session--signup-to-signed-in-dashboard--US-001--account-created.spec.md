@@ -102,6 +102,38 @@ Note: the `ACCOUNT_EXISTS` collision case is delegated to sibling Spec US-002 (`
 
 ---
 
+## Async / Event / Webhook / Cron / Stream
+
+### 1. Long-running operation
+
+- No — sync REST is correct here. Argon2id hashing (PD-002 params m=64MB / t=3 / p=4) is constant-time bounded under ~500ms typical / ~1.2s p99 on commodity hardware; the two indexed DB writes (`User` insert + `Session` insert) are O(1). Total p99 stays well under the 2s threshold, with no external HTTP.
+
+### 2. External callback (webhook)
+
+- No — sync REST is correct here. No third-party is invoked by this Spec; signup is a Zedos-internal flow with no Stripe, mailer, or OAuth call.
+
+### 3. Temporal trigger (cron)
+
+- Out of scope — covered by another layer (infra cron). `Session` row expiry cleanup is owned by PD-007 §4 cron `cleanup.sessions.expired` (hourly), not by this Spec.
+
+### 4. Event produced or consumed
+
+- No — sync REST is correct here. v0 signup does not emit a cross-Spec event. Welcome email is Out of Scope; sibling Specs do not depend on a signup-completed event.
+
+### 5. Real-time push to client (SSE / WebSocket)
+
+- No — sync REST is correct here. The response is a 303 redirect; the client navigates to `/dashboard` via the browser. No further server-pushed state is needed for this Spec.
+
+### 6. Background job / queue
+
+- No — sync REST is correct here. Welcome email is Out of Scope (no mailer in v0 per PD-002). The only post-signup work is the redirect; nothing is deferred.
+
+### Summary
+
+**Async classification:** Pure sync — no async patterns required, REST/server-action sufficient.
+
+---
+
 ## Tests
 
 ### Unit / behavior tests
@@ -193,6 +225,7 @@ Signals are emitted server-side; no PII (email, password) is attached to event p
 - [x] Data model fields named with constraints
 - [x] Contract inputs/outputs/errors enumerated
 - [x] UI surface named or marked None with reason
+- [x] Async / Event / Webhook / Cron / Stream — all 6 sub-questions answered with one of the four allowed responses, and Async classification line filled
 - [x] Tests section non-empty across unit, integration, and acceptance layers
 - [x] Observability signals named with purpose
 - [x] Implementation notes name stack and runtime constraints
@@ -221,3 +254,4 @@ Signals are emitted server-side; no PII (email, password) is attached to event p
 | 2026-05-25 | Scaffolded from approved `/spec propose` (Phase 3 pilot) via `/spec scaffold` | — |
 | 2026-05-25 | Refined via `/spec refine` (Phase 3 pilot — all sections filled in one pass) | — |
 | 2026-05-25 | Promoted to ready-for-implementation after CLEAR readiness check (`/spec promote`) | — |
+| 2026-05-25 | Added mandatory `## Async / Event / Webhook / Cron / Stream` section per SP-15 (template + PD-007 + Spec Critic §4). Classification: Pure sync. | — |

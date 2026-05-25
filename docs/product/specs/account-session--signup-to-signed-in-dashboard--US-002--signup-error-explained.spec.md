@@ -71,6 +71,38 @@ The `ACCOUNT_EXISTS` message intentionally does not confirm that the email alrea
 
 ---
 
+## Async / Event / Webhook / Cron / Stream
+
+### 1. Long-running operation
+
+- Yes — **handled by constant-time response budget pattern**. Anti-enumeration AC-3 requires the response time to be invariant to whether `User.email` exists or not. Implementation: wrap the credential check in `Promise.race(work, sleep(targetMs))` with `targetMs ≈ 700ms` matching the Argon2id worst case. This is a Spec-local pattern (no PD-007 dependency); it is NOT a background job, it is a deliberate latency floor.
+
+### 2. External callback (webhook)
+
+- No — sync REST is correct here. No third-party is invoked on the error path.
+
+### 3. Temporal trigger (cron)
+
+- Out of scope — covered by another layer (infra cron). Same as sibling Spec US-001: PD-007 §4 `cleanup.sessions.expired` owns Session expiry; no cron is specific to the error path.
+
+### 4. Event produced or consumed
+
+- No — sync REST is correct here. Errors emit observability signals (`auth.signup.failed`, `auth.signup.account_exists_collision`), but these are local telemetry, not cross-Spec event-bus contracts.
+
+### 5. Real-time push to client (SSE / WebSocket)
+
+- No — sync REST is correct here. Error message is returned inline with the form re-render; no server-pushed state.
+
+### 6. Background job / queue
+
+- No — sync REST is correct here. The constant-time budget (sub-question 1) is in-request, not a deferred job. Welcome email is Out of Scope (the user never reached account creation).
+
+### Summary
+
+**Async classification:** Sync with async helpers — primary path sync but uses a constant-time response budget via `Promise.race(work, sleep(targetMs))` to defeat timing-based account enumeration.
+
+---
+
 ## Tests
 
 ### Unit / behavior tests
@@ -155,6 +187,7 @@ No PII attached; counts only.
 - [x] Data model fields named with constraints
 - [x] Contract inputs/outputs/errors enumerated
 - [x] UI surface named or marked None with reason
+- [x] Async / Event / Webhook / Cron / Stream — all 6 sub-questions answered with one of the four allowed responses, and Async classification line filled
 - [x] Tests section non-empty across unit, integration, and acceptance layers
 - [x] Observability signals named with purpose
 - [x] Implementation notes name stack and runtime constraints
@@ -183,3 +216,4 @@ No PII attached; counts only.
 | 2026-05-25 | Scaffolded from approved `/spec propose` (Phase 3 pilot) via `/spec scaffold` | — |
 | 2026-05-25 | Refined via `/spec refine` (Phase 3 pilot) | — |
 | 2026-05-25 | Promoted to ready-for-implementation after CLEAR readiness check (`/spec promote`) | — |
+| 2026-05-25 | Added mandatory `## Async / Event / Webhook / Cron / Stream` section per SP-15. Classification: Sync with async helpers (constant-time budget). | — |

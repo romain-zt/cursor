@@ -48,6 +48,36 @@ No data writes / reads.
 - Component: `app/_components/UnderConstruction.tsx`.
 - Primary nav visually differentiates "PRD" entries from "under construction" entries via a tag / style; nav component lives in `app/_components/AppNav.tsx`.
 
+## Async / Event / Webhook / Cron / Stream
+
+### 1. Long-running operation
+
+- No — sync REST is correct here. Static server-component render with no DB reads, no external HTTP. p99 under 30ms.
+
+### 2. External callback (webhook)
+
+- No — sync REST is correct here. No third-party involved.
+
+### 3. Temporal trigger (cron)
+
+- No — sync REST is correct here. No scheduled work owned by this Spec.
+
+### 4. Event produced or consumed
+
+- No — sync REST is correct here. Placeholder render emits a `under_construction.view` observability signal (telemetry only, not an event-bus contract).
+
+### 5. Real-time push to client (SSE / WebSocket)
+
+- No — sync REST is correct here. Static placeholder; nothing to push.
+
+### 6. Background job / queue
+
+- No — sync REST is correct here. No deferred work.
+
+### Summary
+
+**Async classification:** Pure sync — no async patterns required, REST/server-action sufficient.
+
 ## Tests (mandatory)
 
 ### Unit
@@ -99,6 +129,7 @@ No data writes / reads.
 - [x] Mandatory tests named (unit, integration, acceptance, non-functional)
 - [x] Observability touchpoints named
 - [x] Implementation framework / lib / persistence choices explicit (anchored on PD-002)
+- [x] Async / Event / Webhook / Cron / Stream — all 6 sub-questions answered + classification line filled (SP-15)
 - [x] Dependencies named with known statuses
 - [x] Blockers resolved or NEED_HUMAN=true with rationale
 - [x] Out-of-scope explicit
@@ -110,3 +141,4 @@ No data writes / reads.
 | Date | Change | Author |
 |------|--------|--------|
 | 2026-05-25 | Scaffolded, refined, promoted | — |
+| 2026-05-25 | Added mandatory `## Async / Event / Webhook / Cron / Stream` section per SP-15. Classification: Pure sync. | — |

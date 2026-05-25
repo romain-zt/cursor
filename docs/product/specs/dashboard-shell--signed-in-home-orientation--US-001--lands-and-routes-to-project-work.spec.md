@@ -51,6 +51,36 @@ No new tables. Reads from:
 - Component: `app/dashboard/_components/DashboardHome.tsx` (presentational).
 - Empty state CTA links to `/projects/new` (route to be implemented by `project-workspace` Spec).
 
+## Async / Event / Webhook / Cron / Stream
+
+### 1. Long-running operation
+
+- No — sync REST is correct here. Server component reads `auth()` + a single indexed Prisma query against `Project` (most-recent-first); p99 under 100ms with no external HTTP.
+
+### 2. External callback (webhook)
+
+- No — sync REST is correct here. No third-party involved.
+
+### 3. Temporal trigger (cron)
+
+- No — sync REST is correct here. No scheduled work owned by this Spec.
+
+### 4. Event produced or consumed
+
+- No — sync REST is correct here. Render decision (project list vs empty-state) is not a domain event.
+
+### 5. Real-time push to client (SSE / WebSocket)
+
+- No — sync REST is correct here. Polling-on-render acceptable in v0: dashboard reflects state at navigation time. Future SSE for live project updates is out of scope.
+
+### 6. Background job / queue
+
+- No — sync REST is correct here. No deferred work.
+
+### Summary
+
+**Async classification:** Pure sync — no async patterns required, REST/server-action sufficient.
+
 ## Tests (mandatory)
 
 ### Unit
@@ -109,6 +139,7 @@ No new tables. Reads from:
 - [x] Mandatory tests named (unit, integration, acceptance, non-functional)
 - [x] Observability touchpoints named
 - [x] Implementation framework / lib / persistence choices explicit (anchored on PD-002)
+- [x] Async / Event / Webhook / Cron / Stream — all 6 sub-questions answered + classification line filled (SP-15)
 - [x] Dependencies named with known statuses
 - [x] Blockers resolved or NEED_HUMAN=true with rationale
 - [x] Out-of-scope explicit
@@ -120,3 +151,4 @@ No new tables. Reads from:
 | Date | Change | Author |
 |------|--------|--------|
 | 2026-05-25 | Scaffolded (`/spec scaffold`), refined (`/spec refine`), promoted (`/spec promote`) | — |
+| 2026-05-25 | Added mandatory `## Async / Event / Webhook / Cron / Stream` section per SP-15. Classification: Pure sync. | — |

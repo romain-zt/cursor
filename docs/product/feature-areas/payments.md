@@ -107,6 +107,18 @@ The founder can **buy prepaid credit packs** (**100 / 200 / 1000** credits) usin
 
 **Verdict:** READY FOR SCOPE SLICES
 
+### Delivery Readiness
+
+- [x] DR-01 — Status is `validated` at audit time
+- [x] DR-02 — Direct FA dependency `credit-system` has a scaffolded file (status `exploratory`, but file exists); Stripe is a PRD constraint, not an FA
+- [x] DR-03 — Governing Product Decisions are `approved` (PD-002 stack baseline, PD-003 burn tiers, PD-005 auto-reload SCA)
+- [ ] **DR-04 — FAIL.** Direct dependency `credit-system` carries `NEED_HUMAN: true` (PRD Surface Blocker: operator-config `X` undefined; plus the FA itself has not been promoted from `exploratory`). Investing in detailed downstream User Story / Spec work for credit-bearing flows is therefore blocked.
+- [x] DR-05 — At least one Scope Slice is `ready-for-user-stories` (both v0 slices are)
+
+**Verdict:** NOT READY FOR VERTICAL DELIVERY — blocked by DR-04 (`credit-system` NEED_HUMAN=true).
+
+**Unblock path:** resolve the operator-config-X question on `credit-system`, promote `credit-system` from `exploratory` to `validated`, then re-run `/feature-area clear-for-vertical payments`. See `docs/prd/notes/2026-05-25-delivery-readiness-backfill.md`.
+
 ---
 
 ## Changelog
@@ -115,3 +127,4 @@ The founder can **buy prepaid credit packs** (**100 / 200 / 1000** credits) usin
 |------|--------|--------|
 | 2026-05-09 | Initial scaffold from approved Feature Area map (`/feature-area scaffold`) | — |
 | 2026-05-25 | Promoted to validated after CLEAR readiness check (`/feature-area promote`) | — |
+| 2026-05-25 | Delivery readiness audited (PD-006); held at validated — DR-04 fails on `credit-system` dependency | — |

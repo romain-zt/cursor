@@ -41,7 +41,14 @@ Before any mode executes, the User Story Builder skill reads in this order:
 
 Do not skip steps 3 or 4. Open PRD blockers and PD-001 constraints govern all downstream work.
 
-**Gate:** the parent Scope Slice must be at status **`ready-for-user-stories`** before any `/user-story` mode (except `check`) operates. If status is not `ready-for-user-stories`, stop and instruct the user to complete `/feature-area refine-slice` + `/feature-area promote-slice` first.
+**Gate (double check, per PD-006):**
+
+1. The parent Scope Slice must be at status **`ready-for-user-stories`**. If not, stop and instruct the user to complete `/feature-area refine-slice` + `/feature-area promote-slice` first.
+2. The grandparent Feature Area must be at status **`delivery-ready`**. If status is `validated` (or anything else), stop and instruct the user to run `/feature-area clear-for-vertical <fa-name>` first; this gate is required by `docs/product-decisions/PD-006-per-fa-delivery-readiness-gate.md` to authorize the per-FA vertical chain.
+
+Both gates apply to `propose`, `scaffold`, `refine`, and `promote`. `check` may operate on any User Story file regardless of the parent FA's status (read-only diagnostic).
+
+If the grandparent FA is at `delivery-ready` but a direct dependency of that FA subsequently regressed (per CC-04 / DR-04 drift handling in PD-006), the FA must be reverted to `validated` and re-promoted via `/feature-area clear-for-vertical` before any further User Story / Spec / Task work proceeds.
 
 **User Story Lead pre-flight (`propose`, `scaffold`, `refine`, `check`, `promote`):** On the initial invocation of any of these modes, the User Story Lead agent (`.cursor/agents/user-story/user-story-lead.md`) produces a User Story Context Brief. The builder acts only after the brief is available. Do not re-run when the user is responding to an existing proposal. When running `scaffold` immediately after approving a proposal produced in the same conversation, reuse the Brief produced for `propose`.
 
@@ -53,7 +60,7 @@ Reads the parent Scope Slice + PRD context and proposes candidate User Stories. 
 
 ### Behavior
 
-1. Read parent Scope Slice; confirm status `ready-for-user-stories`.
+1. Read parent Scope Slice; confirm status `ready-for-user-stories`. Read grandparent Feature Area (from the Slice's Parent Feature Area link); confirm status `delivery-ready` per PD-006. If either gate fails, stop and report the missing gate with the corresponding next command (`/feature-area promote-slice` or `/feature-area clear-for-vertical`).
 2. Identify distinct acceptance dimensions within the Scope Slice's UX States + Included Behavior + Acceptance-Level Outcome.
 3. For each dimension, propose one User Story:
    - Name (kebab-safe, descriptive)
@@ -101,7 +108,9 @@ Creates User Story files from `.cursor/templates/product/user-story.template.md`
 
 1. An approved User Story proposal for this Scope Slice exists in-context. If not, stop and instruct the user to run `/user-story propose <scope-slice-path>` first.
 2. Parent Scope Slice exists and is at status `ready-for-user-stories`.
-3. Parent Scope Slice has `NEED_HUMAN: false`. If `true`, stop and list open blockers.
+3. Grandparent Feature Area exists and is at status `delivery-ready` per PD-006. If `validated` (or anything else), stop and instruct the user to run `/feature-area clear-for-vertical <fa-name>` first.
+4. Parent Scope Slice has `NEED_HUMAN: false`. If `true`, stop and list open blockers.
+5. Grandparent Feature Area has `NEED_HUMAN: false` on the FA itself and on every direct dependency listed in its `Dependencies` section (DR-04 propagation). If any of these carry `NEED_HUMAN: true`, stop and surface the dependency that needs resolution.
 
 ### Behavior
 
@@ -222,10 +231,11 @@ Runs the same checker, then only if CLEAR applies a narrow update.
 
 1. Target file exists and is non-empty under `docs/product/user-stories/`.
 2. Parent Scope Slice is at status `ready-for-user-stories`.
-3. Current Status is `exploratory` (if `blocked` or `deferred`, stop; if already `ready-for-spec`, no-op — report only).
-4. `NEED_HUMAN: false` and `NEED_UPDATE: false`.
-5. No unresolved blocker rows; PRD active question queue does not block this US.
-6. US-01..US-N and CC-01..CC-05 must all PASS.
+3. Grandparent Feature Area is at status `delivery-ready` per PD-006. If the FA has regressed to `validated` or `blocked` since the US was scaffolded, stop and instruct the user to re-run `/feature-area clear-for-vertical <fa-name>` after resolving the regression.
+4. Current Status is `exploratory` (if `blocked` or `deferred`, stop; if already `ready-for-spec`, no-op — report only).
+5. `NEED_HUMAN: false` and `NEED_UPDATE: false`.
+6. No unresolved blocker rows; PRD active question queue does not block this US.
+7. US-01..US-N and CC-01..CC-05 must all PASS.
 
 ### Behavior — only if CLEAR
 

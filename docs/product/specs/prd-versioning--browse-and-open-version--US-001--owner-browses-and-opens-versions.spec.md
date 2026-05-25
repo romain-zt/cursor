@@ -52,6 +52,36 @@ No new tables. Reuses `PRDVersion`.
 - `app/projects/[id]/versions/_components/VersionReadOnlyView.tsx`.
 - `app/projects/[id]/versions/_components/EmptyVersions.tsx`.
 
+## Async / Event / Webhook / Cron / Stream
+
+### 1. Long-running operation
+
+- No — sync REST is correct here. Two indexed reads on `PRDVersion` (list-by-project + get-by-id); p99 under 100ms.
+
+### 2. External callback (webhook)
+
+- No — sync REST is correct here. No third-party invoked.
+
+### 3. Temporal trigger (cron)
+
+- No — sync REST is correct here. No scheduled work owned by this Spec. `PRDVersion` rows are kept indefinitely in v0 (audit trail).
+
+### 4. Event produced or consumed
+
+- Out of scope — covered by sibling Spec. Version-list view does not emit page-view events in v0; if analytics consumes one later, it will come from the create-or-capture Spec, not this read-only one.
+
+### 5. Real-time push to client (SSE / WebSocket)
+
+- No — sync REST is correct here. Polling-on-render acceptable in v0: list refreshes on navigation. Live "new version captured" push deferred.
+
+### 6. Background job / queue
+
+- No — sync REST is correct here. No deferred work on the read path.
+
+### Summary
+
+**Async classification:** Pure sync — no async patterns required, REST/server-action sufficient.
+
 ## Tests (mandatory)
 
 ### Unit
@@ -110,6 +140,7 @@ No new tables. Reuses `PRDVersion`.
 - [x] Mandatory tests named
 - [x] Observability named
 - [x] Implementation anchored on PD-002
+- [x] Async / Event / Webhook / Cron / Stream — all 6 sub-questions answered + classification line filled (SP-15)
 - [x] Dependencies known
 - [x] Blockers resolved
 - [x] Out-of-scope explicit
@@ -121,3 +152,4 @@ No new tables. Reuses `PRDVersion`.
 | Date | Change | Author |
 |------|--------|--------|
 | 2026-05-25 | Scaffolded, refined, promoted | — |
+| 2026-05-25 | Added mandatory `## Async / Event / Webhook / Cron / Stream` section per SP-15. Classification: Pure sync. | — |

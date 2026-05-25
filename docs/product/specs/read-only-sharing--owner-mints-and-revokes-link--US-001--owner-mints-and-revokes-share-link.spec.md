@@ -74,6 +74,36 @@ CREATE UNIQUE INDEX share_link_one_active_per_version
 - `app/projects/[id]/versions/[versionId]/_components/ShareLinkPanel.tsx` (client).
 - `app/projects/[id]/versions/[versionId]/_actions/shareLink.ts` (server actions).
 
+## Async / Event / Webhook / Cron / Stream
+
+### 1. Long-running operation
+
+- No — sync REST is correct here. Mint = one `ShareLink` insert. Revoke = one `ShareLink` update. p99 under 50ms.
+
+### 2. External callback (webhook)
+
+- No — sync REST is correct here. No third-party invoked.
+
+### 3. Temporal trigger (cron)
+
+- Out of scope — covered by another layer (infra cron). PD-007 §4 `cleanup.share-links.revoked` (daily) deletes `ShareLink` rows in status `REVOKED` older than 30 days.
+
+### 4. Event produced or consumed
+
+- No — sync REST is correct here. Mint and revoke are owner-scoped operations; v0 has no cross-Spec consumer.
+
+### 5. Real-time push to client (SSE / WebSocket)
+
+- No — sync REST is correct here. The freshly-minted token is returned in the same response (form re-render with the URL); revoke is reflected on the next render.
+
+### 6. Background job / queue
+
+- No — sync REST is correct here. No deferred work.
+
+### Summary
+
+**Async classification:** Pure sync — no async patterns required, REST/server-action sufficient.
+
 ## Tests (mandatory)
 
 ### Unit
@@ -132,6 +162,7 @@ CREATE UNIQUE INDEX share_link_one_active_per_version
 - [x] Mandatory tests named
 - [x] Observability named
 - [x] Implementation anchored on PD-002
+- [x] Async / Event / Webhook / Cron / Stream — all 6 sub-questions answered + classification line filled (SP-15)
 - [x] Dependencies known
 - [x] Blockers resolved
 - [x] Out-of-scope explicit
@@ -143,3 +174,4 @@ CREATE UNIQUE INDEX share_link_one_active_per_version
 | Date | Change | Author |
 |------|--------|--------|
 | 2026-05-25 | Scaffolded, refined, promoted | — |
+| 2026-05-25 | Added mandatory `## Async / Event / Webhook / Cron / Stream` section per SP-15. Classification: Pure sync. | — |

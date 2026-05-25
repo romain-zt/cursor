@@ -6,7 +6,7 @@
 
 ## Status
 
-`validated`
+`delivery-ready`
 
 > **NEED_HUMAN:** false
 > **NEED_UPDATE:** false
@@ -102,6 +102,16 @@ The founder can organize work into **multiple projects** (each a container for a
 
 **Verdict:** READY FOR SCOPE SLICES
 
+### Delivery Readiness
+
+- [x] DR-01 — Status is `validated` at audit time
+- [x] DR-02 — All direct FA dependencies have scaffolded files (`account-session`)
+- [x] DR-03 — Governing Product Decisions are `approved` (PD-002 stack baseline)
+- [x] DR-04 — No `NEED_HUMAN=true` on this FA or its direct dependencies
+- [x] DR-05 — At least one Scope Slice is `ready-for-user-stories` (2 slices are)
+
+**Verdict:** READY FOR VERTICAL DELIVERY
+
 ---
 
 ## Changelog
@@ -110,3 +120,4 @@ The founder can organize work into **multiple projects** (each a container for a
 |------|--------|--------|
 | 2026-05-09 | Initial scaffold from approved Feature Area map (`/feature-area scaffold`) | — |
 | 2026-05-25 | Promoted to validated after CLEAR readiness check (`/feature-area promote`) | — |
+| 2026-05-25 | Promoted to delivery-ready after CLEAR DR-01–DR-05 backfill audit (PD-006) | — |

@@ -8,7 +8,7 @@
 
 `ready-for-implementation`
 
-> **NEED_HUMAN:** false
+> **NEED_HUMAN:** true — read surface is implementable as sync today (PD-007 §5 event-bus pattern committed as of 2026-05-25 approval), but the **producer contract** (write-side of `DecisionEntry`) still depends on `FA:guided-clarification` unblocking (B-002 — AI provider undecided). See §4 below.
 
 ---
 
@@ -58,6 +58,36 @@ Write paths to `DecisionEntry` are not implemented in this Spec — they are the
 - `app/projects/[id]/decisions/_components/DecisionListItem.tsx`.
 - `app/projects/[id]/decisions/_components/EmptyDecisions.tsx`.
 
+## Async / Event / Webhook / Cron / Stream
+
+### 1. Long-running operation
+
+- No — sync REST is correct here on the read path. One indexed Prisma `findMany` on `(projectId, createdAt asc)`; p99 under 100ms.
+
+### 2. External callback (webhook)
+
+- No — sync REST is correct here. No third-party invoked.
+
+### 3. Temporal trigger (cron)
+
+- No — sync REST is correct here. `DecisionEntry` rows are kept indefinitely in v0 (audit trail; PD-007 §4 cleanup list does not include them).
+
+### 4. Event produced or consumed
+
+- **Out of scope — deferred to future `guided-clarification` Spec (write side).** This Spec is the **consumer / read surface** for `DecisionEntry`. The producer contract — when, who, with what transactional guarantees — belongs to `guided-clarification` Specs (FA `exploratory`, blocked). When PD-007 is ratified and `guided-clarification` is cleared for vertical, those Specs will emit `decision.entry.appended` events per PD-007 §5 (at-least-once, idempotent on `(projectId, eventId)`). Until then, this read surface is functional with empty / externally-seeded data.
+
+### 5. Real-time push to client (SSE / WebSocket)
+
+- No — sync REST is correct here. Polling-on-render acceptable in v0: list refreshes on navigation. Live-update (new decision arrives mid-session) is out of scope.
+
+### 6. Background job / queue
+
+- No — sync REST is correct here. No deferred work on the read path.
+
+### Summary
+
+**Async classification:** Pure sync — read surface only. Producer contract (event production for `DecisionEntry`) is deferred to `guided-clarification` Specs.
+
 ## Tests (mandatory)
 
 ### Unit
@@ -98,7 +128,9 @@ Write paths to `DecisionEntry` are not implemented in this Spec — they are the
 
 | Blocker | Blocks | NEED_HUMAN |
 |---------|--------|------------|
-| — | — | — |
+| `guided-clarification` FA is `exploratory` + `NEED_HUMAN=true` (AI provider undecided — B-002). Read surface implementable now; producer contract for `DecisionEntry` deferred. | Write path (producer) for `DecisionEntry`. | true |
+
+PD-007 was approved 2026-05-25 — event-bus pattern (§5) is the committed path for `decision.entry.appended`. The remaining `NEED_HUMAN` is purely about the producer-side ownership, which lives in `guided-clarification`.
 
 ## Out of Scope
 
@@ -115,8 +147,9 @@ Write paths to `DecisionEntry` are not implemented in this Spec — they are the
 - [x] Mandatory tests named
 - [x] Observability named
 - [x] Implementation anchored on PD-002
+- [x] Async / Event / Webhook / Cron / Stream — all 6 sub-questions answered + classification line filled (SP-15)
 - [x] Dependencies known
-- [x] Blockers resolved
+- [x] Blockers resolved or NEED_HUMAN=true explicitly set (producer contract deferred to `guided-clarification` Specs; PD-007 approved)
 - [x] Out-of-scope explicit
 
 **Verdict:** READY FOR IMPLEMENTATION
@@ -126,3 +159,5 @@ Write paths to `DecisionEntry` are not implemented in this Spec — they are the
 | Date | Change | Author |
 |------|--------|--------|
 | 2026-05-25 | Scaffolded, refined, promoted | — |
+| 2026-05-25 | Added mandatory `## Async / Event / Webhook / Cron / Stream` section per SP-15. Classification: Pure sync (read surface). Producer contract for `DecisionEntry` deferred to `guided-clarification` Specs per PD-007 §5. NEED_HUMAN=true. | — |
+| 2026-05-25 | PD-007 approved. PD-007 dependency lifted; remaining NEED_HUMAN reason is solely B-002 (`guided-clarification` AI provider undecided). | — |

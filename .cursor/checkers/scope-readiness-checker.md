@@ -1,11 +1,12 @@
 # Scope Readiness Checker
 
 Governed by: `.cursor/rules/feature-area-workflow.mdc` (FA / Slice) and `.cursor/rules/user-story-workflow.mdc` (User Story / Spec / Task).
-Decision: `docs/product-decisions/PD-001-post-slice-workflow.md`.
+Decisions: `docs/product-decisions/PD-001-post-slice-workflow.md`, `docs/product-decisions/PD-006-per-fa-delivery-readiness-gate.md`.
 
 Run this checker before advancing any artifact to the next level in the hierarchy:
 - Feature Area → Scope Slice (Part 1 + Part 7)
-- Scope Slice → User Story (Part 2 + Part 7)
+- Feature Area `validated` → `delivery-ready` (Part 8 + Part 7)
+- Scope Slice → User Story (Part 2 + Part 7) — requires parent FA at `delivery-ready` per PD-006
 - User Story → Spec (Part 4 + Part 7)
 - Spec → Task or Implementation (Part 5 + Part 7)
 - Task → Merge (Part 6 + Part 7)
@@ -518,16 +519,60 @@ Governed by: `docs/product-decisions/PD-001-post-slice-workflow.md`.
 - Tasks table populated without subdivision justification in Implementation notes.
 - Task entries that could merge into one without ceremony loss.
 
+### SP-15 · Async / Event / Webhook / Cron / Stream explicit
+
+> The `## Async / Event / Webhook / Cron / Stream` section is present, every one of the six sub-questions has a non-empty answer matching one of the four allowed shapes, and the final **Async classification** line is filled with one of the four canonical options. Default-REST-sync is a choice, not a default — it must be stated.
+>
+> Governed by `docs/product-decisions/PD-007-async-event-baseline.md` once published. Until PD-007 ships, SP-15 still applies: answers may temporarily defer pattern selection to PD-007 (e.g. "Yes — handled by future webhook pattern in PD-007"), but they may not be blank.
+
+The six sub-questions are:
+
+1. **Long-running operation** — anything >2s wall time (LLM, external API, large query, file processing). If yes → stream / job-background, sync POST forbidden.
+2. **External callback (webhook)** — third party calls back on its own timeline. If yes → webhook handler with signature + idempotency + replay.
+3. **Temporal trigger (cron)** — scheduled work (cleanup, digest, polling fallback). If yes → name the cron, frequency, idempotency, worker.
+4. **Event produced or consumed** — emits or consumes an event another Spec / FA / worker depends on. If yes → name event type, producer, consumer, delivery contract.
+5. **Real-time push to client (SSE / WebSocket)** — client receives updates without polling. If yes → channel + message shape. If no → state polling-on-render is acceptable and why.
+6. **Background job / queue** — work outside request/response cycle. If yes → queue, job type, retry policy, idempotency key.
+
+The four allowed answer shapes per sub-question:
+
+- `Yes — handled by <pattern>` (with PD-007 reference once published).
+- `No — sync REST is correct here because <reason>` (must give a reason; "obvious" is not a reason).
+- `Out of scope — deferred to sibling/future Spec <id>` (must name the Spec).
+- `Out of scope — covered by another layer (middleware, infra)` (must name the layer).
+
+The four canonical **Async classification** options:
+
+- `Pure sync — no async patterns required.`
+- `Sync with async helpers — primary path sync, uses <helper>.`
+- `Mixed sync + async — primary path sync, emits/consumes/triggers <pattern>.`
+- `Async-first — primary path is <stream | webhook | job>; sync only for kick-off.`
+
+**FAIL signals:**
+
+- Section header missing.
+- One or more sub-questions blank.
+- Sub-question answered with prose that does not match any of the four allowed shapes (free-form essays are not acceptable — they bypass the discipline).
+- A `No — sync REST is correct` answer with no reason or with "default" / "REST is fine" / "no need" / "trivial" as the reason.
+- A `Yes — handled by <pattern>` answer that does not name a pattern, queue, channel, event, cron, or webhook.
+- A `Out of scope — deferred to <Spec>` answer where the referenced Spec does not exist anywhere in the chain.
+- **Async classification** line missing or not one of the four canonical options.
+- Sub-question 1 answered `No — sync REST is correct` but the Spec body mentions LLM, AI inference, file processing, external HTTP roundtrip, or batch operations — the answer is internally inconsistent.
+- Sub-question 2 answered `No` but the Spec touches a payment / OAuth / third-party identity provider / mailer / SMS flow that has a known webhook surface (e.g. Stripe `payment_intent.*`).
+- Sub-question 5 answered `Yes — SSE` or `Yes — WebSocket` without naming the channel topology and message shape.
+
+---
+
 ### SP-14 · Status is valid
 
 > Valid Spec statuses are: `exploratory`, `blocked`, `deferred`, `ready-for-implementation`.
 >
-> If the Spec has passed SP-01–SP-13 and CC-01–CC-05 with no unresolved NEED_HUMAN flag, status must be `ready-for-implementation` (set via `/spec promote` or equivalent manual edits). Implementation may not begin until this status is set.
+> If the Spec has passed SP-01–SP-13, SP-15, and CC-01–CC-05 with no unresolved NEED_HUMAN flag, status must be `ready-for-implementation` (set via `/spec promote` or equivalent manual edits). Implementation may not begin until this status is set.
 
 **FAIL signals:**
 - Status is `validated`, `ready-for-spec`, or any non-Spec status.
 - Status is `ready-for-implementation` with unresolved NEED_HUMAN.
-- Status is `ready-for-implementation` but SP-01–SP-13 or CC-01–CC-05 have failures.
+- Status is `ready-for-implementation` but SP-01–SP-13, SP-15, or CC-01–CC-05 have failures.
 
 ---
 
@@ -615,6 +660,86 @@ Governed by: `docs/product-decisions/PD-001-post-slice-workflow.md`.
 - Status is any non-Task status.
 - Status is `ready-for-merge` with unresolved NEED_HUMAN.
 - Status is `ready-for-merge` but TK-01–TK-08 or CC-01–CC-05 have failures.
+
+---
+
+## Part 8 — Delivery Readiness Checks (Feature Area `validated` → `delivery-ready`)
+
+Run when evaluating whether a `validated` Feature Area is ready to authorize the start of its downstream User Story / Spec / code chain in parallel with the continued macro elaboration of other Feature Areas.
+
+**This part operates on Feature Area artifacts only.** It does not replace Part 1 (which gates `exploratory` → `validated`); it gates the next transition.
+
+Governed by: `docs/product-decisions/PD-006-per-fa-delivery-readiness-gate.md`.
+
+A `delivery-ready` Feature Area whose dependency status subsequently regresses (e.g. a dependency moves to `blocked`, or a previously approved PD is reopened to `provisional`) **must** be reverted to `validated` and re-checked by re-running Part 8. This is the same propagation discipline as CC-04, applied at the FA-level dependency layer.
+
+### DR-01 · Parent FA is `validated`
+
+> The Feature Area's `Status` field is exactly `validated`. Statuses `exploratory`, `blocked`, `deferred`, and `delivery-ready` itself all fail DR-01 (no skip-promote, no re-promote).
+
+**FAIL signals:**
+- Status is `exploratory` (Part 1 has not been run successfully yet).
+- Status is `blocked` or `deferred`.
+- Status is already `delivery-ready` and this is being re-run as a sanity check — that is not a transition; the check should be invoked only on a `validated` FA.
+
+---
+
+### DR-02 · Direct dependencies at minimum scaffolded
+
+> Every Feature Area named in this FA's `Dependencies` section has an existing file at `docs/product/feature-areas/<kebab>.md`. The dependency FA file may be in any status (`exploratory`, `validated`, `delivery-ready`, `blocked`, `deferred`), but it must exist on disk with the canonical Feature Area template.
+
+**FAIL signals:**
+- A named dependency has no corresponding FA file.
+- A dependency row in the table references a Feature Area name that does not resolve to a file (typo, paraphrase, invented name).
+- The Dependencies section refers vaguely to "the rest of the product" or "TBD" without enumerated FA files.
+
+---
+
+### DR-03 · Governing Product Decisions are `approved`
+
+> Every Product Decision (PD) cited in this Feature Area's body, or that any reasonable agent would identify as governing the FA's contract or behavior, is at `status: approved` in `docs/product-decisions/`. Decisions at `provisional`, `proposed`, or any other non-final status fail DR-03.
+
+**How to check:**
+- Read every PD referenced in the FA file.
+- Cross-reference with `docs/product-decisions/README.md` and any PRD passages that would imply a governing PD (stack baseline, credit model, payments posture, share controls, etc.).
+- A PD that is not yet authored but that would govern this FA's behavior also fails DR-03 (it is an implicit gap — surface it before promoting).
+
+**FAIL signals:**
+- A referenced PD is at `status: provisional` or `proposed`.
+- A PD that clearly governs this FA's contract is not referenced in the FA body and not yet authored.
+- The FA body cites a PD by id that does not exist in `docs/product-decisions/`.
+
+---
+
+### DR-04 · No `NEED_HUMAN=true` on this FA or its direct dependencies
+
+> This Feature Area's metadata carries `NEED_HUMAN: false`. Every direct dependency (per DR-02) also carries `NEED_HUMAN: false`. Any open `NEED_HUMAN=true` flag on this FA or any direct dependency fails DR-04.
+
+**Rationale:** an open `NEED_HUMAN` on a dependency means the contract with that dependency is not stable; investing in detailed downstream User Story / Spec work risks being invalidated when the dependency's `NEED_HUMAN` is resolved.
+
+**FAIL signals:**
+- This FA's metadata says `NEED_HUMAN: true` (Part 1 should have caught this, but re-check).
+- A direct dependency FA carries `NEED_HUMAN: true` in its metadata.
+- A `NEED_HUMAN=true` flag exists on a child Scope Slice and has not been propagated to the parent FA per CC-04 (which is itself a CC-04 failure but also blocks DR-04).
+
+---
+
+### DR-05 · At least one Scope Slice is `ready-for-user-stories`
+
+> The Feature Area has at least one child Scope Slice file in `docs/product/scope-slices/<fa-kebab>--<slice-kebab>.md` whose `Status` is `ready-for-user-stories`. A `delivery-ready` Feature Area must have at least one actionable downstream artifact.
+
+**FAIL signals:**
+- No Scope Slice files exist for this FA.
+- All Scope Slice files exist but are still at `exploratory` (Part 2 has not passed on any of them).
+- All Scope Slice files are at `blocked` or `deferred`.
+
+---
+
+### Part 8 summary
+
+When all five checks DR-01..DR-05 are PASS **and** Cross-Cutting Checks CC-01..CC-05 are PASS, the Feature Area is eligible for promotion from `validated` to `delivery-ready` via `/feature-area clear-for-vertical <name>`.
+
+A single FAIL on DR-01..DR-05 blocks the transition. Address the cause (typically: scaffold a missing dependency FA, approve a `provisional` PD, resolve a `NEED_HUMAN` upstream, or refine at least one Scope Slice to `ready-for-user-stories`) and re-run.
 
 ---
 

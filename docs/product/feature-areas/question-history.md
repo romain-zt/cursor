@@ -101,6 +101,18 @@ The founder keeps a **structured, owner-private log** of product decisions: each
 
 **Verdict:** READY FOR SCOPE SLICES
 
+### Delivery Readiness
+
+- [x] DR-01 — Status is `validated` at audit time
+- [x] DR-02 — Direct FA dependencies have scaffolded files (`guided-clarification`, `project-workspace`)
+- [x] DR-03 — Governing Product Decisions are `approved` (PD-002 stack baseline)
+- [ ] **DR-04 — FAIL.** Direct dependency `guided-clarification` carries `NEED_HUMAN: true` (PRD Surface Blocker: AI inference stance not fixed). Investing in detailed downstream User Story / Spec work is therefore blocked.
+- [x] DR-05 — At least one Scope Slice is `ready-for-user-stories`
+
+**Verdict:** NOT READY FOR VERTICAL DELIVERY — blocked by DR-04 (`guided-clarification` NEED_HUMAN=true).
+
+**Unblock path:** resolve the AI inference stance on `guided-clarification` (PRD Surface Blocker), promote `guided-clarification` from `exploratory` to `validated`, then re-run `/feature-area clear-for-vertical question-history`. See `docs/prd/notes/2026-05-25-delivery-readiness-backfill.md`.
+
 ---
 
 ## Changelog
@@ -109,3 +121,4 @@ The founder keeps a **structured, owner-private log** of product decisions: each
 |------|--------|--------|
 | 2026-05-09 | Initial scaffold from approved Feature Area map (`/feature-area scaffold`) | — |
 | 2026-05-25 | Promoted to validated after CLEAR readiness check (`/feature-area promote`) | — |
+| 2026-05-25 | Delivery readiness audited (PD-006); held at validated — DR-04 fails on `guided-clarification` dependency | — |

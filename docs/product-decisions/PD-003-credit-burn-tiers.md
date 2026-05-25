@@ -36,8 +36,12 @@ This table governs how the `credit-system` Feature Area models the credit ledger
 - **Cons.** Per-operation costs are still tunable, so users may see slight drift between releases (mitigated by tier labels in the UI rather than raw numbers). Tiered model assumes AI operations can be classified — operations that don't cleanly map need an explicit assignment in design.
 - **Reversibility.** Reversible: the tier table can be rewritten as a new PD if the burn model changes. Existing credit ledgers would need a migration plan if costs are renumbered post-launch.
 
+## User approval
+
+Ratified by user on **2026-05-25** as part of the retroactive PD validation pass (Q2 of the H-3 review batch). Tier table and per-operation burns approved as-is. No revision requested.
+
 ## Links
 
 - PRD: `docs/prd/PRD.md`
 - Question source: `docs/prd/questions/open-questions.md` (Q-018)
-- Related PDs: PD-002 (stack baseline), PD-004 (grace ceiling), PD-005 (auto-reload SCA fallback).
+- Related PDs: PD-002 (stack baseline), PD-004 (grace ceiling), PD-005 (auto-reload SCA fallback), PD-010 (credit ledger schema).

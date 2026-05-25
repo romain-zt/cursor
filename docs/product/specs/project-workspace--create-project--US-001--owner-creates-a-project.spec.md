@@ -60,6 +60,36 @@ Validation: name length 1–80 chars; trimmed; collapses internal whitespace; no
 - Server action: `app/projects/_actions/createProject.ts`.
 - Project surface (target of the redirect): owned by `list-and-open-project` Spec.
 
+## Async / Event / Webhook / Cron / Stream
+
+### 1. Long-running operation
+
+- No — sync REST is correct here. Single `Project.upsert` (indexed on `(ownerId, requestToken)`); p99 under 50ms.
+
+### 2. External callback (webhook)
+
+- No — sync REST is correct here. No third-party invoked.
+
+### 3. Temporal trigger (cron)
+
+- No — sync REST is correct here. No scheduled work owned by this Spec.
+
+### 4. Event produced or consumed
+
+- No — sync REST is correct here. Project creation is the canonical entry into the workspace; v0 does not emit a cross-Spec event on project creation. (If welcome-tour / first-project milestones become event-driven later, they will consume `OwnerMilestoneEvent` from `owner-milestone-feedback`, not a new event from here.)
+
+### 5. Real-time push to client (SSE / WebSocket)
+
+- No — sync REST is correct here. 303 redirect to `/projects/{id}`.
+
+### 6. Background job / queue
+
+- No — sync REST is correct here. No deferred work.
+
+### Summary
+
+**Async classification:** Pure sync — no async patterns required, REST/server-action sufficient.
+
 ## Tests (mandatory)
 
 ### Unit
@@ -117,6 +147,7 @@ Validation: name length 1–80 chars; trimmed; collapses internal whitespace; no
 - [x] Mandatory tests named
 - [x] Observability named
 - [x] Implementation choices anchored on PD-002
+- [x] Async / Event / Webhook / Cron / Stream — all 6 sub-questions answered + classification line filled (SP-15)
 - [x] Dependencies known
 - [x] Blockers resolved
 - [x] Out-of-scope explicit
@@ -128,3 +159,4 @@ Validation: name length 1–80 chars; trimmed; collapses internal whitespace; no
 | Date | Change | Author |
 |------|--------|--------|
 | 2026-05-25 | Scaffolded, refined, promoted | — |
+| 2026-05-25 | Added mandatory `## Async / Event / Webhook / Cron / Stream` section per SP-15. Classification: Pure sync. | — |

@@ -8,7 +8,7 @@
 
 `ready-for-implementation`
 
-> **NEED_HUMAN:** false
+> **NEED_HUMAN:** false — PD-007 approved 2026-05-25. Event-bus pattern (`prd.version.first-captured` per PD-007 §5) is the committed path.
 
 ---
 
@@ -60,6 +60,36 @@ model PRDVersion {
 - Page: `app/projects/[id]/versions/new/page.tsx`.
 - Server action: `app/projects/[id]/versions/_actions/captureVersion.ts`.
 
+## Async / Event / Webhook / Cron / Stream
+
+### 1. Long-running operation
+
+- No — sync REST is correct here. One `PRDVersion.create` within a transaction (with the event-write below); p99 under 80ms with no external HTTP.
+
+### 2. External callback (webhook)
+
+- No — sync REST is correct here. No third-party invoked.
+
+### 3. Temporal trigger (cron)
+
+- No — sync REST is correct here. `PRDVersion` rows are kept indefinitely in v0 (audit trail).
+
+### 4. Event produced or consumed
+
+- **Yes — handled by PD-007 §5 event bus.** When this capture is the **first** `PRDVersion` for this owner across all of the owner's projects, this Spec **produces** an event `prd.version.first-captured` consumed by `owner-milestone-feedback`. Per PD-007 §5, the event is written to the `Event` table **in the same DB transaction** as the `PRDVersion.create`; an optional `NOTIFY` is issued post-commit. Delivery contract: at-least-once, idempotent on `(ownerId, "first-captured")` (consumer must guard against multiple inserts if the producer races). This formalizes the previously-implicit contract documented in the `owner-milestone-feedback` Spec's "producer slices write to `OwnerMilestoneEvent`" line.
+
+### 5. Real-time push to client (SSE / WebSocket)
+
+- No — sync REST is correct here. Capture page redirects to `/projects/{id}/versions/{versionId}`; no further server-pushed state.
+
+### 6. Background job / queue
+
+- No — sync REST is correct here. Snapshot of `Project.draftPayload` is in-memory and committed in the same transaction; no work deferred.
+
+### Summary
+
+**Async classification:** Mixed sync + async — primary path sync, but emits `prd.version.first-captured` event (PD-007 §5) when this is the owner's first captured version, consumed by `owner-milestone-feedback`.
+
 ## Tests (mandatory)
 
 ### Unit
@@ -101,7 +131,9 @@ model PRDVersion {
 
 | Blocker | Blocks | NEED_HUMAN |
 |---------|--------|------------|
-| — | — | — |
+| — | — | false |
+
+PD-007 was approved 2026-05-25. Event-bus pattern committed per PD-007 §5.
 
 ## Out of Scope
 
@@ -118,8 +150,9 @@ model PRDVersion {
 - [x] Mandatory tests named
 - [x] Observability named
 - [x] Implementation anchored on PD-002
+- [x] Async / Event / Webhook / Cron / Stream — all 6 sub-questions answered + classification line filled (SP-15)
 - [x] Dependencies known
-- [x] Blockers resolved
+- [x] Blockers resolved (PD-007 approved 2026-05-25)
 - [x] Out-of-scope explicit
 
 **Verdict:** READY FOR IMPLEMENTATION
@@ -129,3 +162,5 @@ model PRDVersion {
 | Date | Change | Author |
 |------|--------|--------|
 | 2026-05-25 | Scaffolded, refined, promoted | — |
+| 2026-05-25 | Added mandatory `## Async / Event / Webhook / Cron / Stream` section per SP-15. Classification: Mixed sync + async (produces `prd.version.first-captured` event per PD-007 §5). NEED_HUMAN=true pending PD-007 ratification. | — |
+| 2026-05-25 | PD-007 approved. NEED_HUMAN lifted (true → false). Event-bus pattern committed. | — |
