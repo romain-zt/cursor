@@ -10,7 +10,7 @@
 
 ## Status
 
-`exploratory`
+`ready-for-user-stories`
 
 > **NEED_HUMAN:** false
 > **NEED_UPDATE:** false
@@ -45,7 +45,11 @@ A new founder can complete open self-serve signup and land in the signed-in prod
 
 | State | When | What the user sees / experiences |
 |-------|------|----------------------------------|
-|       |      |                                  |
+| Awaiting input (empty) | Founder lands on the signup entry without having submitted yet. | A clearly labeled self-serve signup entry with the inputs needed to create an account; no error, no progress indicator, no “sign-in” pre-selected path. |
+| Submitting (in-progress) | Founder confirms account creation and the system is processing the new account. | A non-blocking progress indication; controls disabled so the founder cannot double-submit; copy reassures that account creation is underway. |
+| Signed-in landed (success) | Account is created and the session is established at the post-auth entry. | Founder arrives at the signed-in web app entry as the **single owner**; the surface makes the next step toward PRD work legible, even if non-PRD areas are framed as **under construction**. |
+| Signup error (error) | Submission cannot create an account (e.g. invalid email shape, missing required field, account-already-exists conflict). | An inline, actionable explanation tied to the failing input; no account is created; founder can correct and retry without losing context; no partial session is opened. |
+| Already-signed-in redirect (edge / gated) | An already-authenticated founder reaches the signup entry. | Signup form is not shown; founder is sent to the signed-in post-auth entry instead, preserving solo-owner attribution; no second account is created. |
 
 ---
 
@@ -53,7 +57,8 @@ A new founder can complete open self-serve signup and land in the signed-in prod
 
 | Object | Operation | Notes |
 |--------|-----------|-------|
-|        |           |       |
+| User account | Create | New owner identity established with **solo-owner** scope (Operating Model: one account owns projects and PRDs); no team / invite / role objects created. |
+| Session | Open | Authenticated session is opened for the new owner at the post-auth entry; consistent with **in-app first** confirmation (no external email/link confirmation as v0 default). |
 
 ---
 
@@ -81,7 +86,7 @@ None — PRD-aligned **owner feedback** milestones (e.g. first PRD version gener
 |------------|------|--------|-------|
 | [Account & session](../feature-areas/account-session.md) | Feature Area | ready | Parent boundaries and solo-owner stance |
 | `docs/prd/PRD.md` — Buyer entry point, Journey 1, Operating Model | PRD constraint | ready | Public signup default; dashboard landing |
-| Signed-in dashboard / shell entry UX | Slice / sibling area | unknown | Landing “next step” copy and layout **TBD** at product-detail level |
+| [Dashboard shell](../feature-areas/dashboard-shell.md) — signed-in landing surface | Sibling Feature Area | pending | Parent FA exists at `exploratory`; this slice does not require `dashboard-shell` to be `validated` — the PRD's Journey 1 (Sign up → land in dashboard, non-PRD areas may show **under construction**) is satisfied at the boundary where this slice ends; shell content choices are owned by the Dashboard shell FA. |
 
 ---
 
@@ -103,18 +108,18 @@ A founder without an existing account can use **default public signup**, complet
 
 <!-- Fill before marking ready-for-user-stories -->
 
-- [ ] User value stated without implementation language
-- [ ] Exact boundary defined (included + excluded)
-- [ ] UX states enumerated (including error and empty states)
-- [ ] Business objects named
-- [ ] Credit / payment impact assessed
-- [ ] Sharing / privacy surface assessed
-- [ ] Feedback / instrumentation impact assessed
-- [ ] All dependencies named and their status known
-- [ ] All blockers resolved or NEED_HUMAN=true explicitly set
-- [ ] Acceptance-level outcome is behavioral (not a test or code spec)
+- [x] User value stated without implementation language
+- [x] Exact boundary defined (included + excluded)
+- [x] UX states enumerated (including error and empty states)
+- [x] Business objects named
+- [x] Credit / payment impact assessed
+- [x] Sharing / privacy surface assessed
+- [x] Feedback / instrumentation impact assessed
+- [x] All dependencies named and their status known
+- [x] All blockers resolved or NEED_HUMAN=true explicitly set
+- [x] Acceptance-level outcome is behavioral (not a test or code spec)
 
-**Verdict:** NOT READY
+**Verdict:** READY FOR USER STORIES
 
 ---
 
@@ -123,3 +128,4 @@ A founder without an existing account can use **default public signup**, complet
 | Date | Change | Author |
 |------|--------|--------|
 | 2026-05-09 | Scaffolded from approved `/feature-area slice account-session` via `/feature-area scaffold-slices` | — |
+| 2026-05-25 | Promoted to ready-for-user-stories after CLEAR readiness check (`/feature-area promote-slice`) | — |

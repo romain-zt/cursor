@@ -118,7 +118,7 @@ The following are strictly forbidden at each layer:
 **At Feature Area stage:**
 - Creating tasks or user stories from a Feature Area before Scope Slices are defined
 - Creating Feature Area markdown under `docs/product/feature-areas/` **except** via `/feature-area scaffold` after user approval — forbidden
-- Editing Feature Area markdown **except** via `/feature-area scaffold` (creation/population from an approved map), `/feature-area promote <name>` (only the narrow validated transition defined in `.cursor/commands/feature-area.md`), or ordinary human/manual edits — forbidden for agents/commands
+- Editing Feature Area markdown **except** via `/feature-area scaffold` (creation/population from an approved map), `/feature-area promote <name>` (only the narrow `validated` transition defined in `.cursor/commands/feature-area.md`), `/feature-area clear-for-vertical <name>` (only the narrow `delivery-ready` transition defined in `.cursor/commands/feature-area.md`), or ordinary human/manual edits — forbidden for agents/commands
 - Naming architecture, services, or runtime boundaries
 - Treating a Feature Area as implementation-ready
 
@@ -142,8 +142,12 @@ The following are strictly forbidden at each layer:
 
 ### Feature Area lifecycle
 
+- Valid Feature Area statuses are: `exploratory`, `validated`, `delivery-ready`, `blocked`, `deferred`.
 - A Feature Area in `exploratory` status **may** list candidate Scope Slices in its Candidate Scope Slices section (names + one-line descriptions only).
 - After `/feature-area validate <name>` returns **CLEAR**, **`/feature-area promote <name>`** may apply the predefined file updates (status, readiness checklist, verdict, changelog row) so the artifact matches `validated`; manual edits remain valid.
+- After `/feature-area clear-for-vertical <name>` returns **CLEAR** against Part 8 (DR-01..DR-05) + Part 7 (CC-01..CC-05) of `.cursor/checkers/scope-readiness-checker.md`, the same command may apply the predefined file updates (status, readiness verdict, changelog row) so the artifact transitions from `validated` to `delivery-ready`. Governed by `docs/product-decisions/PD-006-per-fa-delivery-readiness-gate.md`.
+- A Feature Area at `delivery-ready` authorizes the start of User Story / Spec / Task / code work on its Scope Slices, in parallel with the macro elaboration of other Feature Areas.
+- **Drift handling.** If a `delivery-ready` Feature Area's dependency situation regresses (a direct dependency moves to `blocked`, or a previously `approved` governing PD is reopened to `provisional`, or any `NEED_HUMAN=true` is introduced on this FA or any direct dependency), the FA **must** be reverted to `validated` and Part 8 of the checker must be re-run before any further downstream work proceeds.
 
 ### Scope Slice lifecycle
 
@@ -162,7 +166,20 @@ A Feature Area may be decomposed into Scope Slices only when:
 - [ ] In-scope and out-of-scope behaviors are separated
 - [ ] No open PRD blockers affect this area (`open-questions.md` checked)
 - [ ] Deferred behaviors are listed explicitly
-- [ ] Status is `validated` (not `exploratory`, `blocked`, or `deferred`)
+- [ ] Status is `validated` or `delivery-ready` (not `exploratory`, `blocked`, or `deferred`)
+
+### Feature Area `validated` → `delivery-ready`
+
+A Feature Area may be promoted from `validated` to `delivery-ready` only when **all five** of the following hold (DR-01..DR-05 per `.cursor/checkers/scope-readiness-checker.md` Part 8):
+
+- [ ] DR-01 — Status is currently `validated` (not `exploratory`, not already `delivery-ready`, not `blocked`/`deferred`)
+- [ ] DR-02 — Every Feature Area listed in `Dependencies` has an existing file in `docs/product/feature-areas/` (the dependency may be in any status, but its file must exist)
+- [ ] DR-03 — Every governing Product Decision is at `status: approved` (not `provisional`, not `proposed`)
+- [ ] DR-04 — No `NEED_HUMAN=true` on this FA or on any direct dependency FA
+- [ ] DR-05 — At least one child Scope Slice is at `ready-for-user-stories`
+- [ ] CC-01..CC-05 all PASS
+
+User Story / Spec / Task / code work on this Feature Area's Scope Slices is gated on this transition. Governed by `docs/product-decisions/PD-006-per-fa-delivery-readiness-gate.md`.
 
 ### Scope Slice → User Stories
 

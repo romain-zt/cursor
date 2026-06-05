@@ -6,7 +6,7 @@
 
 ## Status
 
-`exploratory`
+`delivery-ready`
 
 > **NEED_HUMAN:** false
 > **NEED_UPDATE:** false
@@ -88,16 +88,26 @@ Within a project, the founder maintains a **versioned PRD** where the **in-app**
 
 ## Readiness Verdict
 
-- [ ] PRD source sections read
-- [ ] Product intent stated without technical language
-- [ ] Business objects enumerated
-- [ ] User journeys identified
-- [ ] In-scope / out-of-scope explicitly separated
-- [ ] No unresolved PRD open questions affecting this area
-- [ ] Deferred behaviors explicitly named
-- [ ] Candidate Scope Slices are individually small enough
+- [x] PRD source sections read
+- [x] Product intent stated without technical language
+- [x] Business objects enumerated
+- [x] User journeys identified
+- [x] In-scope / out-of-scope explicitly separated
+- [x] No unresolved PRD open questions affecting this area
+- [x] Deferred behaviors explicitly named
+- [x] Candidate Scope Slices are individually small enough
 
-**Verdict:** NOT READY
+**Verdict:** READY FOR SCOPE SLICES
+
+### Delivery Readiness
+
+- [x] DR-01 — Status is `validated` at audit time
+- [x] DR-02 — All direct FA dependencies have scaffolded files (`project-workspace`)
+- [x] DR-03 — Governing Product Decisions are `approved` (PD-002 stack baseline)
+- [x] DR-04 — No `NEED_HUMAN=true` on this FA or its direct dependencies
+- [x] DR-05 — At least one Scope Slice is `ready-for-user-stories` (both slices are)
+
+**Verdict:** READY FOR VERTICAL DELIVERY
 
 ---
 
@@ -106,3 +116,5 @@ Within a project, the founder maintains a **versioned PRD** where the **in-app**
 | Date | Change | Author |
 |------|--------|--------|
 | 2026-05-09 | Initial scaffold from approved Feature Area map (`/feature-area scaffold`) | — |
+| 2026-05-25 | Promoted to validated after CLEAR readiness check (`/feature-area promote`) | — |
+| 2026-05-25 | Promoted to delivery-ready after CLEAR DR-01–DR-05 backfill audit (PD-006) | — |
