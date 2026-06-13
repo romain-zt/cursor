@@ -8,6 +8,9 @@ docs/*
 !docs/product-decisions/**
 !docs/process/
 !docs/process/**
+# Orchestration state (read + written by the GitHub automation — must be committed)
+!docs/state/
+!docs/state/**
 
 # Node / pnpm / npm
 node_modules/
