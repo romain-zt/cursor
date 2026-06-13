@@ -21,7 +21,11 @@ This rule complements:
 
 - `.cursor/rules/00-siso.mdc` — request quality and EXECUTION vs DISCOVERY classification
 - `.cursor/rules/feature-area-workflow.mdc` — PRD → Feature Area → Scope Slice → User Story → Spec → Task
+- `.cursor/rules/20-model-routing.mdc` — model tier per action (Vision / Manager / Executor)
+- `.cursor/rules/implementation-workflow.mdc` — the Spec → Test → Implementation phase (when enabled in `docs/project.config.md`)
 - `.cursor/checkers/scope-readiness-checker.md` — **only** source of readiness verdicts (`CLEAR` / `BLOCKED`)
+
+Project-specific values (priority bands, v0 exclusions, whether the implementation phase is enabled, forbidden paths) are read from **`docs/project.config.md`** — keep this rule project-agnostic.
 
 Command: `.cursor/commands/execute-prd.md`  
 Operational skill: `.cursor/skills/execution-loop/SKILL.md`
@@ -74,13 +78,12 @@ When rebuilding from Feature Area / Scope Slice files:
 
 ## 4. Product priority bands (queue `Priority`)
 
-| Band | Feature Areas |
-|------|----------------|
-| **P0** | Account & session → `FA-account-session`; Dashboard shell → `FA-dashboard-shell` |
-| **P1** | Project workspace → `FA-project-workspace`; PRD versioning → `FA-prd-versioning` |
-| **P2** | Guided clarification → `FA-guided-clarification`; Question history → `FA-question-history` |
-| **P3** | Read-only sharing → `FA-read-only-sharing`; Owner milestone feedback → `FA-owner-milestone-feedback` |
-| **P4** | Credit system → `FA-credit-system`; Payments → `FA-payments` |
+Priority bands are **project-specific** and are read from **`docs/project.config.md`**
+(§ Priority bands), not hardcoded here. Each Feature Area is listed under a band
+`P0` (highest) → `P4`. If `docs/project.config.md` is missing, create it from
+`.cursor/templates/project/project.config.template.md` and surface a
+`NEED_UPDATE` row in `POINTS_OF_ATTENTION` until bands are filled — do **not**
+invent bands.
 
 Derive **`SS-*`** row priority from its parent Feature Area’s band.
 
