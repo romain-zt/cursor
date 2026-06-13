@@ -1,0 +1,126 @@
+---
+description: Re-exports the in-repo zedos/.cursor/rules/01-architecture-layers.md as workspace-level governance with enforcement globs. Forbidden cross-layer imports are mechanical violations.
+globs:
+  - zedos/nextjs_space/src/**
+  - zedos/nextjs_space/app/**
+  - apps/**
+  - packages/**
+  - services/**
+alwaysApply: false
+---
+
+# Hexagonal Boundaries
+
+## 1. Purpose
+
+zedos uses six hexagonal layers. The canonical text lives in `zedos/.cursor/rules/01-architecture-layers.md` (in-repo, code-side). This rule is the **workspace-side enforcement contract** — it does not duplicate the canonical text; it cites it and codifies what the agents and hooks must enforce.
+
+Read the canonical text first: [`zedos/.cursor/rules/01-architecture-layers.md`](../../zedos/.cursor/rules/01-architecture-layers.md).
+
+This rule complements:
+
+- `zedos/.cursor/rules/01-architecture-layers.md` — canonical layer definitions (READ THIS)
+- `.cursor/rules/73-result-rop.mdc` — error handling across boundaries
+- `.cursor/rules/74-contracts-zod.mdc` — contract layer is the only source of cross-layer DTOs
+- `.cursor/agents/execution/domain-guardian.md` — agent that enforces this rule on every diff
+
+---
+
+## 2. The six layers (citation only)
+
+| Layer | Pre-migration path | Post-migration path |
+|---|---|---|
+| `domain` | `zedos/nextjs_space/src/domain/` | `packages/domain/src/` |
+| `application` | `zedos/nextjs_space/src/application/` | `packages/application/src/` |
+| `contracts` | `zedos/nextjs_space/src/contracts/` | `packages/contracts/src/` |
+| `infrastructure` | `zedos/nextjs_space/src/infrastructure/` | `packages/persistence/src/`, `packages/sdk-*/src/`, `packages/auth/src/` |
+| `ui` | currently empty (lives in `zedos/nextjs_space/components/` — drift) | `packages/ui/src/` |
+| `shared` | `zedos/nextjs_space/src/shared/` | `packages/shared/src/` |
+
+The drift between "spec" and "today" (UI in `components/` instead of `src/ui/`, `lib/` parallel runtime) is a known Phase-2 cleanup item. Implementation Plans authored today must **not** put new code in `lib/` — see §5.
+
+---
+
+## 3. Allowed and forbidden imports (the enforcement contract)
+
+The canonical text in `zedos/.cursor/rules/01-architecture-layers.md` defines the rules. The enforcement summary:
+
+| From layer | May import | May not import |
+|---|---|---|
+| `domain` | `shared` (only `result`, `events`, `errors`) | `application`, `contracts`, `infrastructure`, `ui` |
+| `application` | `domain`, `contracts`, `shared` | `infrastructure`, `ui` |
+| `contracts` | `shared` | `domain`, `application`, `infrastructure`, `ui` |
+| `infrastructure` | `domain`, `application`, `contracts`, `shared` | `ui` |
+| `ui` | `contracts` (types), `shared` | `domain`, `application`, `infrastructure` |
+| `shared` | nothing | every other layer |
+
+Routes (`app/api/**/route.ts`) and Server Components (`app/**/page.tsx`) are **adapters**, not a layer. They may call into `application/` use cases and `infrastructure/` composition; they may not import `domain/` directly except for read-only types.
+
+Vendor SDKs (`stripe`, `bcrypt`, raw `fetch` to AI providers, raw `prisma` outside repository implementations) may **only** be imported inside `infrastructure/<vendor>/` adapters. Routes, components, and `lib/` may not import them.
+
+---
+
+## 4. ESLint enforcement
+
+`eslint-plugin-boundaries` is configured at `zedos/nextjs_space/.eslintrc.json` today and will move to `packages/eslint-config/boundaries.cjs` post-migration.
+
+Today's gap: `next.config.js` sets `eslint.ignoreDuringBuilds: true`, so boundaries violations slip through `next build`. The fix lives in Phase 0 of `docs/retro/zedos-monorepo-retro.md`. **Until that fix lands, every Implementation Plan must run boundary lint as a separate verifier step** — see `.cursor/agents/execution/verifier.md`.
+
+---
+
+## 5. Hard rules (mechanically enforced)
+
+Each item below is a violation to refuse in `architect`, `implementer`, `reviewer`, `domain-guardian`, and the `pre-commit` hook:
+
+1. **No raw vendor SDK imports outside `infrastructure/`.** Specifically: `stripe`, `bcryptjs`, `bcrypt`, `@aws-sdk/*`, `@azure/storage-blob`, raw `fetch` to LLM providers, raw `prisma` (PrismaClient construction).
+2. **No `Prisma.<Model>` types leaking outside `infrastructure/persistence/`.** Domain entities are returned via mappers.
+3. **No business logic in routes.** Routes are < 20 lines: parse → call use case → map Result. Anchor: `zedos/.cursor/rules/04-no-business-logic-in-routes.md`.
+4. **No `lib/` additions.** `zedos/nextjs_space/lib/` is in retirement. New code goes in `src/<layer>/`.
+5. **No throwing across layer boundaries.** Errors cross via `Result<T, E>` per `73-result-rop.mdc`.
+6. **No DTOs hand-written.** Cross-layer types are `z.infer<typeof Schema>` from `contracts/` per `74-contracts-zod.mdc`.
+7. **No `as any` to bridge a layer mismatch.** That cast hides a real architectural violation. Anchor: `73-result-rop.mdc` §3.
+
+---
+
+## 6. Drift signals — refuse to proceed
+
+The agent must stop and report when any of these surface during planning or implementation:
+
+- A route file longer than 30 lines.
+- A `prisma.*` call inside `app/`, `components/`, or `lib/`.
+- A `new Stripe(...)` outside `infrastructure/payments/` (or `packages/sdk-stripe/` post-migration).
+- A `getServerSession`-equivalent call inside `domain/` or `application/`.
+- An `import` from `application/` inside `domain/`.
+- An `as any` cast added to make a type-check pass.
+
+`reviewer` flags these as `🔴 Critical` findings. `verifier` halts the loop on lint violations of this kind.
+
+---
+
+## 7. v0 transitional carve-outs (documented exceptions)
+
+The pre-migration codebase has documented violations of this rule. They are **frozen** — no new code is allowed to compound them; they are scheduled for cleanup per the monorepo retro:
+
+| Exception | Where | Removed in |
+|---|---|---|
+| UI in `components/` not `src/ui/` | `zedos/nextjs_space/components/**` | Phase 2 (P2.7 of monorepo retro) |
+| `lib/credits.ts`, `lib/ai-service.ts`, `lib/auth-options.ts`, `lib/config.ts` parallel runtime | `zedos/nextjs_space/lib/**` | Phase 2 (P2.2 — P2.5 of monorepo retro) |
+| `prisma/schema.prisma` co-located with the app | `zedos/nextjs_space/prisma/` | Phase 1 (P1.6) → Phase 2 (P2.6) |
+| `next.config.js: eslint.ignoreDuringBuilds: true` | `zedos/nextjs_space/next.config.js` | Phase 0 (P0.5) |
+| `tsconfig.json: strict: false`, `noImplicitAny: false` | `zedos/nextjs_space/tsconfig.json` | Phase 1 (P1.1, P1.5) |
+| 117 `as any` casts across `src/`, `app/`, `lib/` | various | Phase 1 (P1.4) |
+
+Treat each exception as a **freeze**: do not add to the count, do not introduce parallel violations elsewhere, and prefer fixes that reduce the count whenever a touched file is in scope.
+
+---
+
+## 8. Enforced by
+
+| Mechanism | Enforces |
+|---|---|
+| `.cursor/agents/execution/domain-guardian.md` | §3 import matrix, §5 hard rules, §6 drift signals |
+| `.cursor/agents/execution/architect.md` | §3 (Plan layer assignments), §7 (no compounding exceptions) |
+| `.cursor/agents/execution/reviewer.md` | §5 hard rules on every diff |
+| `.cursor/agents/execution/verifier.md` | §4 ESLint boundary run as a verification step |
+| `.cursor/hooks/pre-commit.sh` | §4, §5 — refuses commit on violation |
+| `eslint-plugin-boundaries` | §3 import matrix at lint time |
