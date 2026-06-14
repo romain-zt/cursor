@@ -17,7 +17,7 @@ What situation or gap led to this decision? Why does a change to the framework g
 
 **One clear, present-tense statement of what is being decided.**
 
-> Example: "The manifest entry `command.prd-init` is renamed to `command.prd-init-scaffold` and its path changes from `.cursor/core/commands/prd-init.md` to `.cursor/core/commands/prd-init-scaffold.md`."
+> Example: "The manifest entry `command.prd-init` is renamed to `command.prd-init-scaffold` and its path changes from `commands/prd-init.md` to `commands/prd-init-scaffold.md`."
 
 ---
 

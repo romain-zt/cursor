@@ -105,7 +105,7 @@ Files scanned:   <M>
 
 | Check      | Result | Gap kind       | Detail                     |
 |------------|--------|----------------|----------------------------|
-| FR-01(x)   | FAIL   | core-broken    | .cursor/core/agents/x.md   |
+| FR-01(x)   | FAIL   | core-broken    | Missing: &lt;entry.path&gt;    |
 | FR-N+1(y)  | FAIL   | optional       | y has no manifest entry    |
 | FR-2N+5    | PASS   |                |                            |
 | FR-2N+6    | WARN   | tier-violation | Executor share: 45%        |
