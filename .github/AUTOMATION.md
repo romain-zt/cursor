@@ -38,7 +38,7 @@ with scheduled "re-catch" jobs so **nothing stays stuck for more than ~1h**.
 | `CI_AUTOFIX_SKIP_BRANCH_PREFIXES` | `orchestrator/` | Branch prefixes the CI autofixer leaves alone (they run their own remediation) |
 
 > **Model selection is not an env var.** Each CI script picks its model from
-> `.github/scripts/cursor-models.config.ts` (see §1e). Change models there, not in
+> `.github/scripts/core/cursor-models.config.ts` (see §1e). Change models there, not in
 > repo variables — the mapping is reviewed in PRs alongside the script.
 
 ### d. Branch protection (recommended) — `main`
@@ -48,7 +48,7 @@ Settings → Branches → Add rule:
 - Require branches up to date ✅
 
 ### e. Model selection per script
-The mapping lives in [`.github/scripts/cursor-models.config.ts`](scripts/cursor-models.config.ts) and follows the tiers defined in [`.cursor/rules/20-model-routing.mdc`](../.cursor/rules/20-model-routing.mdc):
+The mapping lives in [`.github/scripts/core/cursor-models.config.ts`](scripts/core/cursor-models.config.ts) and follows the tiers defined in [`.cursor/core/rules/20-model-routing.mdc`](../.cursor/core/rules/20-model-routing.mdc):
 
 | Script | Tier | Model | Why |
 |---|---|---|---|

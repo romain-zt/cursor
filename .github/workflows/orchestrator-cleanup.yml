@@ -100,7 +100,7 @@ jobs:
           node-version: 22
 
       - name: Install deps
-        run: npm install --prefix .github/scripts
+        run: npm install --prefix .github/scripts/core
 
       - name: Run cleanup
         env:
@@ -110,4 +110,4 @@ jobs:
           REQUIRED_CHECKS: ${{ vars.REQUIRED_CHECKS || 'quality' }}
           STALE_READY_MINUTES: ${{ github.event_name == 'workflow_dispatch' && inputs.stale_ready_minutes || '10' }}
           STALE_DRAFT_MINUTES: ${{ github.event_name == 'workflow_dispatch' && inputs.stale_draft_minutes || '15' }}
-        run: npx --prefix .github/scripts tsx .github/scripts/orchestrator-cleanup.ts
+        run: npx --prefix .github/scripts/core tsx .github/scripts/core/orchestrator-cleanup.ts

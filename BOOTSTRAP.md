@@ -11,31 +11,52 @@ clone ─▶ set up locally with Cursor (PRD → scope → plan)
 
 Two layers, kept separate:
 
-- **`.cursor/**`** — project-agnostic governance (commands, rules, agents, skills). See [`.cursor/README.md`](.cursor/README.md).
-- **`.github/**`** — the cloud automation. See [`.github/AUTOMATION.md`](.github/AUTOMATION.md).
+- **`.cursor/core/**`** — the framework governance layer (commands, rules, agents, skills, templates, checkers, hooks). Source of truth in *this* repo. In a project, copy it once and treat it as read-only.
+- **`.cursor/project/**`** — per-project additions and overrides. Gitignored on this framework repo; committed by downstream projects.
+- **`.github/scripts/core/**`** — the cloud automation scripts.
+- **`.github/workflows/*.yml`** — GitHub Actions workflows (flat by requirement).
 
-Project specifics live in **`docs/project.config.md`** and **`docs/state/`** — nothing project-specific is hardcoded in the scripts.
+Project specifics live in **`docs/project.config.md`** and **`docs/state/`** — nothing project-specific is hardcoded in the framework.
 
 ---
 
-## Step 1 — Clone the template
+## Step 1 — Bootstrap a new project from this framework
+
+**There is no auto-sync.** Copy the framework files once, then own them in your project. When the framework repo ships updates, manually diff and apply what you need.
 
 ```bash
-gh repo create my-product --private --clone --template <this-template-repo>
+# Create your new project repo (or use an existing one)
+gh repo create my-product --private --clone
 cd my-product
+
+# One-shot copy: framework core
+cp -r /path/to/framework/.cursor/core/ .cursor/core/
+cp -r /path/to/framework/.github/scripts/core/ .github/scripts/core/
+cp /path/to/framework/.github/workflows/*.yml .github/workflows/
+# (skip project--*.yml if any)
+
+# Create your project overlay scaffold (gitignore core, commit project)
+mkdir -p .cursor/project/{rules,skills,commands,agents,templates,hooks}
+touch .cursor/project/rules/.gitkeep
+touch .cursor/project/skills/.gitkeep
+touch .cursor/project/commands/.gitkeep
+touch .cursor/project/agents/.gitkeep
+touch .cursor/project/templates/.gitkeep
+touch .cursor/project/hooks/.gitkeep
+cp /path/to/framework/.cursor/project/README.md .cursor/project/README.md
 ```
 
-You now have `.cursor/`, `.github/`, `docs/`, and the starter monorepo skeleton.
+Then configure `.gitignore` to track `project/` but ignore `core/` modifications (treat `core/` as installed, not editable).
 
 ---
 
 ## Step 2 — Make it your project (local, in Cursor)
 
 1. **Set identity.** Edit `docs/project.config.md` (or recreate from
-   `.cursor/templates/project/project.config.template.md`): project name, stack
+   `.cursor/core/templates/project/project.config.template.md`): project name, stack
    overrides, priority bands (P0–P4), v0 boundary.
 2. **Bring in the code skeleton.** The product root must be a pnpm monorepo so CI can
-   build it. Use `.cursor/templates/starter-monorepo/` as the base (next-forge direction
+   build it. Use `.cursor/core/templates/starter-monorepo/` as the base (next-forge direction
    + Payload(Postgres) + docker-compose for Postgres/MinIO). Local services:
    ```bash
    docker compose up -d        # Postgres + MinIO
@@ -54,7 +75,7 @@ You now have `.cursor/`, `.github/`, `docs/`, and the starter monorepo skeleton.
 > create them — you just append slice steps to the pipeline later.
 
 ### Enable implementation (off by default)
-1. Copy `.cursor/templates/product-decisions/PD-implementation-phase.template.md` →
+1. Copy `.cursor/core/templates/product-decisions/PD-implementation-phase.template.md` →
    `docs/product-decisions/PD-NNN-implementation-phase.md`, set `status: approved`.
 2. In `docs/project.config.md` set **Implementation governance enabled: yes**.
 
@@ -87,7 +108,7 @@ Add work to the pipeline, then automation takes over:
   **Orchestration Planner** workflow.
 
 For each ready step the orchestrator opens a draft tracking PR and fires a Cursor cloud
-agent that implements the slice (test-first, per `.cursor/rules/`). When `quality` passes
+agent that implements the slice (test-first, per `.cursor/core/rules/`). When `quality` passes
 and review approves, it merges and advances to the next step. Watch progress in the
 **Actions** tab (each run prints a live Cursor dashboard link).
 

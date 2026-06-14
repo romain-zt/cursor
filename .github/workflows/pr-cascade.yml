@@ -105,7 +105,7 @@ jobs:
             PR_SHA=$(gh pr view "$PR_NUM" --repo "$REPO" --json headRefOid --jq '.headRefOid')
             echo "→ Waiting for required checks on $PR_SHA"
             if ! PR_NUMBER="$PR_NUM" PR_SHA="$PR_SHA" REPO="$REPO" REQUIRED_CHECKS="$REQUIRED_CHECKS" \
-              bash .github/scripts/wait-for-required-pr-checks.sh; then
+              bash .github/scripts/core/wait-for-required-pr-checks.sh; then
               echo "  ⚠️ Skipping merge for PR #$PR_NUM — required checks did not pass"
               git checkout "$MERGED_BASE"
               git pull origin "$MERGED_BASE" --ff-only 2>/dev/null || true

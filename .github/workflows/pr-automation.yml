@@ -28,7 +28,7 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
           PR_SHA: ${{ github.event.pull_request.head.sha }}
           REQUIRED_CHECKS: ${{ vars.REQUIRED_CHECKS || 'quality' }}
-        run: bash .github/scripts/wait-for-required-pr-checks.sh
+        run: bash .github/scripts/core/wait-for-required-pr-checks.sh
 
   cursor-review-and-merge:
     needs: required-checks
@@ -51,12 +51,12 @@ jobs:
           node-version: 22
 
       - name: Install deps
-        run: npm install --prefix .github/scripts
+        run: npm install --prefix .github/scripts/core
 
       - name: Run Cursor PR automation
         env:
           CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
-          # Model tier defaults are in .github/scripts/cursor-models.config.ts (Manager tier).
+          # Model tier defaults are in .github/scripts/core/cursor-models.config.ts (Manager tier).
           # Override per-tier model id with repo variables when bumping versions.
           CURSOR_MODEL_VISION_ID: ${{ vars.CURSOR_MODEL_VISION_ID }}
           CURSOR_MODEL_MANAGER_ID: ${{ vars.CURSOR_MODEL_MANAGER_ID }}
@@ -69,4 +69,4 @@ jobs:
           BASE_BRANCH: ${{ github.event.pull_request.base.ref }}
           HEAD_BRANCH: ${{ github.event.pull_request.head.ref }}
           REQUIRED_CHECKS: ${{ vars.REQUIRED_CHECKS || 'quality' }}
-        run: npx tsx .github/scripts/pr-automation.ts
+        run: npx --prefix .github/scripts/core tsx .github/scripts/core/pr-automation.ts

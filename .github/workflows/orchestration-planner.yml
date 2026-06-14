@@ -40,12 +40,12 @@ jobs:
           node-version: 22
 
       - name: Install deps
-        run: npm install --prefix .github/scripts
+        run: npm install --prefix .github/scripts/core
 
       - name: Append planner queue to pipeline
         env:
           PLANNER_CLEAR_QUEUE: ${{ inputs.clear_planner_queue && '1' || '' }}
-        run: npx --prefix .github/scripts tsx .github/scripts/orchestration-planner.ts
+        run: npx --prefix .github/scripts/core tsx .github/scripts/core/orchestration-planner.ts
 
       - name: Dispatch Phase Orchestrator
         if: ${{ inputs.trigger_orchestrator }}

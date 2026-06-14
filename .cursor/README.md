@@ -1,8 +1,25 @@
 # Cursor Workflow
 
 Idea → PRD → scope → architecture → spec → test → implementation, governed end to end.
-The `.cursor/**` layer is **project-agnostic**; project specifics live in
-`docs/project.config.md`.
+
+## Layered layout
+
+```
+.cursor/
+├── core/       ← framework source of truth (committed; treat as read-only in projects)
+│   ├── rules/        commands/    agents/    skills/
+│   ├── templates/    checkers/    hooks/
+│   └── framework.manifest.json   (M3: self-evolving verifier index)
+└── project/    ← per-project additions (gitignored on this framework repo)
+    ├── rules/  commands/  agents/  skills/  templates/  hooks/
+    └── README.md
+```
+
+The Cursor IDE loads `.cursor/rules/**/*.mdc` and `.cursor/skills/**/SKILL.md` recursively, so `core/` and `project/` both load automatically.
+
+**Rule:** never edit `core/` inside a downstream project. Put project-specific additions in `project/`. If a `core/` artifact needs to change, propose a Framework Decision (FD-NNN) back to this repo.
+
+Project specifics live in **`docs/project.config.md`** — nothing project-specific is hardcoded in `core/`.
 
 ## The flow
 
@@ -55,14 +72,14 @@ Default stack is fixed (`40-architecture-baseline.mdc`). Don't re-litigate it pe
 feature. Fork the clonable skeleton to start:
 
 ```
-.cursor/templates/starter-monorepo/   # next-forge direction + Payload(i18n+S3) + docker-compose(Postgres+MinIO)
+.cursor/core/templates/starter-monorepo/   # next-forge direction + Payload(i18n+S3) + docker-compose(Postgres+MinIO)
 ```
 
 ## Enabling implementation
 
 Implementation is **off by default**. To turn it on for a project:
 
-1. Copy `.cursor/templates/product-decisions/PD-implementation-phase.template.md` → `docs/product-decisions/PD-NNN-implementation-phase.md`, set `status: approved`.
+1. Copy `.cursor/core/templates/product-decisions/PD-implementation-phase.template.md` → `docs/product-decisions/PD-NNN-implementation-phase.md`, set `status: approved`.
 2. In `docs/project.config.md` set **Implementation governance enabled: yes** and the forbidden-paths default.
 
 Then `/implement` (spec → test → run → verify → review) is unlocked for `delivery-ready` Feature Areas.
@@ -70,6 +87,6 @@ Then `/implement` (spec → test → run → verify → review) is unlocked for 
 ## New project bootstrap
 
 1. `/prd init` — scaffold the PRD workspace.
-2. Create `docs/project.config.md` from `.cursor/templates/project/project.config.template.md` (name, priority bands, v0 boundary).
-3. Fork `.cursor/templates/starter-monorepo/` for the code.
+2. Create `docs/project.config.md` from `.cursor/core/templates/project/project.config.template.md` (name, priority bands, v0 boundary).
+3. Fork `.cursor/core/templates/starter-monorepo/` for the code.
 4. `/intake "<your idea>"` and follow the route.

@@ -24,12 +24,12 @@ jobs:
           node-version: 22
 
       - name: Install deps
-        run: npm install --prefix .github/scripts
+        run: npm install --prefix .github/scripts/core
 
       - name: List Cursor models
         env:
           CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
-        run: npx --prefix .github/scripts tsx .github/scripts/discover-cursor-models.ts
+        run: npx --prefix .github/scripts/core tsx .github/scripts/core/discover-cursor-models.ts
 
       - name: Upload discovery JSON
         if: always()

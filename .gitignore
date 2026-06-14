@@ -8,9 +8,21 @@ docs/*
 !docs/product-decisions/**
 !docs/process/
 !docs/process/**
+!docs/framework-decisions/
+!docs/framework-decisions/**
 # Orchestration state (read + written by the GitHub automation — must be committed)
 !docs/state/
 !docs/state/**
+
+# Framework repo: project overlays are per-project content, not framework
+# Downstream projects commit their own .cursor/project/** and .github/scripts/project/**
+.cursor/project/**
+!.cursor/project/README.md
+!.cursor/project/*/.gitkeep
+.cursor/observability/
+.github/scripts/project/**
+!.github/scripts/project/.gitkeep
+.github/workflows/project--*.yml
 
 # Node / pnpm / npm
 node_modules/

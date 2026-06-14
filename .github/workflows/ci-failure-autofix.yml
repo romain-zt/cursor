@@ -43,12 +43,12 @@ jobs:
           node-version: 22
 
       - name: Install script deps
-        run: npm install --prefix .github/scripts
+        run: npm install --prefix .github/scripts/core
 
       - name: Run CI failure autofix
         env:
           CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
-          # Model tier is selected in .github/scripts/cursor-models.config.ts
+          # Model tier is selected in .github/scripts/core/cursor-models.config.ts
           # (Manager by default, Vision when the PR touches sensitive paths).
           # Override per-tier ids via repo variables when bumping model versions.
           CURSOR_MODEL_VISION_ID: ${{ vars.CURSOR_MODEL_VISION_ID }}
@@ -63,4 +63,4 @@ jobs:
           ORCHESTRATOR_ENABLED: ${{ vars.ORCHESTRATOR_ENABLED }}
           MAX_CI_AUTOFIX_ATTEMPTS: ${{ vars.MAX_CI_AUTOFIX_ATTEMPTS || '3' }}
           SKIP_BRANCH_PREFIXES: ${{ vars.CI_AUTOFIX_SKIP_BRANCH_PREFIXES || 'orchestrator/' }}
-        run: npx tsx .github/scripts/ci-failure-autofix.ts
+        run: npx --prefix .github/scripts/core tsx .github/scripts/core/ci-failure-autofix.ts

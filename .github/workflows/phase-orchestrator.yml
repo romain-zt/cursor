@@ -55,12 +55,12 @@ jobs:
           node-version: 22
 
       - name: Install deps
-        run: npm install --prefix .github/scripts
+        run: npm install --prefix .github/scripts/core
 
       - name: Run phase orchestrator
         env:
           CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
-          # Model tier defaults are in .github/scripts/cursor-models.config.ts
+          # Model tier defaults are in .github/scripts/core/cursor-models.config.ts
           # (Manager for the worker; sub-delegates code-typing to the Executor subagent).
           # Override the canonical model id per tier with repo variables when bumping.
           CURSOR_MODEL_VISION_ID: ${{ vars.CURSOR_MODEL_VISION_ID }}
@@ -75,4 +75,4 @@ jobs:
           ORCHESTRATOR_TRACKING_BASE: ${{ vars.ORCHESTRATOR_TRACKING_BASE || 'main' }}
           MAX_REMEDIATION_RUNS: ${{ vars.MAX_REMEDIATION_RUNS || '5' }}
           STEP_ID: ${{ github.event.inputs.step_id || '' }}
-        run: npx tsx .github/scripts/phase-orchestrator.ts
+        run: npx --prefix .github/scripts/core tsx .github/scripts/core/phase-orchestrator.ts

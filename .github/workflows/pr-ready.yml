@@ -33,7 +33,7 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
           PR_SHA: ${{ github.event.pull_request.head.sha }}
           REQUIRED_CHECKS: ${{ vars.REQUIRED_CHECKS || 'quality' }}
-        run: bash .github/scripts/wait-for-required-pr-checks.sh
+        run: bash .github/scripts/core/wait-for-required-pr-checks.sh
 
       - name: Merge tracking PR
         run: |

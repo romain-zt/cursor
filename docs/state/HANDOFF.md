@@ -15,7 +15,7 @@ A new project bootstrapped from the Cursor governance template. See
 <!-- The shape of the codebase as it exists right now: apps, packages, key boundaries.
      On a fresh project this is just the starter monorepo (apps/web, apps/cms, packages/*). -->
 - Monorepo: `apps/*`, `packages/*` (pnpm + turbo).
-- Stack baseline: see `.cursor/rules/40-architecture-baseline.mdc` and `docs/project.config.md`.
+- Stack baseline: see `.cursor/core/rules/40-architecture-baseline.mdc` and `docs/project.config.md`.
 
 ## Active work
 
