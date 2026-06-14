@@ -21,7 +21,7 @@
 
 import { Agent, CursorAgentError, type RunResult } from "@cursor/sdk";
 import { buildCursorCloudOptions } from "./cursor-sdk-options";
-import { CURSOR_MODELS } from "./cursor-models.config";
+import { formatPickedModel, pickOrchestratorWorkerModel } from "./cursor-models.config";
 import fs from "node:fs";
 import path from "node:path";
 import { execSync, execFileSync } from "node:child_process";
@@ -115,6 +115,13 @@ Record the next layer in \`docs/state/HANDOFF.md\`, commit, push, and stop unles
 Follow the active \`.cursor/rules/\` — especially \`implementation-workflow.mdc\` (spec → test → implementation gates),
 \`30-test-strategy.mdc\` (test-first; contract/integration/unit over e2e), \`40-architecture-baseline.mdc\` (stack), and
 the v0 boundary in \`docs/project.config.md\`. Do not change architecture, dependencies, or package boundaries unless the step requires it.
+
+## Tier delegation (mandatory)
+You are running at **Manager** tier. Per \`.cursor/rules/20-model-routing.mdc\`, manager plans/splits, executor builds.
+Two named subagents are pre-wired into this run via the \`Task\` tool:
+- **\`executor\`** (composer-2.5) — for the actual code-typing brick (one Task / one commit). Use it for mechanical edits, scaffolding from an approved spec, and test-first writes once the layer to implement is unambiguous.
+- **\`vision-reviewer\`** (claude-opus-4-8) — read-only escalation for high-risk decisions (irreversible, security, architecture, contract). Use it before committing changes that touch \`auth\`, \`money\`, \`data migrations\`, public contracts, or anything you can't undo.
+Default DOWN: do as much as you can yourself at Manager; delegate to \`executor\` for the implementation brick; escalate to \`vision-reviewer\` only when the call is genuinely high-stakes.
 
 ## Checks
 Run the repo's check commands (typically \`pnpm typecheck\`, \`pnpm build\`, \`pnpm test\`; prefer the narrowest relevant command first).
@@ -360,16 +367,37 @@ function openTrackingPR(stepRow: PipelineStepRow): TrackingPR {
     ].join("\n"),
   );
 
-  const prUrl = gh(
-    `pr create --repo "${repo}" --base "${trackingBase}" --head "${branch}" --draft --title "${title}" --body-file "${bodyFile}"`,
-  );
-  const prNumber = parseInt(prUrl.split("/").at(-1) ?? "0", 10);
+  try {
+    const prUrl = gh(
+      `pr create --repo "${repo}" --base "${trackingBase}" --head "${branch}" --draft --title "${title}" --body-file "${bodyFile}"`,
+    );
+    const prNumber = parseInt(prUrl.split("/").at(-1) ?? "0", 10);
 
-  try { fs.unlinkSync(bodyFile); } catch { /* ignore */ }
-  try { gitExec(`checkout ${trackingBase}`); } catch { gitExec(`checkout main`); }
+    try { fs.unlinkSync(bodyFile); } catch { /* ignore */ }
+    try { gitExec(`checkout ${trackingBase}`); } catch { gitExec(`checkout main`); }
 
-  console.log(`📋 Tracking PR #${prNumber} opened (draft): ${prUrl}`);
-  return { number: prNumber, branch, url: prUrl };
+    console.log(`📋 Tracking PR #${prNumber} opened (draft): ${prUrl}`);
+    return { number: prNumber, branch, url: prUrl };
+  } catch (err: unknown) {
+    console.error(`❌ Failed to create tracking PR for step ${step} on branch ${branch}. Cleaning up…`);
+    try { fs.unlinkSync(bodyFile); } catch { /* ignore */ }
+    try { execSync(`git push origin --delete ${branch}`, { stdio: "inherit" }); } catch { /* ignore */ }
+    try { gitExec(`checkout ${trackingBase}`); } catch { try { gitExec(`checkout main`); } catch { /* ignore */ } }
+
+    const msg = err instanceof Error ? err.message : String(err);
+    if (/not permitted to create or approve pull requests/i.test(msg)) {
+      console.error("");
+      console.error("═══════════════════════════════════════════════════════════════");
+      console.error("  CONFIGURATION REQUIRED");
+      console.error("  GitHub Actions is not allowed to create pull requests.");
+      console.error("  Fix: repo → Settings → Actions → General → Workflow permissions");
+      console.error("    ✅ Read and write permissions");
+      console.error("    ✅ Allow GitHub Actions to create and approve pull requests");
+      console.error("═══════════════════════════════════════════════════════════════");
+      console.error("");
+    }
+    throw err;
+  }
 }
 
 function readStatusFromGitRev(revLike: string): StatusJson | null {
@@ -542,8 +570,9 @@ function emitCursorCloudRunTelemetry(args: { label: string; agentId: string; run
 }
 
 async function runOneCloudPrompt(message: string, label: string): Promise<RunResult> {
-  const opts = buildCursorCloudOptions(apiKey!, repo!, CURSOR_MODELS.orchestratorWorker);
-  console.log(`🤖 Cloud agent for "${label}" — model: ${CURSOR_MODELS.orchestratorWorker}`);
+  const picked = pickOrchestratorWorkerModel();
+  const opts = buildCursorCloudOptions(apiKey!, repo!, picked.modelSelection);
+  console.log(`🤖 Cloud agent for "${label}" — model: ${formatPickedModel(picked)}`);
   const agent = await Agent.create(opts);
   try {
     const run = await agent.send(message);
@@ -746,33 +775,49 @@ async function mainOrchestrator(): Promise<void> {
     }
 
     const currentStepStatus = resolveStepStatus(status, stepId);
-
-    if (currentStepStatus === "in-progress") {
-      const draftPR = findDraftTrackingPR(stepId);
-      if (draftPR) {
-        if (bumpRemediationOrTrip(status, stepId)) process.exit(2);
-        validateRunnableStep(stepId);
-        await executeAgentRun(stepId, draftPR, true);
-        return;
-      }
-      console.log(`⚠️  Worker: "${stepId}" in-progress but no draft tracking PR for '${trackingBase}'. Resetting.`);
-      resetInProgress(stepId);
-      status = readStatus();
-      if (!status) { process.exit(0); return; }
-    }
-
     validateRunnableStep(stepId);
 
-    // Idempotency guard: reuse an existing draft PR opened by a concurrent run.
+    // Always look for an existing draft PR for this step first — the worker is
+    // idempotent and may be re-dispatched (cron, CI failure, manual). If one
+    // exists, that's the source of truth; reuse it.
     const existingPR = findDraftTrackingPR(stepId);
+
     if (existingPR) {
-      console.log(`♻️  Reusing existing draft tracking PR #${existingPR.number} for "${stepId}".`);
-      await executeAgentRun(stepId, existingPR, false);
+      // If a tracking PR already exists for this step, by definition the agent
+      // is continuing previous work, not starting fresh. Always run in
+      // remediation mode and ensure status.json reflects in-progress so the
+      // coordinator + cleanup see a coherent state.
+      if (currentStepStatus !== "in-progress") {
+        console.log(
+          `🔧 Worker: status was "${currentStepStatus ?? "unset"}" but draft PR #${existingPR.number} exists — restoring in-progress.`,
+        );
+        markInProgress(status, stepId);
+        status = readStatus() ?? status;
+      }
+      console.log(`♻️  Reusing existing draft tracking PR #${existingPR.number} for "${stepId}" (remediation).`);
+      if (bumpRemediationOrTrip(status, stepId)) process.exit(2);
+      await executeAgentRun(stepId, existingPR, true);
       return;
+    }
+
+    // No draft PR exists. If the status still says in-progress that is an
+    // actual orphan (a previous agent run died before/after committing). Reset
+    // and continue with a fresh PR. (If status is anything else this is just a
+    // fresh dispatch — no reset needed.)
+    if (currentStepStatus === "in-progress") {
+      console.log(
+        `⚠️  Worker: "${stepId}" in-progress but no draft tracking PR for '${trackingBase}' — orphaned, resetting before retry.`,
+      );
+      resetInProgress(stepId);
+      status = readStatus() ?? status;
     }
 
     console.log(`\n📋 Opening draft tracking PR for ${stepId}…`);
     const trackingPR = openTrackingPR(pipelineStepById(stepId));
+    // Mark the step in-progress as soon as we own a PR — keeps status.json and
+    // the open PR in sync even if the agent run dies before completing.
+    markInProgress(status, stepId);
+    status = readStatus() ?? status;
     await executeAgentRun(stepId, trackingPR, false);
     return;
   }

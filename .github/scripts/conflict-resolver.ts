@@ -13,7 +13,7 @@
 
 import { Agent, CursorAgentError } from "@cursor/sdk";
 import { buildCursorCloudOptions } from "./cursor-sdk-options";
-import { pickConflictResolverModel } from "./cursor-models.config";
+import { formatPickedModel, pickConflictResolverModel } from "./cursor-models.config";
 import { execSync } from "node:child_process";
 
 // ---------------------------------------------------------------------------
@@ -56,19 +56,77 @@ interface ConflictedPR {
   isDraft: boolean;
 }
 
+interface PrListRow {
+  number: number;
+  headRefName: string;
+  title: string;
+  isDraft: boolean;
+  /** "MERGEABLE" | "CONFLICTING" | "UNKNOWN" */
+  mergeable: string;
+  /** "CLEAN" | "DIRTY" | "BLOCKED" | "BEHIND" | "UNSTABLE" | "UNKNOWN" | "DRAFT" | "HAS_HOOKS" */
+  mergeStateStatus: string;
+}
+
+/**
+ * GitHub recomputes mergeability asynchronously after the base branch advances.
+ * Until the calc finishes, `mergeable` is `UNKNOWN` and `mergeStateStatus` is
+ * one of `UNKNOWN` / `BEHIND`. If we list during that window we see zero
+ * conflicting PRs and exit early, leaving real conflicts unresolved (this is
+ * exactly how PR #29 slipped through after PR #30 merged at 13:49).
+ *
+ * Strategy: fetch the relevant statuses, return early as soon as any PR is
+ * conclusively CONFLICTING, and only return "no conflicts" once GitHub has
+ * given us a definitive answer for every open PR (no more `UNKNOWN`s). Bound
+ * the total wait so a stuck GitHub state can never wedge the workflow.
+ */
+const MERGEABILITY_MAX_ATTEMPTS = 6;
+const MERGEABILITY_WAIT_SECS = 20;
+
+function fetchOpenPRs(): PrListRow[] {
+  const raw = gh(
+    `pr list --repo ${repo} --state open --base ${baseBranch} --json number,headRefName,title,isDraft,mergeable,mergeStateStatus`,
+  );
+  return JSON.parse(raw || "[]") as PrListRow[];
+}
+
+function isPending(pr: PrListRow): boolean {
+  // GitHub flags pending recomputation either by mergeable=UNKNOWN or by a
+  // mergeStateStatus that explicitly means "haven't measured yet".
+  return pr.mergeable === "UNKNOWN" || pr.mergeStateStatus === "UNKNOWN";
+}
+
 function listConflictedPRs(): ConflictedPR[] {
-  // GitHub's mergeability computation can lag — retry once with a short wait.
-  let raw = "";
-  for (let attempt = 0; attempt < 2; attempt++) {
-    raw = gh(
-      `pr list --repo ${repo} --state open --base ${baseBranch} --json number,headRefName,title,isDraft,mergeable --jq '[.[] | select(.mergeable == "CONFLICTING")]'`,
+  let lastPRs: PrListRow[] = [];
+  for (let attempt = 1; attempt <= MERGEABILITY_MAX_ATTEMPTS; attempt++) {
+    lastPRs = fetchOpenPRs();
+    const conflicting = lastPRs.filter((pr) => pr.mergeable === "CONFLICTING");
+    const pending = lastPRs.filter(isPending);
+
+    if (conflicting.length > 0) {
+      if (attempt > 1) console.log(`✅  Mergeability computed after ${attempt} attempt(s).`);
+      return conflicting;
+    }
+
+    if (pending.length === 0) {
+      if (attempt > 1) console.log(`✅  Mergeability computed after ${attempt} attempt(s) — no conflicts.`);
+      return [];
+    }
+
+    if (attempt === MERGEABILITY_MAX_ATTEMPTS) {
+      console.warn(
+        `⚠️  Gave up waiting for GitHub mergeability after ${MERGEABILITY_MAX_ATTEMPTS} attempts; ` +
+          `${pending.length} PR(s) still pending. The next push / cron run will retry.`,
+      );
+      return [];
+    }
+
+    console.log(
+      `⏳  GitHub still computing mergeability for ${pending.length} PR(s); ` +
+        `waiting ${MERGEABILITY_WAIT_SECS}s and retrying (attempt ${attempt}/${MERGEABILITY_MAX_ATTEMPTS - 1})…`,
     );
-    const prs: ConflictedPR[] = JSON.parse(raw || "[]");
-    if (prs.length > 0 || attempt === 1) return prs;
-    console.log("⏳  No conflicted PRs yet — waiting 15s for GitHub to catch up…");
-    execSync("sleep 15");
+    execSync(`sleep ${MERGEABILITY_WAIT_SECS}`);
   }
-  return JSON.parse(raw || "[]");
+  return [];
 }
 
 /**
@@ -195,22 +253,23 @@ for (const pr of conflicted) {
   console.log(`\n━━━ Resolving PR #${pr.number}: ${pr.title} ━━━`);
 
   const changedFiles = listPrChangedFiles(pr.number);
-  const { modelId, tier, matchedPaths } = pickConflictResolverModel(changedFiles);
+  const picked = pickConflictResolverModel(changedFiles);
 
-  if (tier === "sensitive") {
+  if (picked.sensitivity === "sensitive") {
+    const matched = picked.matchedPaths ?? [];
     console.log(
-      `🛡  Escalating to Vision tier (${modelId}) — sensitive paths touched: ${matchedPaths
+      `🛡  Escalating to ${formatPickedModel(picked)} — sensitive paths touched: ${matched
         .slice(0, 5)
-        .join(", ")}${matchedPaths.length > 5 ? `, +${matchedPaths.length - 5} more` : ""}`,
+        .join(", ")}${matched.length > 5 ? `, +${matched.length - 5} more` : ""}`,
     );
   } else {
-    console.log(`🔧 Manager tier (${modelId}) — no sensitive paths in this PR.`);
+    console.log(`🔧 ${formatPickedModel(picked)} — no sensitive paths in this PR.`);
   }
 
   const prompt = buildPrompt(pr);
 
   try {
-    const result = await Agent.prompt(prompt, buildCursorCloudOptions(apiKey!, repo!, modelId));
+    const result = await Agent.prompt(prompt, buildCursorCloudOptions(apiKey!, repo!, picked.modelSelection));
 
     if (result.status === "error") {
       console.error(`❌ Agent failed for PR #${pr.number}.`);

@@ -16,6 +16,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 
 const ROOT = process.cwd();
 const PRD_PATH = path.join(ROOT, "docs/prd/PRD.md");
@@ -86,15 +87,23 @@ export function normalizeFlowCell(flowCell: string): string {
     .toLowerCase();
 }
 
+/** PRD tables may use "Yes" or checkmark glyphs (✅) in the v0 column. */
+export function isFlowInventoryV0Yes(v0Cell: string): boolean {
+  const t = (v0Cell ?? "").trim();
+  if (!t) return false;
+  if (/^\s*yes\b/i.test(t)) return true;
+  return /^[✅✓☑]/.test(t);
+}
+
 export function parseFlowInventory(prdContent: string): FlowInventoryRow[] {
   const lines = prdContent.split(/\r?\n/);
-  const start = lines.findIndex((l) => l.trim() === "# Flow Inventory");
+  const start = lines.findIndex((l) => /^#{1,2}\s+Flow Inventory\s*$/.test(l.trim()));
   if (start === -1) return [];
 
   const rows: FlowInventoryRow[] = [];
   for (let j = start + 1; j < lines.length; j++) {
     const line = lines[j];
-    if (line.startsWith("# ") && !line.startsWith("##")) break;
+    if (/^#{1,2}\s+\S/.test(line.trim())) break;
     const t = line.trim();
     if (!t.startsWith("|")) continue;
     const cells = t
@@ -107,7 +116,7 @@ export function parseFlowInventory(prdContent: string): FlowInventoryRow[] {
     if (flowCell.includes("---")) continue;
     rows.push({
       flow: flowCell,
-      v0Yes: /^\s*yes\b/i.test(v0Cell ?? ""),
+      v0Yes: isFlowInventoryV0Yes(v0Cell ?? ""),
     });
   }
   return rows;
@@ -308,4 +317,15 @@ function main(): void {
   console.log(`✅ PRD sync appended ${toAppend.length} slice step(s): ${toAppend.map((s) => s.id).join(", ")}`);
 }
 
-main();
+/**
+ * Only run as a CLI when invoked directly (e.g. `tsx sync-prd-orchestration.ts`).
+ * Guarded so other scripts (prd-decomposer.ts) can import parseFlowInventory /
+ * normalizeFlowCell without triggering a full sync on import.
+ */
+const invokedDirectly =
+  typeof process.argv[1] === "string" &&
+  import.meta.url === pathToFileURL(process.argv[1]).href;
+
+if (invokedDirectly) {
+  main();
+}
